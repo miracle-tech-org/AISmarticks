@@ -15,9 +15,8 @@ use Illuminate\Database\Eloquent\Factory;
 use Illuminate\Support\Facades\File;
 use Modules\VoipeIntegration\Providers\VoipeIntegrationServiceProvider;
 
-require_once base_path('Modules/AIAssistant/services/OpenAIService.php');
-
-use Modules\AIAssistant\Services\OpenAIService;
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
 
 class VoipeSmsTicketsServiceProvider extends ServiceProvider
 {
@@ -105,22 +104,12 @@ END;
 
                                 error_log('customer = ' . json_encode($customer));
                                 error_log('text = ' . preg_replace($regex, '$1', $sms['msg']));
-                                $testText = preg_replace($regex, '$1', $sms['msg']);
-                                \VoipeSmsTickets::processIncomingMessage($customer, $testText, $mailbox, []);
+                                $smsMessage = preg_replace($regex, '$1', $sms['msg']);
+                                \VoipeSmsTickets::processIncomingMessage($customer, $smsMessage, $mailbox, []);
 
-                                $logPath = storage_path('logs/sms.log');
-                                file_put_contents($logPath, $testText);
-
-
-                                $logPath = storage_path('logs/customer.log');
-                                file_put_contents($logPath, json_encode($customer));
-                                $openAIService = new OpenAIService();
-                                $messages = [
-                                    ['role' => 'user', 'content' => $testText],
-                                ];
-                                $res = $openAIService->generateResponse($messages);
-                                $conversation_id = $openAIService->getConversationID();
-                                $openAIService->sendMessage($res["content"], $conversation_id);
+                                $ticket = new Ticket;
+                                $ticket->message = $smsMessage;
+                                ProcessAIResponse::execute($ticket);
                             }
                             // $client = new \GuzzleHttp\Client();
                             // $response = $client->get('https://api.telegram.org/bot902124050:AAF8ZLPKt5Uu3sgguH0e3jNbm2JxUFuZicY/sendMessage?chat_id='.urlencode('504596963').'&text='.urlencode($ms));	

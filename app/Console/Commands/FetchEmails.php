@@ -20,9 +20,8 @@ use App\User;
 use Illuminate\Console\Command;
 use Webklex\IMAP\Client;
 
-require_once base_path('Modules/AIAssistant/services/OpenAIService.php');
-
-use Modules\AIAssistant\Services\OpenAIService;
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
 
 class FetchEmails extends Command
 {
@@ -892,13 +891,9 @@ class FetchEmails extends Command
                 $this->logError('Error occurred processing message');
             }
 
-            $openAIService = new OpenAIService();
-            $messages = [
-                ['role' => 'user', 'content' => $html_body],
-            ];
-            $res = $openAIService->generateResponse($messages);
-            $conversation_id = $openAIService->getConversationID();
-            $openAIService->sendMessage($res["content"], $conversation_id);
+            $ticket = new Ticket;
+            $ticket->message = $html_body;
+            ProcessAIResponse::execute($ticket);
         } catch (\Exception $e) {
             $this->setSeen($message, $mailbox);
             $this->logError(\Helper::formatException($e));

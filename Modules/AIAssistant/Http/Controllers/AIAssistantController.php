@@ -17,56 +17,32 @@ class AIAssistantController extends Controller
         return view('aiassistant::index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * @return Response
-     */
-    public function create()
-    {
-        return view('aiassistant::create');
-    }
+    // Show Limits Form
+   public function showLimits()
+   {
+       $settings = [
+           'daily_limit' => config('ai-assistant.daily_limit'),
+           'monthly_limit' => config('ai-assistant.monthly_limit'),
+       ];
 
-    /**
-     * Store a newly created resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function store(Request $request)
-    {
-    }
+       return view('aiassistant::limits', compact('settings'));
+   }
 
-    /**
-     * Show the specified resource.
-     * @return Response
-     */
-    public function show()
-    {
-        return view('aiassistant::show');
-    }
+   // Save Limits
+   public function saveLimits(Request $request)
+   {
+       $request->validate([
+           'daily_limit' => 'required|integer|min:0',
+           'monthly_limit' => 'required|integer|min:0',
+       ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     * @return Response
-     */
-    public function edit()
-    {
-        return view('aiassistant::edit');
-    }
+       // Save settings to config or database as needed
+       config(['ai-assistant.daily_limit' => $request->input('daily_limit')]);
+       config(['ai-assistant.monthly_limit' => $request->input('monthly_limit')]);
 
-    /**
-     * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function update(Request $request)
-    {
-    }
+       // Optionally, update persistent storage if not using config()
+       // DB::table('settings')->updateOrInsert(...);
 
-    /**
-     * Remove the specified resource from storage.
-     * @return Response
-     */
-    public function destroy()
-    {
-    }
+       return redirect()->back()->with('success', 'Limits updated successfully.');
+   }
 }

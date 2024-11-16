@@ -131,16 +131,3 @@ Route::post('/uploads/upload', ['uses' => 'SecureController@upload', 'laroute' =
 //Route::get('/billing-license', ['uses' => 'BillingLicenseController@view', 'laroute' => true])->name('billing_license.view');
 Route::get('/billing-license/{section?}', ['uses' => 'BillingLicenseController@view'])->name('billing_license');
 Route::post('/billing-license/{section?}', ['uses' => 'BillingLicenseController@viewSave'])->name('billing_license.save');
-
-// Route::get("/ai-assistant/{mailbox_id}", 'AIAgentController@index')->name("aiagents.index");
-// Route::get("/ai-assistant/{mailbox_id}/create", 'AIAgentController@create')->name("aiagents.create");
-// Route::post("/ai-assistant/{mailbox_id}/store", 'AIAgentController@store')->name("aiagents.store");
-// Route::get("/ai-assistant/{mailbox_id}/edit", 'AIAgentController@edit')->name("aiagents.edit");
-// Route::post("/ai-assistant/{mailbox_id}/update/{id}", 'AIAgentController@update')->name("aiagents.update");
-// Route::post("/ai-assistant/{mailbox_id}/destory/{id}", 'AIAgentController@destroy')->name("aiagents.destroy");
-
-// Route::get('/ai-report', "ReportingController@index")->name("report");
-// Route::get('/ai-agent-report', "ReportingController@show")->name("report-agent");
-
-// Route::get('/limits', 'AIAssistantController@showLimits')->name('ai-assistant.limits');
-// Route::post('/limits', 'AIAssistantController@saveLimits')->name('ai-assistant.save-limits');

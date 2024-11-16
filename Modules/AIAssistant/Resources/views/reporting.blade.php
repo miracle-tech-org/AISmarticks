@@ -27,7 +27,7 @@
                     <ul>
                         @foreach ($aiAgents as $agent)
                         <li>
-                            <a href="{{ route('report-agent', ['id' => $agent->id]) }}">{{ $agent->name }}</a>
+                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->name }}</a>
                         </li>
                         @endforeach
                     </ul>

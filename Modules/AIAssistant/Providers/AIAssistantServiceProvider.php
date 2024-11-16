@@ -31,10 +31,7 @@ class AIAssistantServiceProvider extends ServiceProvider
     /**
      * Module hooks.
      */
-    public function hooks()
-    {
-        
-    }
+    public function hooks() {}
 
     /**
      * Register the service provider.
@@ -54,10 +51,11 @@ class AIAssistantServiceProvider extends ServiceProvider
     protected function registerConfig()
     {
         $this->publishes([
-            __DIR__.'/../Config/config.php' => config_path('aiassistant.php'),
+            __DIR__ . '/../Config/config.php' => config_path('aiassistant.php'),
         ], 'config');
         $this->mergeConfigFrom(
-            __DIR__.'/../Config/config.php', 'aiassistant'
+            __DIR__ . '/../Config/config.php',
+            'aiassistant'
         );
     }
 
@@ -70,11 +68,11 @@ class AIAssistantServiceProvider extends ServiceProvider
     {
         $viewPath = resource_path('views/modules/aiassistant');
 
-        $sourcePath = __DIR__.'/../Resources/views';
+        $sourcePath = __DIR__ . '/../Resources/views';
 
         $this->publishes([
             $sourcePath => $viewPath
-        ],'views');
+        ], 'views');
 
         $this->loadViewsFrom(array_merge(array_map(function ($path) {
             return $path . '/modules/aiassistant';
@@ -88,7 +86,7 @@ class AIAssistantServiceProvider extends ServiceProvider
      */
     public function registerTranslations()
     {
-        $this->loadJsonTranslationsFrom(__DIR__ .'/../Resources/lang');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../Resources/lang');
     }
 
     /**

@@ -9,7 +9,7 @@
 
 @section('content')
 <div class="section-heading margin-bottom">
-    AI Assistant
+    AI Assistant Create
 </div>
 
 <div class="col-xs-12">

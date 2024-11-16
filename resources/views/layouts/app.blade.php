@@ -113,6 +113,7 @@
                                         @endif
                                         @if (Auth::user()->can('viewMailboxMenu', Auth::user()))
                                             <li class="{{ \App\Misc\Helper::menuSelectedHtml('mailboxes') }}"><a href="{{ route('mailboxes') }}">{{ __('Mailboxes') }}</a></li>
+                                            <li class="{{ \App\Misc\Helper::menuSelectedHtml('ai-assistant.limits') }}"><a href="{{ route('ai-assistant.limits')}}">AI Assistant Settings</a></li>
                                         @endif
                                         @action('menu.manage.after_mailboxes')
                                         @if (Auth::user()->isAdmin() || Auth::user()->hasPermission(App\User::PERM_EDIT_USERS))

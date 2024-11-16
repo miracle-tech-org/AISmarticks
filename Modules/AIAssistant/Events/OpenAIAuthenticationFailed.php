@@ -8,23 +8,15 @@ class OpenAIAuthenticationFailed
 {
     use SerializesModels;
 
+    public $apiKey;
+
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($apiKey)
     {
-        //
-    }
-
-    /**
-     * Get the channels the event should be broadcast on.
-     *
-     * @return array
-     */
-    public function broadcastOn()
-    {
-        return [];
+        $this->apiKey = $apiKey;
     }
 }

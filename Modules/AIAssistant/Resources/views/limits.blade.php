@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'AI Assistant Settings')
+@section('title', 'AI Assistant Limit Settings')
 
 @section('content')
 
 <div class="container">
-    <h1>AI Assistant Settings</h1>
+    <h1>AI Assistant Limit Settings</h1>
     <form action="{{ route('ai-assistant.save-limits') }}" method="POST">
         @csrf
         <div class="form-group">

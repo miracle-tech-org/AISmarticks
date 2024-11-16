@@ -2,17 +2,13 @@
 
 namespace Modules\TelegramIntegration\Http\Controllers;
 
-use App\Customer;
 use App\Mailbox;
-use App\Thread;
-use App\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
-require_once base_path('Modules/AIAssistant/services/OpenAIService.php');
-
-use Modules\AIAssistant\Services\OpenAIService;
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
 
 class TelegramIntegrationController extends Controller
 {
@@ -45,15 +41,10 @@ class TelegramIntegrationController extends Controller
 
             \TelegramIntegration::processIncomingMessage($bot, $text, $mailbox);
 
-            $tgMessageJson = json_encode($request->all());
-            $tgMessageData = json_decode($tgMessageJson);
-            $openAIService = new OpenAIService();
-            $messages = [
-                ['role' => 'user', 'content' => $tgMessageData->message->text],
-            ];
-            $res = $openAIService->generateResponse($messages);
-            $conversation_id = $openAIService->getConversationID();
-            $openAIService->sendMessage($res["content"], $conversation_id);
+            $tgMessage = json_decode(json_encode($request->all()));
+            $ticket = new Ticket;
+            $ticket->message = $tgMessage->message->text;
+            ProcessAIResponse::execute($ticket);
 
 //            \TelegramIntegration::processSendMessage($bot, $res["content"], $mailbox);
 //            $bot->reply($res["content"]);

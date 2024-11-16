@@ -7,24 +7,16 @@ use Illuminate\Queue\SerializesModels;
 class OpenAIServiceUnavailable
 {
     use SerializesModels;
+    
+    public $message;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($message)
     {
-        //
-    }
-
-    /**
-     * Get the channels the event should be broadcast on.
-     *
-     * @return array
-     */
-    public function broadcastOn()
-    {
-        return [];
+        $this->message = $message;
     }
 }

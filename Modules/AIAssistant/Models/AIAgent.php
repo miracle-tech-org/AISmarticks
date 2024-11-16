@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace Modules\AIAssistant\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 class AIAgent extends Model
 {
     protected $table = "ai_agents";
+    
     protected $fillable = [
         'name',
         'openai_api_key',
@@ -39,20 +40,37 @@ class AIAgent extends Model
         return $inputs;
     }
 
+    /**
+     * Mutator to encrypt the API key
+     *
+     * @param string $value
+     */
     // public function setOpenaiApiKeyAttribute($value)
     // {
     //     $this->attributes['openai_api_key'] = Crypt::encryptString($value);
     // }
 
+    /**
+     * Accessor to decrypt the API key
+     *
+     * @param string $value
+     *
+     * @return string
+     */
     // public function getOpenaiApiKeyAttribute($value)
     // {
     //     return Crypt::decryptString($value);
     // }
 
-    protected $hidden = ['openai_api_key'];
+    protected $hidden = ['openai_api_key']; // Hide API key in JSON responses
 
+    /**
+     * Relationship: AI Agent Assignments
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function assignments()
     {
-        // return $this->hasMany(AIAgentAssignment::class);
+        return $this->hasMany(AIAgentAssignment::class);
     }
 }
