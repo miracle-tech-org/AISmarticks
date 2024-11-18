@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,21 @@ class AuthServiceProvider extends ServiceProvider
         'App\Thread'       => 'App\Policies\ThreadPolicy',
     ];
 
+    protected $guards = [
+        'web' => [
+            'driver' =>'session',
+            'provider' => 'users',
+        ],
+    ];
+
+    protected $passwordBrokers = [
+        'users' => [
+            'provider' => 'users',
+            'table' => 'password_resets',
+            'expire' => 60,
+        ],
+    ];
+
     /**
      * Register any authentication / authorization services.
      *
@@ -28,6 +44,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('manage_ai_agents', function ($user) {
+            // Authorization logic for managing AI agents
+        });
     }
 }

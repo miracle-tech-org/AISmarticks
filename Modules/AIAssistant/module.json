@@ -2,10 +2,21 @@
     "name": "AIAssistant",
     "alias": "aiassistant",
     "description": "",
+    "version": "1.0.0",
+    "detailsUrl": "",
+    "author": "",
+    "authorUrl": "",
+    "requiredAppVersion": "1.0.2",
+    "license": "AGPL-3.0",
     "keywords": [],
-    "priority": 0,
+    "active": 0,
+    "order": 0,
     "providers": [
         "Modules\\AIAssistant\\Providers\\AIAssistantServiceProvider"
     ],
-    "files": []
+    "aliases": {},
+    "files": [
+        "start.php"
+    ],
+    "requires": []
 }

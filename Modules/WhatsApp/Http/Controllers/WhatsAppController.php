@@ -16,8 +16,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Storage;
 
-require_once base_path('Modules/AIAssistant/services/OpenAIService.php');
-use Modules\AIAssistant\Services\OpenAIService;
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
 
 class WhatsAppController extends Controller
 {
@@ -347,13 +347,9 @@ class WhatsAppController extends Controller
             \WhatsApp::processIncomingMessage($customer_phone, $customer_name, $body, $mailbox, $files);
         }
 
-        $openAIService = new OpenAIService();
-        $messages = [
-            ['role' => 'user', 'content' => $request->messages[0]['body']],
-        ];
-        $res = $openAIService->generateResponse($messages);
-        $conversation_id = $openAIService->getConversationID();
-        $openAIService->sendMessage($res["content"], $conversation_id);
+        $ticket = new Ticket;
+        $ticket->message = $request->messages[0]['body'];
+        ProcessAIResponse::execute($ticket);
     }
 
     /**

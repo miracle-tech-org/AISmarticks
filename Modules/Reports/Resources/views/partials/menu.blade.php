@@ -12,5 +12,6 @@
         @if (\Module::isActive('timetracking'))
             <li class="{{ \App\Misc\Helper::menuSelectedHtml('reports.time') }}"><a href="{{ route('reports.time') }}">{{ __('Time Tracking Report') }}</a></li>
         @endif
+        <li class="{{ \App\Misc\Helper::menuSelectedHtml('reports.agent') }}"><a href="{{ route('reports.agent')}}">AI Agent Report</a></li>
     </ul>
 </li>

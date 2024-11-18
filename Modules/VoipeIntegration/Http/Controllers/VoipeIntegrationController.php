@@ -17,6 +17,9 @@ use App\Mailbox;
 use App\Thread;
 use App\User;
 
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
+
 class VoipeIntegrationController extends Controller
 {
 	public function webhooks(Request $request, $mailbox_id)
@@ -55,6 +58,9 @@ class VoipeIntegrationController extends Controller
 					\VoipeIntegration::processCallsEvents($data['callerid'], $data['callerid'], $data, $mailbox, [], ['voipe_calls_row_id'=>$row_id]);
 				}
 			}
+            $ticket = new Ticket;
+            $ticket->message = "Hi";
+            ProcessAIResponse::execute($ticket);
 		}
 	}
 
