@@ -19,6 +19,9 @@ class AIAgentAssignment extends Model
         'alert_triggered',
     ];
 
+    protected $table = "ai_agent_assignments";
+    public $timestamps = false;
+
     /**
      * Relationship: AI Agent
      *

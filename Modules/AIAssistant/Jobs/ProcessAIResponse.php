@@ -95,7 +95,7 @@ class ProcessAIResponse implements ShouldQueue
         ];
 
         $body = [
-            '_token' => 'JfNGrpcYUYZ2wEE7PAa1bzzc4gZPiBzqnNtRCrZc',
+            '_token' => 'fmQKjb5xxX4TdX9jp3wOUR8FClO8p1lEzZJaVETI',
             'conversation_id' => $conversation_id,
             'mailbox_id' => 1,
             'saved_reply_id' => '',

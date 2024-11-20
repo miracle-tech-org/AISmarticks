@@ -5,6 +5,7 @@ namespace Modules\AIAssistant\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Crypt;
 
 use Modules\AIAssistant\Http\Requests\AIAgentRequest;
 use Modules\AIAssistant\Models\AIAgent;
@@ -23,6 +24,11 @@ class AIAgentController extends Controller
     public function index($mailbox_id)
     {
         $aiAgents = AIAgent::all();
+        
+        foreach ($aiAgents as $aiAgent) {
+            $aiAgent->openai_api_key = Crypt::encryptString($aiAgent->openai_api_key);
+        }
+
         $mailbox = Mailbox::findOrFail($mailbox_id);
         return view('aiassistant::aiagents.index', [
             'mailbox' => $mailbox,
