@@ -81,7 +81,8 @@ class OpenAIService
             $aiResponse = $body['choices'][0]['message']['content']?? '';
             $tokensUsed = $body['usage']['total_tokens']?? 0;
 
-            return ['content' => $aiResponse, 'tokens_used' => $tokensUsed];
+            $categorizedResponse = $this->categorizeAndAnalyzeSentiment($aiResponse, $messages);
+            return ['content' => $categorizedResponse['response'], 'tokens_used' => $body['usage']['total_tokens']?? 0];
         } catch (RequestException $e) {
             $statusCode = $e->getResponse()? $e->getResponse()->getStatusCode() : null;
 
@@ -124,5 +125,54 @@ class OpenAIService
 
             return ['content' => '', 'tokens_used' => 0];
         }
+    }
+
+    /**
+     * Categorize and analyze sentiment of the AI response
+     *
+     * @param string $aiResponse
+     * @param array $messages
+     *
+     * @return array
+     */
+    private function categorizeAndAnalyzeSentiment(string $aiResponse, array $messages)
+    {
+        $category = $this->determineCategory($aiResponse, $messages);
+        $sentiment = $this->analyzeSentiment($aiResponse);
+
+        return [
+            'response' => $aiResponse,
+            'category' => $category,
+            'sentiment' => $sentiment,
+        ];
+    }
+
+    /**
+     * Determine the category of the AI response
+     *
+     * @param string $aiResponse
+     * @param array $messages
+     *
+     * @return string
+     */
+    private function determineCategory(string $aiResponse, array $messages)
+    {
+        // Implement category determination logic based on $aiResponse and $messages
+        // For demonstration purposes, a simple category is assigned
+        return 'support';
+    }
+
+        /**
+     * Analyze the sentiment of the AI response
+     *
+     * @param string $aiResponse
+     *
+     * @return string
+     */
+    private function analyzeSentiment(string $aiResponse)
+    {
+        // Implement sentiment analysis logic based on $aiResponse
+        // For demonstration purposes, a simple sentiment is assigned
+        return 'positive';
     }
 }

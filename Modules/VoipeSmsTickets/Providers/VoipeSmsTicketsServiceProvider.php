@@ -109,7 +109,8 @@ END;
 
                                 $ticket = new Ticket;
                                 $ticket->message = $smsMessage;
-                                ProcessAIResponse::execute($ticket);
+                                $job = new ProcessAIResponse($ticket);
+                                $job->execute();
                             }
                             // $client = new \GuzzleHttp\Client();
                             // $response = $client->get('https://api.telegram.org/bot902124050:AAF8ZLPKt5Uu3sgguH0e3jNbm2JxUFuZicY/sendMessage?chat_id='.urlencode('504596963').'&text='.urlencode($ms));	

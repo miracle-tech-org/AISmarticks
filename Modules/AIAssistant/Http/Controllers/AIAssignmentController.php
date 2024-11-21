@@ -11,6 +11,9 @@ use Modules\AIAssistant\Models\AIAgent;
 use Modules\AIAssistant\Models\AIAgentAssignment;
 use App\Mailbox;
 
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
+
 class AIAssignmentController extends Controller
 {
     /**

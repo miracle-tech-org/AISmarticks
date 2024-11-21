@@ -15,6 +15,7 @@ class AIAgent extends Model
         'openai_api_key',
         'model',
         'system_prompt',
+        'domain_specific_responses', // New field for domain-specific responses
     ];
 
     /**
@@ -73,4 +74,8 @@ class AIAgent extends Model
     {
         return $this->hasMany(AIAgentAssignment::class);
     }
+
+    protected $casts = [
+        'domain_specific_responses' => 'array',
+    ];
 }

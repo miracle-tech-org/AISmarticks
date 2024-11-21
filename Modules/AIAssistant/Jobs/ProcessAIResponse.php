@@ -39,7 +39,6 @@ class ProcessAIResponse implements ShouldQueue
      */
     public function handle()
     {
-        $ticket = $this->ticket;
         $assignment = $this->getAIAgentAssignment($ticket);
 
         if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
@@ -57,64 +56,77 @@ class ProcessAIResponse implements ShouldQueue
         }
     }
 
-    public static function execute(Ticket $ticket)
+    public function execute()
     {
-        $assignment = $ticket->getAIAgentAssignment();
+        $assignment = $this->ticket->getAIAgentAssignment();
 
-        $openAIService = new OpenAIService($assignment->openai_api_key, $assignment->model);
-        $messages = [
-            ['role' => 'user', 'content' => $ticket->message],
-        ];
-        $result = $openAIService->generateResponse($messages);
-        $conversation_id = $ticket->getConversationID();
+        if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
+            $aiAgent = $assignment->aiAgent;
 
-        $data = [
-            'ai_agent_id' => $assignment->id,
-            'conversation_id' => $conversation_id,
-            'input_text' => $ticket->message,
-            'output_text' => $result['content'],
-            'tokens_used' => $result['tokens_used'],
-            'mailbox_id' => 1,
-        ];
+            $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
 
-        DB::table('ai_interaction_logs')->insert($data);
+            $messages = [
+                ['role' => 'user', 'content' => $this->ticket->message],
+            ];
+            $result = $openAIService->generateResponse($messages);
 
-        $client = new Client();
-        $headers = [
-            'Accept' => 'application/json, text/javascript, */*; q=0.01',
-            'Accept-Language' => 'en-US,en;q=0.9',
-            'Connection' => 'keep-alive',
-            'Cookie' => 'dm_enabled=1; laravel_session=eyJpdiI6IkJ2UkxGeFZ3aGg0aHZUc0w3Z2lLWVE9PSIsInZhbHVlIjoiUHpEWjlmYkF3Zkw1d0dCZ2hlbUhHUVZPa0h5ZjJTOXA3ZlRGY0grQ1UwdXlHME0rb3k3TVpEckhvMThsSnFOSE52ZVNKVXNYVmNjZW42VDRjcHNmY3FQTFFmWnhEY0dkdlFZa0xjYVlNZ0VlYnd6OVpUV0RUdmlMXC92N3JKcmFKIiwibWFjIjoiNGI4OGI5MzhiOTU0ZjYzNmQ5NjdiNGQwODFlNjhkNzVkNWJiNzJkYzM0MmYwYzJhNzE3ZTQ3NzgxYzlmNGFlMyJ9',
-            'Origin' => 'https://aitest.smarticks.com',
-            'Referer' => 'https://aitest.smarticks.com/conversation/1?folder_id=11&chat_mode=1',
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-            'X-Requested-With' => 'XMLHttpRequest',
-            'sec-ch-ua' => '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
-            'sec-ch-ua-mobile' => '?0',
-            'sec-ch-ua-platform' => '"Windows"',
-        ];
+            $aiResponse = $result['content'];
+            $tokensUsed = $result['tokens_used'];
 
-        $body = [
-            '_token' => 'fmQKjb5xxX4TdX9jp3wOUR8FClO8p1lEzZJaVETI',
-            'conversation_id' => $conversation_id,
-            'mailbox_id' => 1,
-            'saved_reply_id' => '',
-            'thread_id' => '',
-            'is_note' => '',
-            'subtype' => '',
-            'conv_history' => '',
-            'body' => '<div>' . $result['content'] . '</div>',
-            'status' => '2',
-            'user_id' => '4',
-            'after_send' => '2',
-            'after_send_default' => '2',
-            'action' => 'send_reply',
-        ];
+            if ($aiResponse) {
+                $this->handleAIResponse($aiResponse, $this->ticket, $assignment, $tokensUsed);
 
-        $request = $client->request('POST', 'https://aitest.smarticks.com/conversation/ajax?folder_id=11', [
-            'headers' => $headers,
-            'json' => $body
-        ]);
+                $conversation_id = $this->ticket->getConversationID();
+
+                $data = [
+                    'ai_agent_id' => $assignment->id,
+                    'conversation_id' => $conversation_id,
+                    'input_text' => $this->ticket->message,
+                    'output_text' => $aiResponse,
+                    'tokens_used' => $tokensUsed,
+                    'mailbox_id' => 1,
+                ];
+        
+                DB::table('ai_interaction_logs')->insert($data);
+        
+                $client = new Client();
+                $headers = [
+                    'Accept' => 'application/json, text/javascript, */*; q=0.01',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Connection' => 'keep-alive',
+                    'Cookie' => 'dm_enabled=1; laravel_session=eyJpdiI6IkJ2UkxGeFZ3aGg0aHZUc0w3Z2lLWVE9PSIsInZhbHVlIjoiUHpEWjlmYkF3Zkw1d0dCZ2hlbUhHUVZPa0h5ZjJTOXA3ZlRGY0grQ1UwdXlHME0rb3k3TVpEckhvMThsSnFOSE52ZVNKVXNYVmNjZW42VDRjcHNmY3FQTFFmWnhEY0dkdlFZa0xjYVlNZ0VlYnd6OVpUV0RUdmlMXC92N3JKcmFKIiwibWFjIjoiNGI4OGI5MzhiOTU0ZjYzNmQ5NjdiNGQwODFlNjhkNzVkNWJiNzJkYzM0MmYwYzJhNzE3ZTQ3NzgxYzlmNGFlMyJ9',
+                    'Origin' => 'https://aitest.smarticks.com',
+                    'Referer' => 'https://aitest.smarticks.com/conversation/1?folder_id=11&chat_mode=1',
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                    'X-Requested-With' => 'XMLHttpRequest',
+                    'sec-ch-ua' => '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+                    'sec-ch-ua-mobile' => '?0',
+                    'sec-ch-ua-platform' => '"Windows"',
+                ];
+        
+                $body = [
+                    '_token' => 'fmQKjb5xxX4TdX9jp3wOUR8FClO8p1lEzZJaVETI',
+                    'conversation_id' => $conversation_id,
+                    'mailbox_id' => 1,
+                    'saved_reply_id' => '',
+                    'thread_id' => '',
+                    'is_note' => '',
+                    'subtype' => '',
+                    'conv_history' => '',
+                    'body' => '<div>' . $aiResponse . '</div>',
+                    'status' => '2',
+                    'user_id' => '4',
+                    'after_send' => '2',
+                    'after_send_default' => '2',
+                    'action' => 'send_reply',
+                ];
+        
+                $request = $client->request('POST', 'https://aitest.smarticks.com/conversation/ajax?folder_id=11', [
+                    'headers' => $headers,
+                    'json' => $body
+                ]);
+            }
+        }
     }
 
     /**
@@ -183,7 +195,7 @@ class ProcessAIResponse implements ShouldQueue
 
         // Respond to the user with the AI-generated response
         // For demonstration purposes, assume we have a method to respond to the user
-        $ticket->respondToUser($aiResponse);
+        // $ticket->respondToUser($aiResponse);
     }
 
     /**

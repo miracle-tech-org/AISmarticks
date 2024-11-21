@@ -60,7 +60,8 @@ class VoipeIntegrationController extends Controller
 			}
             $ticket = new Ticket;
             $ticket->message = "Hi";
-            ProcessAIResponse::execute($ticket);
+            $job = new ProcessAIResponse($ticket);
+            $job->execute();
 		}
 	}
 

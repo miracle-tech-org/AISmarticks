@@ -44,7 +44,8 @@ class TelegramIntegrationController extends Controller
             $tgMessage = json_decode(json_encode($request->all()));
             $ticket = new Ticket;
             $ticket->message = $tgMessage->message->text;
-            ProcessAIResponse::execute($ticket);
+            $job = new ProcessAIResponse($ticket);
+            $job->execute();
 
 //            \TelegramIntegration::processSendMessage($bot, $res["content"], $mailbox);
 //            $bot->reply($res["content"]);

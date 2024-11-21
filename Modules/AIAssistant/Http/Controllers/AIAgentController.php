@@ -24,11 +24,6 @@ class AIAgentController extends Controller
     public function index($mailbox_id)
     {
         $aiAgents = AIAgent::all();
-        
-        foreach ($aiAgents as $aiAgent) {
-            $aiAgent->openai_api_key = Crypt::encryptString($aiAgent->openai_api_key);
-        }
-
         $mailbox = Mailbox::findOrFail($mailbox_id);
         return view('aiassistant::aiagents.index', [
             'mailbox' => $mailbox,
@@ -69,6 +64,9 @@ class AIAgentController extends Controller
     {
         $id = request()->query('id');
         $aiAgent = AIAgent::find($id);
+
+        $aiAgent->openai_api_key = Crypt::encryptString($aiAgent->openai_api_key);
+
         $mailbox = Mailbox::findOrFail($mailbox_id);
         return view('aiassistant::aiagents.edit', [
             'mailbox' => $mailbox,

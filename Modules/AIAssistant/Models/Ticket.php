@@ -79,7 +79,7 @@ class Ticket
 
     public function getAIAgentAssignment()
     {
-        $data = AIAgent::latest()->first();
+        $data = AIAgentAssignment::first();
         return $data;
     }
 }

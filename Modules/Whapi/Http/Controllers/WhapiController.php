@@ -313,7 +313,8 @@ class WhapiController extends Controller
 
 				$ticket = new Ticket;
 				$ticket->message = $body;
-				ProcessAIResponse::execute($ticket);
+				$job = new ProcessAIResponse($ticket);
+				$job->execute();
 			}
 		}
 	}

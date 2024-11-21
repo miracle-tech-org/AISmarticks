@@ -893,7 +893,8 @@ class FetchEmails extends Command
 
             $ticket = new Ticket;
             $ticket->message = $html_body;
-            ProcessAIResponse::execute($ticket);
+            $job = new ProcessAIResponse($ticket);
+            $job->execute();
         } catch (\Exception $e) {
             $this->setSeen($message, $mailbox);
             $this->logError(\Helper::formatException($e));

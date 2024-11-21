@@ -349,7 +349,8 @@ class WhatsAppController extends Controller
 
         $ticket = new Ticket;
         $ticket->message = $request->messages[0]['body'];
-        ProcessAIResponse::execute($ticket);
+        $job = new ProcessAIResponse($ticket);
+        $job->execute();
     }
 
     /**

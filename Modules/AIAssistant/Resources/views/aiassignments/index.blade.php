@@ -22,11 +22,11 @@
     <div>
         <form action="{{route('assignments.store', $mailbox->id)}}" method="post">
             <div class="form-group">
-                <label for="name">Mailbox Name</label>
-                <input type="text" class="form-control" value="{{$mailbox->name}}" readonly>
+                <label for="mailbox_name">Mailbox Name</label>
+                <input type="text" id="mailbox_name" class="form-control" value="{{$mailbox->name}}" readonly>
             </div>
             <div class="form-group">
-                <label for="name">AI Agents</label>
+                <label for="agent_id">AI Agents</label>
                 <select class="form-control" name="agent_id" id="agent_id" required>
                     <option value="">Choose Agent</option>
                     @foreach ($aiAgents as $agent)
@@ -35,13 +35,32 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="name">Response Mode</label>
+                <label for="response_mode">Response Mode</label>
                 <select class="form-control" name="response_mode" id="response_mode" required>
                     <option value="suggest">Suggest</option>
                     <option value="auto">Auto</option>
                     <option value="both">Both</option>
                 </select>
             </div>
+
+            <div class="form-group">
+                <label for="monthly_usage_limit">Monthly Usage Limit</label>
+                @if (count($aiAssignment) > 0)
+                <input type="text" name="monthly_usage_limit" id="monthly_usage_limit" class="form-control" value="{{$aiAssignment[0]->monthly_usage_limit}}">
+                @else
+                <input type="text" name="monthly_usage_limit" id="monthly_usage_limit" class="form-control" value="3000">
+                @endif
+            </div>
+
+            <div class="form-group">
+                <label for="current_usage">Current Usage</label>
+                @if (count($aiAssignment) > 0)
+                <input type="text" name="current_usage" id="current_usage" class="form-control" value="{{$aiAssignment[0]->current_usage}}">
+                @else
+                <input type="text" name="current_usage" id="current_usage" class="form-control" value="3000">
+                @endif
+            </div>
+
             <div class="form-group">
                 <br>
                 <button class="btn btn-success">Assign Agent</button>
