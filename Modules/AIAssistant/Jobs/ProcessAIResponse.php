@@ -21,6 +21,8 @@ class ProcessAIResponse implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $ticket;
+    protected $maxRetryAttempts = 3; // Maximum retry attempts
+    protected $retryDelay = 300; // Retry delay in seconds
 
     /**
      * Create a new job instance.
@@ -42,18 +44,42 @@ class ProcessAIResponse implements ShouldQueue
         $assignment = $this->getAIAgentAssignment($ticket);
 
         if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
-            $aiAgent = $assignment->aiAgent;
-            $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
-            $messages = $this->buildMessages($ticket, $aiAgent->system_prompt);
-            $result = $openAIService->generateResponse($messages);
-
-            $aiResponse = $result['content'];
-            $tokensUsed = $result['tokens_used'];
-
-            if ($aiResponse) {
-                $this->handleAIResponse($aiResponse, $ticket, $assignment, $tokensUsed);
+            try {
+                $aiAgent = $assignment->aiAgent;
+                $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
+                $messages = $this->buildMessages($ticket, $aiAgent->system_prompt);
+                $result = $openAIService->generateResponse($messages);
+    
+                $aiResponse = $result['content'];
+                $tokensUsed = $result['tokens_used'];
+    
+                if ($aiResponse) {
+                    $this->handleAIResponse($aiResponse, $ticket, $assignment, $tokensUsed);
+                }
+            } catch (Exception $e) {
+                // Retry logic with exponential backoff
+                if ($this->attempt() < $this->maxRetryAttempts) {
+                    $this->release($this->retryDelay * (2 ** $this->attempt()));
+                } else {
+                    // Alternative AI fallback
+                    $this->fallbackToAlternativeAI($e);
+                }
             }
         }
+    }
+
+        /**
+     * Fallback to alternative AI service
+     *
+     * @param \Exception $e
+     *
+     * @return void
+     */
+    private function fallbackToAlternativeAI(\Exception $e)
+    {
+        // Implement alternative AI service logic
+        // For demonstration purposes, a simple log is written
+        \Log::error('Fallback to alternative AI service due to error: '. $e->getMessage());
     }
 
     public function execute()
@@ -62,69 +88,79 @@ class ProcessAIResponse implements ShouldQueue
 
         if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
             $aiAgent = $assignment->aiAgent;
+            try {
 
-            $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
+                $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
 
-            $messages = [
-                ['role' => 'user', 'content' => $this->ticket->message],
-            ];
-            $result = $openAIService->generateResponse($messages);
-
-            $aiResponse = $result['content'];
-            $tokensUsed = $result['tokens_used'];
-
-            if ($aiResponse) {
-                $this->handleAIResponse($aiResponse, $this->ticket, $assignment, $tokensUsed);
-
-                $conversation_id = $this->ticket->getConversationID();
-
-                $data = [
-                    'ai_agent_id' => $assignment->id,
-                    'conversation_id' => $conversation_id,
-                    'input_text' => $this->ticket->message,
-                    'output_text' => $aiResponse,
-                    'tokens_used' => $tokensUsed,
-                    'mailbox_id' => 1,
+                $messages = [
+                    ['role' => 'user', 'content' => $this->ticket->message],
                 ];
-        
-                DB::table('ai_interaction_logs')->insert($data);
-        
-                $client = new Client();
-                $headers = [
-                    'Accept' => 'application/json, text/javascript, */*; q=0.01',
-                    'Accept-Language' => 'en-US,en;q=0.9',
-                    'Connection' => 'keep-alive',
-                    'Cookie' => 'dm_enabled=1; laravel_session=eyJpdiI6IkJ2UkxGeFZ3aGg0aHZUc0w3Z2lLWVE9PSIsInZhbHVlIjoiUHpEWjlmYkF3Zkw1d0dCZ2hlbUhHUVZPa0h5ZjJTOXA3ZlRGY0grQ1UwdXlHME0rb3k3TVpEckhvMThsSnFOSE52ZVNKVXNYVmNjZW42VDRjcHNmY3FQTFFmWnhEY0dkdlFZa0xjYVlNZ0VlYnd6OVpUV0RUdmlMXC92N3JKcmFKIiwibWFjIjoiNGI4OGI5MzhiOTU0ZjYzNmQ5NjdiNGQwODFlNjhkNzVkNWJiNzJkYzM0MmYwYzJhNzE3ZTQ3NzgxYzlmNGFlMyJ9',
-                    'Origin' => 'https://aitest.smarticks.com',
-                    'Referer' => 'https://aitest.smarticks.com/conversation/1?folder_id=11&chat_mode=1',
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-                    'X-Requested-With' => 'XMLHttpRequest',
-                    'sec-ch-ua' => '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
-                    'sec-ch-ua-mobile' => '?0',
-                    'sec-ch-ua-platform' => '"Windows"',
-                ];
-        
-                $body = [
-                    '_token' => 'fmQKjb5xxX4TdX9jp3wOUR8FClO8p1lEzZJaVETI',
-                    'conversation_id' => $conversation_id,
-                    'mailbox_id' => 1,
-                    'saved_reply_id' => '',
-                    'thread_id' => '',
-                    'is_note' => '',
-                    'subtype' => '',
-                    'conv_history' => '',
-                    'body' => '<div>' . $aiResponse . '</div>',
-                    'status' => '2',
-                    'user_id' => '4',
-                    'after_send' => '2',
-                    'after_send_default' => '2',
-                    'action' => 'send_reply',
-                ];
-        
-                $request = $client->request('POST', 'https://aitest.smarticks.com/conversation/ajax?folder_id=11', [
-                    'headers' => $headers,
-                    'json' => $body
-                ]);
+                $result = $openAIService->generateResponse($messages);
+
+                $aiResponse = $result['content'];
+                $tokensUsed = $result['tokens_used'];
+
+                if ($aiResponse) {
+                    $this->handleAIResponse($aiResponse, $this->ticket, $assignment, $tokensUsed);
+
+                    $conversation_id = $this->ticket->getConversationID();
+
+                    $data = [
+                        'ai_agent_id' => $assignment->id,
+                        'conversation_id' => $conversation_id,
+                        'input_text' => $this->ticket->message,
+                        'output_text' => $aiResponse,
+                        'tokens_used' => $tokensUsed,
+                        'mailbox_id' => 1,
+                    ];
+            
+                    DB::table('ai_interaction_logs')->insert($data);
+            
+                    $client = new Client();
+                    $headers = [
+                        'Accept' => 'application/json, text/javascript, */*; q=0.01',
+                        'Accept-Language' => 'en-US,en;q=0.9',
+                        'Connection' => 'keep-alive',
+                        'Cookie' => 'dm_enabled=1; laravel_session=eyJpdiI6IkJ2UkxGeFZ3aGg0aHZUc0w3Z2lLWVE9PSIsInZhbHVlIjoiUHpEWjlmYkF3Zkw1d0dCZ2hlbUhHUVZPa0h5ZjJTOXA3ZlRGY0grQ1UwdXlHME0rb3k3TVpEckhvMThsSnFOSE52ZVNKVXNYVmNjZW42VDRjcHNmY3FQTFFmWnhEY0dkdlFZa0xjYVlNZ0VlYnd6OVpUV0RUdmlMXC92N3JKcmFKIiwibWFjIjoiNGI4OGI5MzhiOTU0ZjYzNmQ5NjdiNGQwODFlNjhkNzVkNWJiNzJkYzM0MmYwYzJhNzE3ZTQ3NzgxYzlmNGFlMyJ9',
+                        'Origin' => 'https://aitest.smarticks.com',
+                        'Referer' => 'https://aitest.smarticks.com/conversation/1?folder_id=11&chat_mode=1',
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                        'X-Requested-With' => 'XMLHttpRequest',
+                        'sec-ch-ua' => '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+                        'sec-ch-ua-mobile' => '?0',
+                        'sec-ch-ua-platform' => '"Windows"',
+                    ];
+            
+                    $body = [
+                        '_token' => 'fmQKjb5xxX4TdX9jp3wOUR8FClO8p1lEzZJaVETI',
+                        'conversation_id' => $conversation_id,
+                        'mailbox_id' => 1,
+                        'saved_reply_id' => '',
+                        'thread_id' => '',
+                        'is_note' => '',
+                        'subtype' => '',
+                        'conv_history' => '',
+                        'body' => '<div>' . $aiResponse . '</div>',
+                        'status' => '2',
+                        'user_id' => '4',
+                        'after_send' => '2',
+                        'after_send_default' => '2',
+                        'action' => 'send_reply',
+                    ];
+            
+                    $request = $client->request('POST', 'https://aitest.smarticks.com/conversation/ajax?folder_id=11', [
+                        'headers' => $headers,
+                        'json' => $body
+                    ]);
+                }
+            } catch (Exception $e) {
+                // Retry logic with exponential backoff
+                if ($this->attempt() < $this->maxRetryAttempts) {
+                    $this->release($this->retryDelay * (2 ** $this->attempt()));
+                } else {
+                    // Alternative AI fallback
+                    $this->fallbackToAlternativeAI($e);
+                }
             }
         }
     }
