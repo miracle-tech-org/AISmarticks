@@ -5,6 +5,8 @@ namespace Modules\AIAssistant\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Conversation;
 use App\Mailbox;
+use Modules\AIAssistant\Events\APIUsageLimitApproaching;
+use Modules\AIAssistant\Events\APIUsageLimitReached;
 
 class AIAgentAssignment extends Model
 {
@@ -50,5 +52,28 @@ class AIAgentAssignment extends Model
     public function conversation()
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+        /**
+     * Check if usage alert should be triggered
+     *
+     * @return void
+     */
+    public function checkUsageAlert()
+    {
+        if(is_null($this->monthly_usage_limit))
+            $this->monthly_usage_limit = 10000;
+        
+        $usagePercentage = ($this->current_usage / $this->monthly_usage_limit) * 100;
+
+        if ($usagePercentage >= $this->usage_alert_threshold &&!$this->alert_triggered) {
+            $this->alert_triggered = true;
+            $this->save();
+
+            // Trigger usage alert
+            event(new APIUsageLimitApproaching($this));
+        } elseif ($usagePercentage >= 100) {
+            event(new APIUsageLimitReached($this));
+        }
     }
 }

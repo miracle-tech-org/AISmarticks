@@ -47,6 +47,8 @@ class AIAssignmentController extends Controller
         $assignment->mailbox_id = $mailbox_id;
         $assignment->save();
 
-       return redirect()->back()->with('success', 'Agent assigned successfully.');
+        $assignment->checkUsageAlert();
+
+       return redirect()->back()->with('success', 'Agent assigned successfully.')->with('success', 'AI Agent Assignment updated successfully!');
     }
 }
