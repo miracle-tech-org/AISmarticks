@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Crypt;
 
 use Modules\AIAssistant\Http\Requests\AIAgentRequest;
 use Modules\AIAssistant\Models\AIAgent;
+use Modules\AIAssistant\Models\AIAgentAssignment;
 use App\Mailbox;
 
 class AIAgentController extends Controller
@@ -51,8 +52,15 @@ class AIAgentController extends Controller
     public function store(AIAgentRequest $request, $mailbox_id)
     {
         $validatedInputs = $request->validated();
+        $aiAgent = AIAgent::create($request->all());
 
-        AIAgent::create($request->all());
+        // Create default assignment with rate limiting
+        AIAgentAssignment::create([
+            'ai_agent_id' => $aiAgent->id,
+            'monthly_usage_limit' => 10000, // Default monthly usage limit
+            'usage_alert_threshold' => 80, // Default usage alert threshold
+        ]);
+
         return redirect()->route('aiagents.index', ['mailbox_id' => $mailbox_id])->with('success', 'AI Agent created successfully!');
     }
 

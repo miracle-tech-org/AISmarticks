@@ -62,6 +62,15 @@
             </div>
 
             <div class="form-group">
+                <label for="usage_alert_threshold">Usage Alert Threshold (%)</label>
+                @if (count($aiAssignment) > 0)
+                <input type="text" id="usage_alert_threshold" name="usage_alert_threshold" value="{{ $aiAssignment[0]->usage_alert_threshold }}" class="form-control">
+                @else
+                <input type="text" id="usage_alert_threshold" name="usage_alert_threshold" value="80" class="form-control">
+                @endif
+            </div>
+
+            <div class="form-group">
                 <br>
                 <button class="btn btn-success">Assign Agent</button>
             </div>

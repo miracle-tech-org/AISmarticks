@@ -21,6 +21,11 @@ class AIAgentAssignment extends Model
         'alert_triggered',
     ];
 
+    protected $casts = [
+        'monthly_usage_limit' => 'integer',
+        'usage_alert_threshold' => 'integer',
+    ];
+
     protected $table = "ai_agent_assignments";
     public $timestamps = false;
 
