@@ -108,8 +108,12 @@
                     </thead>
                     <tbody>
                     @foreach ($table_customer_interaction as $customerId => $customer_interaction)
+                        @php
+                            $customerName = data_get($customer_interaction, 'name');
+                            $customerName = trim($customerName) !== '' ? $customerName : __("Some customer");
+                        @endphp
                         <tr>
-                            <td><a href="{{ route('customers.update', ['id' => $customerId]) }}" target="_blank">{{ $customer_interaction['name'] }}</a></td>
+                            <td><a href="{{ route('customers.update', ['id' => $customerId]) }}" target="_blank">{{ $customerName }}</a></td>
                             <td>{{ $customer_interaction['interaction_count'] }}</td>
                             <td>{{ $customer_interaction['agent_responses_times'] }}</td>
                             <td>{{ $customer_interaction['resolution_times'] }}</td>

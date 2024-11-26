@@ -154,7 +154,7 @@
                                                     {{ __('Notifications') }}
                                                     <small class="web-notifications-count  @if (!(int)$web_notifications_info['unread_count']) hidden @endif" title="{{ __('Unread Notifications') }}" data-toggle="tooltip">@if ($web_notifications_info['unread_count']){{ $web_notifications_info['unread_count'] }}@endif</small>
                                                 </h1>
-                                                <a href="#" class="web-notifications-mark-read @if (!(int)$web_notifications_info['unread_count']) hidden @endif" data-loading-text="{{ __('Processing') }}ï¿½">
+                                                <a href="#" class="web-notifications-mark-read @if (!(int)$web_notifications_info['unread_count']) hidden @endif" data-loading-text="{{ __('Processing') }}…">
                                                     {{ __('Mark all as read') }}
                                                 </a>
                                             </div>
@@ -168,7 +168,7 @@
 
                                                     @if ($web_notifications_info['notifications']->hasMorePages())
                                                         <li class="web-notification-more">
-                                                            <button class="btn btn-link btn-block link-dark" data-loading-text="{{ __('Loading') }}ï¿½">
+                                                            <button class="btn btn-link btn-block link-dark" data-loading-text="{{ __('Loading') }}…">
                                                                 {{ __('Load more') }}
                                                             </button>
                                                         </li>
@@ -281,7 +281,7 @@
             && empty(app('request')->x_embed) && empty($__env->yieldContent('no_footer')))
             <div class="footer">
                 @if (!\Eventy::filter('footer.text', ''))
-                    &copy; 2018-{{ date('Y') }} <a href="{{ config('app.freescout_url') }}" target="{{ $target_blank }}">{{ \Config::get('app.name') }}</a> ï¿½ {{ __('Free open source help desk & shared mailbox') }}
+                    &copy; 2018-{{ date('Y') }} <a href="{{ config('app.freescout_url') }}" target="{{ $target_blank }}">{{ \Config::get('app.name') }}</a> — {{ __('Free open source help desk & shared mailbox') }}
                 @else
                     {!! \Eventy::filter('footer.text', '') !!}
                 @endif

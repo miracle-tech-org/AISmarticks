@@ -51,8 +51,12 @@
                     </thead>
                     <tbody>
                     @foreach ($table_agents as $agentId => $agent)
+                        @php
+                            $agentName = data_get($agent, 'name');
+                            $agentName = trim($agentName) !== '' ? $agentName : __("Some user");
+                        @endphp
                         <tr>
-                            <td><a href="{{ route('users.profile', ['id' => $agentId]) }}" target="_blank">{{ $agent['name'] }}</a></td>
+                            <td><a href="{{ route('users.profile', ['id' => $agentId]) }}" target="_blank">{{ $agentName }}</a></td>
                             <td>{{ $agent['countResp'] }}</td>
                             <td>{{ $agent['seconds'] }}</td>
                         </tr>
