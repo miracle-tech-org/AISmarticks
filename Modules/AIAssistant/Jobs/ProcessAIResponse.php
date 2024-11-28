@@ -2,19 +2,19 @@
 
 namespace Modules\AIAssistant\Jobs;
 
+use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\DB;
-use GuzzleHttp\Client;
-
-use Modules\AIAssistant\Services\OpenAIService;
-use Modules\AIAssistant\Models\AIAgentAssignment;
+use Illuminate\Http\Request;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Modules\AIAssistant\Events\APIUsageLimitApproaching;
 use Modules\AIAssistant\Events\APIUsageLimitReached;
+use Modules\AIAssistant\Models\AIAgentAssignment;
+use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
+use Modules\AIAssistant\Services\OpenAIService;
 
 class ProcessAIResponse implements ShouldQueue
 {
@@ -49,10 +49,10 @@ class ProcessAIResponse implements ShouldQueue
                 $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
                 $messages = $this->buildMessages($ticket, $aiAgent->system_prompt);
                 $result = $openAIService->generateResponse($messages);
-    
+
                 $aiResponse = $result['content'];
                 $tokensUsed = $result['tokens_used'];
-    
+
                 if ($aiResponse) {
                     $this->handleAIResponse($aiResponse, $ticket, $assignment, $tokensUsed);
                 }
@@ -68,7 +68,7 @@ class ProcessAIResponse implements ShouldQueue
         }
     }
 
-        /**
+    /**
      * Fallback to alternative AI service
      *
      * @param \Exception $e
@@ -79,11 +79,22 @@ class ProcessAIResponse implements ShouldQueue
     {
         // Implement alternative AI service logic
         // For demonstration purposes, a simple log is written
-        \Log::error('Fallback to alternative AI service due to error: '. $e->getMessage());
+        \Log::error('Fallback to alternative AI service due to error: ' . $e->getMessage());
     }
 
     public function execute()
     {
+        $client = new Client();
+        $response = $client->get(route('aiagents.session'));
+        $userId = json_decode($response->getBody(), true)['userId'];
+        $strCookie = '';
+        foreach ($response->getHeaders()['Set-Cookie'] as $cookie) {
+            if (strpos($cookie, 'laravel_session=') !== false) {
+                $strCookie = $cookie;
+                break;
+            }
+        }
+        
         $assignment = $this->ticket->getAIAgentAssignment();
 
         if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
@@ -103,38 +114,37 @@ class ProcessAIResponse implements ShouldQueue
                 if ($aiResponse) {
                     $this->handleAIResponse($aiResponse, $this->ticket, $assignment, $tokensUsed);
 
-                    $conversation_id = $this->ticket->getConversationID();
-
                     $data = [
-                        'ai_agent_id' => $assignment->id,
-                        'conversation_id' => $conversation_id,
+                        'ai_agent_id' => $aiAgent->id,
+                        'conversation_id' => $this->ticket->conversation_id,
                         'input_text' => $this->ticket->message,
                         'output_text' => $aiResponse,
                         'tokens_used' => $tokensUsed,
-                        'mailbox_id' => 1,
+                        'mailbox_id' => $this->ticket->mailbox_id,
                     ];
-            
-                    DB::table('ai_interaction_logs')->insert($data);
-            
+
+                    AIInteractionLog::create($data);
+
+                    $appUrl = config("app.url");
+                    $folderId = $this->ticket->folder_id;
+
                     $client = new Client();
                     $headers = [
                         'Accept' => 'application/json, text/javascript, */*; q=0.01',
                         'Accept-Language' => 'en-US,en;q=0.9',
                         'Connection' => 'keep-alive',
-                        'Cookie' => 'dm_enabled=1; laravel_session=eyJpdiI6IkJ2UkxGeFZ3aGg0aHZUc0w3Z2lLWVE9PSIsInZhbHVlIjoiUHpEWjlmYkF3Zkw1d0dCZ2hlbUhHUVZPa0h5ZjJTOXA3ZlRGY0grQ1UwdXlHME0rb3k3TVpEckhvMThsSnFOSE52ZVNKVXNYVmNjZW42VDRjcHNmY3FQTFFmWnhEY0dkdlFZa0xjYVlNZ0VlYnd6OVpUV0RUdmlMXC92N3JKcmFKIiwibWFjIjoiNGI4OGI5MzhiOTU0ZjYzNmQ5NjdiNGQwODFlNjhkNzVkNWJiNzJkYzM0MmYwYzJhNzE3ZTQ3NzgxYzlmNGFlMyJ9',
-                        'Origin' => 'https://aitest.smarticks.com',
-                        'Referer' => 'https://aitest.smarticks.com/conversation/1?folder_id=11&chat_mode=1',
+                        'Cookie' => $strCookie,
+                        'Origin' => $appUrl,
                         'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
                         'X-Requested-With' => 'XMLHttpRequest',
                         'sec-ch-ua' => '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
                         'sec-ch-ua-mobile' => '?0',
                         'sec-ch-ua-platform' => '"Windows"',
                     ];
-            
+
                     $body = [
-                        '_token' => 'fmQKjb5xxX4TdX9jp3wOUR8FClO8p1lEzZJaVETI',
-                        'conversation_id' => $conversation_id,
-                        'mailbox_id' => 1,
+                        'conversation_id' => $this->ticket->conversation_id,
+                        'mailbox_id' => $this->ticket->mailbox_id,
                         'saved_reply_id' => '',
                         'thread_id' => '',
                         'is_note' => '',
@@ -142,15 +152,15 @@ class ProcessAIResponse implements ShouldQueue
                         'conv_history' => '',
                         'body' => '<div>' . $aiResponse . '</div>',
                         'status' => '2',
-                        'user_id' => '4',
+                        'user_id' => $userId,
                         'after_send' => '2',
                         'after_send_default' => '2',
                         'action' => 'send_reply',
                     ];
-            
-                    $request = $client->request('POST', 'https://aitest.smarticks.com/conversation/ajax?folder_id=11', [
+
+                    $request = $client->request('POST', "$appUrl/conversation/ajax?folder_id=$folderId", [
                         'headers' => $headers,
-                        'json' => $body
+                        'json' => $body,
                     ]);
                 }
             } catch (Exception $e) {

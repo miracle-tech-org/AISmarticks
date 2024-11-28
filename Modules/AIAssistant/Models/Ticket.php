@@ -8,11 +8,16 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\UserNotifiedOfResponse;
 use Modules\AIAssistant\Models\AIAgent;
+use App\Thread;
+use App\Conversation;
 use Exception;
 
 class Ticket
 {
     public $message;
+    public $conversation_id;
+    public $folder_id;
+    public $mailbox_id;
 
     public function respondToUser($responseContent)
     {
@@ -71,15 +76,16 @@ class Ticket
         return $message;
     }
 
-    public function getConversationID()
-    {
-        $data = DB::table('threads')->latest('id')->first();
-        return $data ? $data->conversation_id : '0';
-    }
-
     public function getAIAgentAssignment()
     {
-        $data = AIAgentAssignment::first();
-        return $data;
+        $thread = Thread::latest('id')->first();
+        $this->conversation_id = $thread ? $thread->conversation_id : '0';
+
+        $conversation = Conversation::find($this->conversation_id);
+        $this->folder_id = $conversation ? $conversation->folder_id : '0';
+        $this->mailbox_id = $conversation ? $conversation->mailbox_id : '0';
+
+        $assignment = AIAgentAssignment::where('mailbox_id', $this->mailbox_id)->first();
+        return $assignment;
     }
 }
