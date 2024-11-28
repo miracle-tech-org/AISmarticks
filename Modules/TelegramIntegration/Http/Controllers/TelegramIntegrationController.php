@@ -46,9 +46,6 @@ class TelegramIntegrationController extends Controller
             $ticket->message = $tgMessage->message->text;
             $job = new ProcessAIResponse($ticket);
             $job->execute();
-
-//            \TelegramIntegration::processSendMessage($bot, $res["content"], $mailbox);
-//            $bot->reply($res["content"]);
         });
 
         $botman->receivesFiles(function ($bot, $files) use ($mailbox) {
