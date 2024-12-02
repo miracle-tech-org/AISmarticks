@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Modules\AIAssistant\Events\OpenAIAuthenticationFailed;
 use Modules\AIAssistant\Events\OpenAIServiceUnavailable;
+use Modules\AIAssistant\Services\KnowledgeBaseService;
 
 /**
  * OpenAI Service Integration
@@ -67,7 +68,7 @@ class OpenAIService
     public function generateResponse(array $messages)
     {
         $validatedInputs = $this->validateInputs(['messages' => $messages]);
-
+        $knowledgeBaseData = (new KnowledgeBaseService())->getKnowledgeBaseData($messages[0]['content']);
         try {
             $response = $this->client->post('chat/completions', [
                 'headers' => [

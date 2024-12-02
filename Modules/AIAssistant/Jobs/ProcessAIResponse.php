@@ -2,6 +2,7 @@
 
 namespace Modules\AIAssistant\Jobs;
 
+use DB;
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -94,7 +95,7 @@ class ProcessAIResponse implements ShouldQueue
                 break;
             }
         }
-        
+
         $assignment = $this->ticket->getAIAgentAssignment();
 
         if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
@@ -103,9 +104,16 @@ class ProcessAIResponse implements ShouldQueue
 
                 $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
 
-                $messages = [
-                    ['role' => 'user', 'content' => $this->ticket->message],
-                ];
+                $threads = DB::select('SELECT * FROM threads WHERE customer_id = ' . $this->ticket->customer_id);
+                $messages = [];
+                $messages = array_map(function ($thread) {
+                    return [
+                        'role' => $thread->type == '1' ? 'user' : 'assistant',
+                        'content' => $thread->body,
+                    ];
+                }, $threads);
+
+                array_unshift($messages, ["role" => "system", "content" => $aiAgent->system_prompt]);
                 $result = $openAIService->generateResponse($messages);
 
                 $aiResponse = $result['content'];
@@ -158,6 +166,27 @@ class ProcessAIResponse implements ShouldQueue
                         'action' => 'send_reply',
                     ];
 
+                    if ($assignment->response_mode == 'suggest') {
+                        $body['action'] = 'save_draft';
+                        // DB::table('threads')->insert([
+                        //     'conversation_id' => $this->ticket->conversation_id,
+                        //     'user_id' => $userId,
+                        //     'type' => '2',
+                        //     'status' => '2',
+                        //     'state' => '2',
+                        //     'body' => '<div>' . $aiResponse . '</div>',
+                        //     'source_via' => '2',
+                        //     'source_type' => '3',
+                        //     'customer_id' => $this->ticket->customer_id,
+                        //     'created_by_user_id' => $userId,
+                        //     'first' => '0',
+                        //     'imported' => '0',
+                        //     // Add all the necessary columns and their values here
+                        //     'created_at' => now(), // Optional: Set the created_at timestamp
+                        //     'updated_at' => now(), // Optional: Set the updated_at timestamp
+                        // ]);
+                    }
+                    
                     $request = $client->request('POST', "$appUrl/conversation/ajax?folder_id=$folderId", [
                         'headers' => $headers,
                         'json' => $body,
