@@ -29,7 +29,7 @@
         </div>
         <div class="form-group">
             <label for="system_prompt">System Prompt</label>
-            <textarea class="form-control" id="system_prompt" name="system_prompt"></textarea>
+            <textarea class="form-control" id="system_prompt" name="system_prompt" rows="10"></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Create AI Agent</button>
     </form>

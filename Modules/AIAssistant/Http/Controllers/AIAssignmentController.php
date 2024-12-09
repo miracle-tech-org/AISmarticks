@@ -45,6 +45,12 @@ class AIAssignmentController extends Controller
         $assignment->ai_agent_id = $request->agent_id;
         $assignment->response_mode = $request->response_mode;
         $assignment->mailbox_id = $mailbox_id;
+
+        $assignment->daily_limit = $request->daily_limit;
+        $assignment->monthly_usage_limit = $request->monthly_usage_limit;
+        $assignment->current_usage = $request->current_usage;
+        $assignment->usage_alert_threshold = $request->usage_alert_threshold;
+        
         $assignment->save();
         $assignment->checkUsageAlert();
 

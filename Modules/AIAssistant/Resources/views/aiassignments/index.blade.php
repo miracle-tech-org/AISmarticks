@@ -53,6 +53,15 @@
             </div>
 
             <div class="form-group">
+                <label for="monthly_usage_limit">Daily Limit</label>
+                @if (count($aiAssignment) > 0)
+                <input type="text" name="daily_limit" id="daily_limit" class="form-control" value="{{$aiAssignment[0]->daily_limit}}">
+                @else
+                <input type="text" name="daily_limit" id="daily_limit" class="form-control" value="300">
+                @endif
+            </div>
+
+            <div class="form-group">
                 <label for="current_usage">Current Usage</label>
                 @if (count($aiAssignment) > 0)
                 <input type="text" name="current_usage" id="current_usage" class="form-control" value="{{$aiAssignment[0]->current_usage}}">

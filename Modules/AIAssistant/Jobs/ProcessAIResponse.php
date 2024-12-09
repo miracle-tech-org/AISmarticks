@@ -2,7 +2,6 @@
 
 namespace Modules\AIAssistant\Jobs;
 
-use DB;
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -104,14 +103,19 @@ class ProcessAIResponse implements ShouldQueue
 
                 $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
 
-                $threads = DB::select('SELECT * FROM threads WHERE customer_id = ' . $this->ticket->customer_id);
-                $messages = [];
-                $messages = array_map(function ($thread) {
-                    return [
-                        'role' => $thread->type == '1' ? 'user' : 'assistant',
-                        'content' => $thread->body,
-                    ];
-                }, $threads);
+                // $threads = DB::select('SELECT * FROM threads WHERE customer_id = ' . $this->ticket->customer_id);
+                $messages = [
+                    [
+                        "role" => "user",
+                        "content" => $this->ticket->message,
+                    ],
+                ];
+                // $messages = array_map(function ($thread) {
+                //     return [
+                //         'role' => $thread->type == '1' ? 'user' : 'assistant',
+                //         'content' => $thread->body,
+                //     ];
+                // }, $threads);
 
                 array_unshift($messages, ["role" => "system", "content" => $aiAgent->system_prompt]);
                 $result = $openAIService->generateResponse($messages);
@@ -142,7 +146,7 @@ class ProcessAIResponse implements ShouldQueue
                         'Accept-Language' => 'en-US,en;q=0.9',
                         'Connection' => 'keep-alive',
                         'Cookie' => $strCookie,
-                        'Origin' => $appUrl,
+                        'Origin' => "$appUrl/conversation/ajax?folder_id=$folderId",
                         'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
                         'X-Requested-With' => 'XMLHttpRequest',
                         'sec-ch-ua' => '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
@@ -168,29 +172,13 @@ class ProcessAIResponse implements ShouldQueue
 
                     if ($assignment->response_mode == 'suggest') {
                         $body['action'] = 'save_draft';
-                        // DB::table('threads')->insert([
-                        //     'conversation_id' => $this->ticket->conversation_id,
-                        //     'user_id' => $userId,
-                        //     'type' => '2',
-                        //     'status' => '2',
-                        //     'state' => '2',
-                        //     'body' => '<div>' . $aiResponse . '</div>',
-                        //     'source_via' => '2',
-                        //     'source_type' => '3',
-                        //     'customer_id' => $this->ticket->customer_id,
-                        //     'created_by_user_id' => $userId,
-                        //     'first' => '0',
-                        //     'imported' => '0',
-                        //     // Add all the necessary columns and their values here
-                        //     'created_at' => now(), // Optional: Set the created_at timestamp
-                        //     'updated_at' => now(), // Optional: Set the updated_at timestamp
-                        // ]);
                     }
-                    
+
                     $request = $client->request('POST', "$appUrl/conversation/ajax?folder_id=$folderId", [
                         'headers' => $headers,
                         'json' => $body,
                     ]);
+
                 }
             } catch (Exception $e) {
                 // Retry logic with exponential backoff
