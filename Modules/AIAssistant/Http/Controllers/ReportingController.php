@@ -2,13 +2,12 @@
 
 namespace Modules\AIAssistant\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Mailbox;
+use DB;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-
 use Modules\AIAssistant\Models\AIAgent;
 use Modules\AIAssistant\Models\AIInteractionLog;
-use DB;
 
 class ReportingController extends Controller
 {
@@ -26,11 +25,13 @@ class ReportingController extends Controller
 
         $monthlyTokens = array_fill(0, 12, 0);
         foreach ($tokens as $item) {
-            $monthIndex = (int)substr($item['month'], 5) - 1;
-            $monthlyTokens[$monthIndex] = (int)$item['total_tokens'];
+            $monthIndex = (int) substr($item['month'], 5) - 1;
+            $monthlyTokens[$monthIndex] = (int) $item['total_tokens'];
         }
 
-        return view('aiassistant::reporting', compact('aiAgents', 'monthlyTokens'));
+        $mailboxes = Mailbox::get();
+
+        return view('aiassistant::reporting', compact('aiAgents', 'monthlyTokens', 'mailboxes'));
     }
 
     /**
@@ -49,10 +50,29 @@ class ReportingController extends Controller
 
         $monthlyTokens = array_fill(0, 12, 0);
         foreach ($tokens as $item) {
-            $monthIndex = (int)substr($item['month'], 5) - 1;
-            $monthlyTokens[$monthIndex] = (int)$item['total_tokens'];
+            $monthIndex = (int) substr($item['month'], 5) - 1;
+            $monthlyTokens[$monthIndex] = (int) $item['total_tokens'];
         }
 
         return view('aiassistant::agent-report', compact('aiAgent', 'interactionLogs', 'monthlyTokens'));
+    }
+
+    public function showMailbox($mailbox_id)
+    {
+        $aiAgents = AIAgent::where('mailbox_id', $mailbox_id)->get();
+        $interactionLogs = AIInteractionLog::all();
+        $tokens = AIInteractionLog::select(DB::raw("SUM(tokens_used) as total_tokens"), DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"))
+            ->groupBy('month')
+            ->get();
+
+        $monthlyTokens = array_fill(0, 12, 0);
+        foreach ($tokens as $item) {
+            $monthIndex = (int) substr($item['month'], 5) - 1;
+            $monthlyTokens[$monthIndex] = (int) $item['total_tokens'];
+        }
+
+        $mailboxes = Mailbox::get();
+
+        return view('aiassistant::reportmailbox', compact('aiAgents', 'monthlyTokens', 'mailboxes')); 
     }
 }

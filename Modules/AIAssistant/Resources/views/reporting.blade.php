@@ -32,6 +32,16 @@
                         @endforeach
                     </ul>
                 </div>
+                <div class="col-md-6">
+                    <h3>Mailboxes</h3>
+                    <ul>
+                        @foreach ($mailboxes as $item)
+                        <li>
+                            <a href="{{ route('reports.mailbox.show', ['id' => $item->id]) }}">{{ $item->name }}</a>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

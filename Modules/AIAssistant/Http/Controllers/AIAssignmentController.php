@@ -22,7 +22,7 @@ class AIAssignmentController extends Controller
      */
     public function index($mailbox_id)
     {
-        $aiAgents = AIAgent::all();
+        $aiAgents = AIAgent::where('mailbox_id', $mailbox_id)->get();
         $aiAssignment = AIAgentAssignment::where('mailbox_id', $mailbox_id)->get();
 
         $mailbox = Mailbox::findOrFail($mailbox_id);

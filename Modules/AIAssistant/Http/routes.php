@@ -16,6 +16,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
 
     Route::get('/ai-reports',                               "ReportingController@index")->name("reports.agent");
     Route::get('/ai-reports/{id}',                          "ReportingController@show")->name("reports.show");
+    Route::get('/ai-reports/mailbox/{id}',                  "ReportingController@showMailbox")->name("reports.mailbox.show");
 
     Route::get('/ai-assignments/{id}',                      "AIAssignmentController@index")->name("assignments.index");
     Route::post('/ai-assignments/{id}/store',               "AIAssignmentController@store")->name("assignments.store");

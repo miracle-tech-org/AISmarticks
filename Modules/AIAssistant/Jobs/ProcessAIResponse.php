@@ -162,7 +162,7 @@ class ProcessAIResponse implements ShouldQueue
                         'is_note' => '',
                         'subtype' => '',
                         'conv_history' => '',
-                        'body' => '<div>' . $aiResponse . '</div>',
+                        'body' => $aiResponse,
                         'status' => '2',
                         'user_id' => $userId,
                         'after_send' => '2',

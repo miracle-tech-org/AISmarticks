@@ -24,7 +24,7 @@ class AIAgentController extends Controller
      */
     public function index($mailbox_id)
     {
-        $aiAgents = AIAgent::all();
+        $aiAgents = AIAgent::where('mailbox_id', $mailbox_id)->get();
         $mailbox = Mailbox::findOrFail($mailbox_id);
         return view('aiassistant::aiagents.index', [
             'mailbox' => $mailbox,

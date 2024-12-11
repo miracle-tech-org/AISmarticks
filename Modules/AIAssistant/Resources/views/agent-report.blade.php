@@ -21,29 +21,47 @@
                     </div>
                 </div>
             </div>
+            <style>
+                table {
+                    table-layout: fixed; /* Fix table layout */
+                    width: 100%; /* Ensure the table takes up the full width */
+                }
+                td, th {
+                    word-wrap: break-word; /* Allow wrapping of long strings */
+                    white-space: normal; /* Override nowrap to allow text wrapping */
+                }
+                .fixed-width {
+                    width: 200px; /* Set a specific width for the fixed column */
+                }
+            </style>
             <div class="row">
                 <div class="col-md-12">
                     <h3>Interaction Logs</h3>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Input Text</th>
-                                <th>Output Text</th>
-                                <th>Tokens Used</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($interactionLogs as $log)
-                            <tr>
-                                <td>{{ $log->id }}</td>
-                                <td>{{ $log->input_text }}</td>
-                                <td>{{ $log->output_text }}</td>
-                                <td>{{ $log->tokens_used }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-responsive" style="padding: 1%">
+                        <table class="table table-striped" id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th width="5">ID</th>
+                                    <th width="40">Input Text</th>
+                                    <th width="40">Output Text</th>
+                                    <th width="5">Tokens Used</th>
+                                    <th width="10">DateTime</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $i = 1; @endphp
+                                @foreach ($interactionLogs as $log)
+                                <tr>
+                                    <td>{{ $i++ }}</td>
+                                    <td class="fixed-width">{{ $log->input_text }}</td>
+                                    <td class="fixed-width">{{ $log->output_text }}</td>
+                                    <td>{{ $log->tokens_used }}</td>
+                                    <td>{{ $log->created_at }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -51,10 +69,16 @@
 </div>
 @endsection
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+
 <script>
     window.onload = function() {
-
         const ctx = document.getElementById('defaultBarChart').getContext('2d');
+        new DataTable(document.getElementById("reportTable"));
 
         const myChart = new Chart(ctx, {
             type: 'bar',

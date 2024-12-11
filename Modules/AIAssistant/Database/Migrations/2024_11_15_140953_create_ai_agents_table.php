@@ -18,6 +18,7 @@ class CreateAiAgentsTable extends Migration
             $table->string('name');
             $table->string('openai_api_key'); // Encrypted
             $table->string('model'); // e.g., 'gpt-3.5-turbo', 'gpt-4'
+            $table->integer('mailbox_id');
             $table->text('system_prompt')->nullable();
             $table->timestamps();
         });
