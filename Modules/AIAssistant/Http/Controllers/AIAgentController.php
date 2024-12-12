@@ -52,7 +52,11 @@ class AIAgentController extends Controller
     public function store(AIAgentRequest $request, $mailbox_id)
     {
         $validatedInputs = $request->validated();
-        $aiAgent = AIAgent::create($request->all());
+        
+        $data = $request->all();
+        $data['mailbox_id'] = $mailbox_id;
+
+        $aiAgent = AIAgent::create($data);
 
         // Create default assignment with rate limiting
         AIAgentAssignment::create([
@@ -92,7 +96,12 @@ class AIAgentController extends Controller
         $validatedInputs = $request->validated();
 
         $aiAgent = AIAgent::find($id);
-        $aiAgent->update($request->all());
+        $data = $request->all();
+        if (!str_starts_with($data['openai_api_key'], 'sk-')) {
+            unset($data['openai_api_key']);
+        }
+    
+        $aiAgent->update($data);
 
         return redirect()->route('aiagents.index', ['mailbox_id' => $mailbox_id])->with('success', 'AI Agent updated successfully!');
     }

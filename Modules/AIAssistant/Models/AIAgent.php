@@ -15,6 +15,7 @@ class AIAgent extends Model
         'openai_api_key',
         'model',
         'system_prompt',
+        'mailbox_id',
         'domain_specific_responses', // New field for domain-specific responses
     ];
 
