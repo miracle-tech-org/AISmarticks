@@ -117,7 +117,12 @@ class ProcessAIResponse implements ShouldQueue
                 //     ];
                 // }, $threads);
 
-                array_unshift($messages, ["role" => "system", "content" => $aiAgent->system_prompt]);
+                $system = $aiAgent->system_prompt;
+                if ($aiAgent->faqs != "") {
+                    $system .= "\nHere are faqs:\n" . $aiAgent->faqs;
+                }
+
+                array_unshift($messages, ["role" => "system", "content" => $system]);
                 $result = $openAIService->generateResponse($messages);
 
                 $aiResponse = $result['content'];

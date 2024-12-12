@@ -32,7 +32,32 @@
             <label for="system_prompt">System Prompt</label>
             <textarea class="form-control" id="system_prompt" name="system_prompt" rows="10">{{ $aiAgent->system_prompt }}</textarea>
         </div>
+        <div class="form-group">
+            <label for="faqsFile">FAQ</label>
+            <input id="faqsFile" type="file"/>
+            <br>
+            <textarea class="form-control" id="faqs" name="faqs" rows="10">{{ $aiAgent->faqs }}</textarea>
+        </div>
         <button type="submit" class="btn btn-primary">Update AI Agent</button>
     </form>
 </div>
 @endsection
+
+<script>
+    window.onload = function() {
+        document.getElementById('faqsFile').addEventListener('change', function() {
+            var files = document.getElementById("faqsFile").files; // Access the files property
+            if (files.length === 0) {
+                return; // Exit if no file is selected
+            }
+            
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                document.getElementById('faqs').value = e.target.result; // Set file content to textarea
+            };
+
+            reader.readAsText(files[0]); // Read the first selected file as text
+        });
+    };
+</script>

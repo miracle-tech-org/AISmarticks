@@ -15,6 +15,7 @@ class AIAgent extends Model
         'openai_api_key',
         'model',
         'system_prompt',
+        'faqs',
         'mailbox_id',
         'domain_specific_responses', // New field for domain-specific responses
     ];
@@ -33,6 +34,7 @@ class AIAgent extends Model
             'openai_api_key' => 'required|string',
             'model' => 'required|string',
             'system_prompt' => 'nullable|string',
+            'faqs' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
