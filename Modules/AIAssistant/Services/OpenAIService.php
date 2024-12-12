@@ -82,9 +82,6 @@ class OpenAIService
                 'timeout' => 15,
             ]);
 
-            $logPath = storage_path('logs/1.json');
-            file_put_contents($logPath, json_encode($messages));
-
             $body = json_decode($response->getBody(), true);
 
             $aiResponse = $body['choices'][0]['message']['content'] ?? '';
@@ -98,9 +95,6 @@ class OpenAIService
             $categorizedResponse = $this->categorizeAndAnalyzeSentiment($aiResponse, $messages);
             return ['content' => $categorizedResponse['response'], 'tokens_used' => $body['usage']['total_tokens'] ?? 0];
         } catch (RequestException $e) {
-            $logPath = storage_path('logs/error.json');
-            file_put_contents($logPath, json_encode($e->getResponse()));
-
             $statusCode = $e->getResponse() ? $e->getResponse()->getStatusCode() : null;
 
             if ($statusCode == 401) {
