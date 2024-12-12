@@ -55,6 +55,14 @@
         <td class="subs-cb subscriptions-mobile"><input type="checkbox" @include('users/is_subscribed', ['medium' => App\Subscription::MEDIUM_MOBILE, 'event' => App\Subscription::EVENT_FOLLOWED_CONVERSATION_UPDATED]) name="{{ $subscriptions_formname }}[{{ App\Subscription::MEDIUM_MOBILE }}][]" @if (!$mobile_available) disabled="disabled" @endif value="{{ App\Subscription::EVENT_FOLLOWED_CONVERSATION_UPDATED }}"></td>
         @action('notifications_table.td', App\Subscription::EVENT_FOLLOWED_CONVERSATION_UPDATED, $subscriptions_formname, $subscriptions)
     </tr>
+    <tr>
+        <td>AI agent daily or monthly usage alert</td>
+        <td class="subs-cb subscriptions-email"><input type="checkbox" checked/></td>
+        <td class="subs-cb subscriptions-browser"><input type="checkbox" checked/></td>
+        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
+        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
+    </tr>
+
     @action('notifications_table.general.append', ['person' => $person, 'subscriptions' => $subscriptions, 'mobile_available' => $mobile_available, 'subscriptions_formname' => $subscriptions_formname])
     <tr class="table-header">
         <th>
