@@ -256,6 +256,7 @@ class ProcessAIResponse implements ShouldQueue
         // Update assignment usage
         $assignment->update([
             'current_usage' => $assignment->current_usage + $tokensUsed,
+            'daily_usage' => $assignment->daily_usage + $tokensUsed,
         ]);
 
         // Trigger usage alerts if necessary
