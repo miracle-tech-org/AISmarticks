@@ -16,8 +16,11 @@ class AIAgentAssignment extends Model
         'conversation_id',
         'response_mode',
         'monthly_usage_limit',
+        'daily_limit',
         'current_usage',
+        'daily_usage',
         'usage_alert_threshold',
+        'daily_usage_alert',
         'alert_triggered',
     ];
 

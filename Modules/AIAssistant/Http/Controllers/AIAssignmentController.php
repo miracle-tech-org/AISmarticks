@@ -50,6 +50,8 @@ class AIAssignmentController extends Controller
         $assignment->monthly_usage_limit = $request->monthly_usage_limit;
         $assignment->current_usage = $request->current_usage;
         $assignment->usage_alert_threshold = $request->usage_alert_threshold;
+        $assignment->daily_usage = $request->daily_usage;
+        $assignment->daily_usage_alert = $request->daily_usage_alert;
         
         $assignment->save();
         $assignment->checkUsageAlert();

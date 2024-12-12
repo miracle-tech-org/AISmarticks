@@ -48,7 +48,7 @@
                 @if (count($aiAssignment) > 0)
                 <input type="text" name="monthly_usage_limit" id="monthly_usage_limit" class="form-control" value="{{$aiAssignment[0]->monthly_usage_limit}}">
                 @else
-                <input type="text" name="monthly_usage_limit" id="monthly_usage_limit" class="form-control" value="3000">
+                <input type="text" name="monthly_usage_limit" id="monthly_usage_limit" class="form-control" value="10000">
                 @endif
             </div>
 
@@ -57,25 +57,43 @@
                 @if (count($aiAssignment) > 0)
                 <input type="text" name="daily_limit" id="daily_limit" class="form-control" value="{{$aiAssignment[0]->daily_limit}}">
                 @else
-                <input type="text" name="daily_limit" id="daily_limit" class="form-control" value="300">
+                <input type="text" name="daily_limit" id="daily_limit" class="form-control" value="350">
                 @endif
             </div>
 
             <div class="form-group">
-                <label for="current_usage">Current Usage</label>
+                <label for="current_usage">Current Usage of Month</label>
                 @if (count($aiAssignment) > 0)
                 <input type="text" name="current_usage" id="current_usage" class="form-control" value="{{$aiAssignment[0]->current_usage}}">
                 @else
-                <input type="text" name="current_usage" id="current_usage" class="form-control" value="3000">
+                <input type="text" name="current_usage" id="current_usage" class="form-control" value="0">
                 @endif
             </div>
 
             <div class="form-group">
-                <label for="usage_alert_threshold">Usage Alert Threshold (%)</label>
+                <label for="daily_usage">Current Usage of Day</label>
+                @if (count($aiAssignment) > 0)
+                <input type="text" name="daily_usage" id="daily_usage" class="form-control" value="{{$aiAssignment[0]->daily_usage}}">
+                @else
+                <input type="text" name="daily_usage" id="daily_usage" class="form-control" value="0">
+                @endif
+            </div>
+
+            <div class="form-group">
+                <label for="usage_alert_threshold">Usage Alert Threshold of Month (%)</label>
                 @if (count($aiAssignment) > 0)
                 <input type="text" id="usage_alert_threshold" name="usage_alert_threshold" value="{{ $aiAssignment[0]->usage_alert_threshold }}" class="form-control">
                 @else
                 <input type="text" id="usage_alert_threshold" name="usage_alert_threshold" value="80" class="form-control">
+                @endif
+            </div>
+
+            <div class="form-group">
+                <label for="daily_usage_alert">Usage Alert Threshold of Day (%)</label>
+                @if (count($aiAssignment) > 0)
+                <input type="text" id="daily_usage_alert" name="daily_usage_alert" value="{{ $aiAssignment[0]->daily_usage_alert }}" class="form-control">
+                @else
+                <input type="text" id="daily_usage_alert" name="daily_usage_alert" value="80" class="form-control">
                 @endif
             </div>
 

@@ -61,8 +61,13 @@ class AIAgentController extends Controller
         // Create default assignment with rate limiting
         AIAgentAssignment::create([
             'ai_agent_id' => $aiAgent->id,
+            'mailbox_id' => $mailbox_id,
             'monthly_usage_limit' => 10000, // Default monthly usage limit
+            'daily_limit' => 350, // Default daily usage limit
+            'current_usage' => 0, // Default usage alert threshold
+            'daily_usage' => 0, // Default usage alert threshold
             'usage_alert_threshold' => 80, // Default usage alert threshold
+            'daily_usage_alert' => 80, // Default usage alert threshold
         ]);
 
         return redirect()->route('aiagents.index', ['mailbox_id' => $mailbox_id])->with('success', 'AI Agent created successfully!');

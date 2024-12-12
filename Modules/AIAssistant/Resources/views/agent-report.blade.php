@@ -45,7 +45,9 @@
                                     <th width="40">Input Text</th>
                                     <th width="40">Output Text</th>
                                     <th width="5">Tokens Used</th>
-                                    <th width="10">DateTime</th>
+                                    <th width="5">DateTime</th>
+                                    <th width="5">Interactions</th>
+                                    <th width="5">Messages</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -57,6 +59,8 @@
                                     <td class="fixed-width">{{ $log->output_text }}</td>
                                     <td>{{ $log->tokens_used }}</td>
                                     <td>{{ $log->created_at }}</td>
+                                    <td>1</td>
+                                    <td>1</td>
                                 </tr>
                                 @endforeach
                             </tbody>
