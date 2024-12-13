@@ -15,6 +15,7 @@ use Modules\AIAssistant\Models\AIAgentAssignment;
 use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
 use Modules\AIAssistant\Services\OpenAIService;
+use App\ActivityLog;
 
 class ProcessAIResponse implements ShouldQueue
 {
@@ -80,6 +81,11 @@ class ProcessAIResponse implements ShouldQueue
         // Implement alternative AI service logic
         // For demonstration purposes, a simple log is written
         \Log::error('Fallback to alternative AI service due to error: ' . $e->getMessage());
+        ActivityLog::create([
+            'properties' => '[]',
+            'log_name' => 'aiassistant_errors',
+            'description' => 'Fallback to alternative AI service due to error: ' . $e->getMessage(),
+        ]);
     }
 
     public function execute()
@@ -186,6 +192,12 @@ class ProcessAIResponse implements ShouldQueue
 
                 }
             } catch (Exception $e) {
+                ActivityLog::create([
+                    'properties' => '[]',
+                    'log_name' => 'aiassistant_errors',
+                    'description' => 'ProcessAIResponse Error: ' . $e->getMessage(),
+                ]);
+        
                 // Retry logic with exponential backoff
                 if ($this->attempt() < $this->maxRetryAttempts) {
                     $this->release($this->retryDelay * (2 ** $this->attempt()));

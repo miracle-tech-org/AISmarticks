@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Modules\AIAssistant\Events\OpenAIAuthenticationFailed;
 use Modules\AIAssistant\Events\OpenAIServiceUnavailable;
 use Modules\AIAssistant\Services\KnowledgeBaseService;
+use App\ActivityLog;
 
 /**
  * OpenAI Service Integration
@@ -99,6 +100,12 @@ class OpenAIService
 
             if ($statusCode == 401) {
                 // Authentication failure
+                ActivityLog::create([
+                    'properties' => '[]',
+                    'log_name' => 'aiassistant_errors',
+                    'description' => 'OpenAI API Authentication Failed: ' . $e->getMessage(),
+                ]);
+    
                 Log::error('OpenAI API Authentication Failed', [
                     'message' => $e->getMessage(),
                     'code' => $statusCode,
@@ -106,6 +113,12 @@ class OpenAIService
                 event(new OpenAIAuthenticationFailed($this->apiKey));
             } elseif ($statusCode == 429) {
                 // Rate limit exceeded
+                ActivityLog::create([
+                    'properties' => '[]',
+                    'log_name' => 'aiassistant_errors',
+                    'description' => 'OpenAI API Rate Limit Exceeded: ' . $e->getMessage(),
+                ]);
+
                 Log::warning('OpenAI API Rate Limit Exceeded', [
                     'message' => $e->getMessage(),
                     'code' => $statusCode,
@@ -113,6 +126,12 @@ class OpenAIService
                 // Implement backoff strategy or notify administrators
             } elseif ($statusCode >= 500 || $e instanceof ConnectException) {
                 // Server error or connection issue
+                ActivityLog::create([
+                    'properties' => '[]',
+                    'log_name' => 'aiassistant_errors',
+                    'description' => 'OpenAI Service Unavailable: ' . $e->getMessage(),
+                ]);
+
                 Log::error('OpenAI Service Unavailable', [
                     'message' => $e->getMessage(),
                     'code' => $statusCode,
@@ -120,6 +139,11 @@ class OpenAIService
                 event(new OpenAIServiceUnavailable($e->getMessage()));
             } else {
                 // Other client errors
+                ActivityLog::create([
+                    'properties' => '[]',
+                    'log_name' => 'aiassistant_errors',
+                    'description' => 'OpenAI API RequestException: ' . $e->getMessage(),
+                ]);
                 Log::error('OpenAI API RequestException', [
                     'message' => $e->getMessage(),
                     'code' => $statusCode,
@@ -129,6 +153,12 @@ class OpenAIService
 
             return ['content' => '', 'tokens_used' => 0];
         } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'aiassistant_errors',
+                'description' => 'Unexpected Error in OpenAIService: ' . $e->getMessage(),
+            ]);
+
             Log::critical('Unexpected Error in OpenAIService', [
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -143,6 +173,11 @@ class OpenAIService
         // Implement rate limiting logic
         // For demonstration purposes, a simple log is written
         \Log::info('Rate limit check: Tokens used - ' . $tokensUsed);
+        ActivityLog::create([
+            'properties' => '[]',
+            'log_name' => 'aiassistant_errors',
+            'description' => 'Rate limit check: Tokens used - ' . $tokensUsed,
+        ]);
     }
 
     /**
