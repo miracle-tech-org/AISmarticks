@@ -34,7 +34,7 @@
         </div>
         <div class="form-group">
             <label for="faqsFile">FAQ</label>
-            <input id="faqsFile" type="file"/>
+            <input id="faqsFile" type="file" accept=".txt"/>
             <br>
             <textarea class="form-control" id="faqs" name="faqs" rows="10">{{ $aiAgent->faqs }}</textarea>
         </div>
@@ -49,6 +49,11 @@
             var files = document.getElementById("faqsFile").files; // Access the files property
             if (files.length === 0) {
                 return; // Exit if no file is selected
+            }
+            
+            if (files[0] && files[0].type !== "text/plain") {
+                alert("Please select only txt file.");
+                return;
             }
             
             const reader = new FileReader();
