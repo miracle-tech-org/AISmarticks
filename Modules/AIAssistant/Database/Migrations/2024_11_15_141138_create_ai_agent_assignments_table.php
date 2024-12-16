@@ -24,6 +24,7 @@ class CreateAiAgentAssignmentsTable extends Migration
             $table->integer('current_usage')->default(0);
             $table->integer('usage_alert_threshold')->default(80); // Percentage
             $table->boolean('alert_triggered')->default(false);
+            $table->integer('status')->default(0);
             $table->timestamps();
 
             // $table->foreign('ai_agent_id')->references('id')->on('ai_agents')->onDelete('cascade');

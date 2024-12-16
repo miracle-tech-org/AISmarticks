@@ -23,7 +23,10 @@ class AIAssignmentController extends Controller
     public function index($mailbox_id)
     {
         $aiAgents = AIAgent::where('mailbox_id', $mailbox_id)->get();
-        $aiAssignment = AIAgentAssignment::where('mailbox_id', $mailbox_id)->get();
+        $aiAssignment = AIAgentAssignment::where([
+            ['mailbox_id', '=', $mailbox_id],
+            ['status', '=', 1],
+        ])->get();
 
         $mailbox = Mailbox::findOrFail($mailbox_id);
         return view('aiassistant::aiassignments.index', [
@@ -40,8 +43,16 @@ class AIAssignmentController extends Controller
      */
     public function store(Request $request, $mailbox_id)
     {
-        AIAgentAssignment::where('mailbox_id', $mailbox_id)->delete();
-        $assignment = new AIAgentAssignment;
+
+        AIAgentAssignment::where("mailbox_id", $mailbox_id)->update([
+            "status" => 0
+        ]);
+
+        $assignment = AIAgentAssignment::where([
+            ['mailbox_id', '=', $mailbox_id],
+            ['ai_agent_id', '=', $request->agent_id],
+        ])->first();
+
         $assignment->ai_agent_id = $request->agent_id;
         $assignment->response_mode = $request->response_mode;
         $assignment->mailbox_id = $mailbox_id;
@@ -52,6 +63,7 @@ class AIAssignmentController extends Controller
         $assignment->usage_alert_threshold = $request->usage_alert_threshold;
         $assignment->daily_usage = $request->daily_usage;
         $assignment->daily_usage_alert = $request->daily_usage_alert;
+        $assignment->status = 1;
         
         $assignment->save();
         $assignment->checkUsageAlert();

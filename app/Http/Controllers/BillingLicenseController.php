@@ -37,7 +37,13 @@ class BillingLicenseController extends Controller
 
         $section_name = 'License and subscription';
         if ($section == 'license')
+		{
             $section_name = 'License';
+		}
+		else
+		{
+			
+		}
 
         switch ($section) {
             case 'license':

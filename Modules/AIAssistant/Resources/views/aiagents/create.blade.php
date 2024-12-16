@@ -36,6 +36,9 @@
             <input id="faqsFile" type="file" accept=".txt"/>
             <br>
             <textarea class="form-control" id="faqs" name="faqs" rows="10"></textarea>
+            <p class="text-muted mt-2 small">
+                Supported file types: .jpg, .png, .pdf. Maximum size: 2MB.
+            </p>
         </div>
         <button type="submit" class="btn btn-primary">Create AI Agent</button>
     </form>

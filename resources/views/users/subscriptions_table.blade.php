@@ -56,7 +56,14 @@
         @action('notifications_table.td', App\Subscription::EVENT_FOLLOWED_CONVERSATION_UPDATED, $subscriptions_formname, $subscriptions)
     </tr>
     <tr>
-        <td>AI agent daily or monthly usage alert</td>
+        <td>AI agent daily usage alert</td>
+        <td class="subs-cb subscriptions-email"><input type="checkbox" checked/></td>
+        <td class="subs-cb subscriptions-browser"><input type="checkbox" checked/></td>
+        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
+        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
+    </tr>
+    <tr>
+        <td>AI agent monthly usage alert</td>
         <td class="subs-cb subscriptions-email"><input type="checkbox" checked/></td>
         <td class="subs-cb subscriptions-browser"><input type="checkbox" checked/></td>
         <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>

@@ -87,7 +87,10 @@ class Ticket
         $this->folder_id = $conversation ? $conversation->folder_id : '0';
         $this->mailbox_id = $conversation ? $conversation->mailbox_id : '0';
 
-        $assignment = AIAgentAssignment::where('mailbox_id', $this->mailbox_id)->first();
+        $assignment = AIAgentAssignment::where([
+            ['mailbox_id', '=', $this->mailbox_id],
+            ['status', '=', $this->mailbox_id],
+        ])->first();
         return $assignment;
     }
 }

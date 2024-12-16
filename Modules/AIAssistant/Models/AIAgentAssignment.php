@@ -22,6 +22,7 @@ class AIAgentAssignment extends Model
         'usage_alert_threshold',
         'daily_usage_alert',
         'alert_triggered',
+        'status',
     ];
 
     protected $table = "ai_agent_assignments";
