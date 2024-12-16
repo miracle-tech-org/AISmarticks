@@ -25,7 +25,6 @@
 </form>
 
 <div class="container">
-
     @if (count($logs))
         <table id="table-logs" class="stripe hover order-column row-border" style="width:100%">
             <thead>
@@ -68,15 +67,28 @@
 </div>
 @endsection
 
-@section('stylesheets')
-    <link href="{{ asset('js/datatables/datatables.min.css') }}" rel="stylesheet">
-@endsection
+@if($current_name != "aiassistant_errors")
+    @section('stylesheets')
+        <link href="{{ asset('js/datatables/datatables.min.css') }}" rel="stylesheet">
+    @endsection
 
-@section('javascripts')
-    <script src="{{ asset('js/datatables/datatables.min.js') }}" {!! \Helper::cspNonceAttr() !!}></script>
-@endsection
+    @section('javascripts')
+        <script src="{{ asset('js/datatables/datatables.min.js') }}" {!! \Helper::cspNonceAttr() !!}></script>
+    @endsection
+@endif
 
 @section('javascript')
     @parent
     logsInit();
 @endsection
+
+@if($current_name == "aiassistant_errors")
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    window.onload = function() {
+        new DataTable(document.getElementById("table-logs"));
+    }
+</script>
+@endif
