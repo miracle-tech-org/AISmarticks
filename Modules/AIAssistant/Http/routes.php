@@ -20,4 +20,5 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
 
     Route::get('/ai-assignments/{id}',                      "AIAssignmentController@index")->name("assignments.index");
     Route::post('/ai-assignments/{id}/store',               "AIAssignmentController@store")->name("assignments.store");
+    Route::post('/ai-assignments/{id}/get',                 "AIAssignmentController@get")->name("assignments.get");
 });

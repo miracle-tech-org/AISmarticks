@@ -53,7 +53,7 @@
             </div>
 
             <div class="form-group">
-                <label for="monthly_usage_limit">Daily Limit</label>
+                <label for="daily_limit">Daily Limit</label>
                 @if (count($aiAssignment) > 0)
                 <input type="text" name="daily_limit" id="daily_limit" class="form-control" value="{{$aiAssignment[0]->daily_limit}}">
                 @else
@@ -111,6 +111,20 @@
     document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("response_mode").value = @json($aiAssignment[0]->response_mode);
         document.getElementById("agent_id").value = @json($aiAssignment[0]->ai_agent_id);
+
+        document.getElementById("agent_id").addEventListener("change", () => {
+            const url = "{{route('assignments.get', $mailbox->id)}}";
+            const agent_id = document.getElementById("agent_id").value;
+            $.post(url, {agent_id}, (res) => {
+                document.getElementById("monthly_usage_limit").value = res.monthly_usage_limit
+                document.getElementById("daily_limit").value = res.daily_limit;
+                document.getElementById("current_usage").value = res.current_usage;
+                document.getElementById("daily_usage").value = res.daily_usage;
+                document.getElementById("usage_alert_threshold").value = res.usage_alert_threshold;
+                document.getElementById("daily_usage_alert").value = res.daily_usage_alert;
+                document.getElementById("response_mode").value = res.response_mode
+            })
+        })
     });
 </script>
 @endif

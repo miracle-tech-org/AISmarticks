@@ -59,9 +59,9 @@ class AIAssignmentController extends Controller
 
         $assignment->daily_limit = $request->daily_limit;
         $assignment->monthly_usage_limit = $request->monthly_usage_limit;
-        $assignment->current_usage = $request->current_usage;
+        // $assignment->current_usage = $request->current_usage;
         $assignment->usage_alert_threshold = $request->usage_alert_threshold;
-        $assignment->daily_usage = $request->daily_usage;
+        // $assignment->daily_usage = $request->daily_usage;
         $assignment->daily_usage_alert = $request->daily_usage_alert;
         $assignment->status = 1;
         
@@ -69,5 +69,14 @@ class AIAssignmentController extends Controller
         $assignment->checkUsageAlert();
 
        return redirect()->back()->with('success', 'Agent assigned successfully.')->with('success', 'AI Agent Assignment updated successfully!');
+    }
+
+    public function get(Request $request, $mailbox_id) {
+        $assignment = AIAgentAssignment::where([
+            ['mailbox_id', '=', $mailbox_id],
+            ['ai_agent_id', '=', $request->agent_id],
+        ])->first();
+
+        return $assignment;
     }
 }
