@@ -53,8 +53,14 @@
                 return; // Exit if no file is selected
             }
             
-            if (files[0] && files[0].type !== "text/plain") {
+            if (files[0].type !== "text/plain") {
                 alert("Please select only txt file.");
+                return;
+            }
+
+            const maxSize = 2 * 1024 * 1024; 
+            if (files[0].size > maxSize) {
+                alert("The selected file is too large. Please select a file smaller than 2MB.");
                 return;
             }
 
