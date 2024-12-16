@@ -54,7 +54,10 @@ class ReportingController extends Controller
             $monthlyTokens[$monthIndex] = (int) $item['total_tokens'];
         }
 
-        return view('aiassistant::agent-report', compact('aiAgent', 'interactionLogs', 'monthlyTokens'));
+        $result = DB::select("SELECT *FROM ai_interaction_logs WHERE ai_agent_id = $id GROUP BY conversation_id;");
+        $conversationCount = count($result);
+
+        return view('aiassistant::agent-report', compact('aiAgent', 'interactionLogs', 'monthlyTokens', 'conversationCount'));
     }
 
     public function showMailbox($mailbox_id)

@@ -37,6 +37,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <h3>Interaction Logs</h3>
+                    <h3 style="text-align: center">Conversations: {{$conversationCount}} &nbsp;&nbsp;&nbsp;Interactions: {{count($interactionLogs)}} &nbsp;&nbsp;&nbsp;Replies: {{count($interactionLogs)}}</h3>
                     <div class="table-responsive" style="padding: 1%">
                         <table class="table table-striped" id="reportTable">
                             <thead>
@@ -60,7 +61,7 @@
                                     <td>{{ $log->tokens_used }}</td>
                                     <td>{{ $log->created_at }}</td>
                                     <td>1</td>
-                                    <td>1</td>
+                                    <td>{{ substr_count($log->output_text, '.') }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

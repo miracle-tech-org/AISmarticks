@@ -64,18 +64,18 @@
             <div class="form-group">
                 <label for="current_usage">Current Usage of Month</label>
                 @if (count($aiAssignment) > 0)
-                <input type="text" name="current_usage" id="current_usage" style="font-style: italic;" class="form-control" value="{{$aiAssignment[0]->current_usage}}">
+                <input type="text" name="current_usage" readonly id="current_usage" style="font-style: italic;" class="form-control" value="{{$aiAssignment[0]->current_usage}}">
                 @else
-                <input type="text" name="current_usage" id="current_usage" style="font-style: italic;" class="form-control" value="0">
+                <input type="text" name="current_usage" readonly id="current_usage" style="font-style: italic;" class="form-control" value="0">
                 @endif
             </div>
 
             <div class="form-group">
                 <label for="daily_usage">Current Usage of Day</label>
                 @if (count($aiAssignment) > 0)
-                <input type="text" name="daily_usage" id="daily_usage" style="font-style: italic;" class="form-control" value="{{$aiAssignment[0]->daily_usage}}">
+                <input type="text" name="daily_usage" readonly id="daily_usage" style="font-style: italic;" class="form-control" value="{{$aiAssignment[0]->daily_usage}}">
                 @else
-                <input type="text" name="daily_usage" id="daily_usage" style="font-style: italic;" class="form-control" value="0">
+                <input type="text" name="daily_usage" readonly id="daily_usage" style="font-style: italic;" class="form-control" value="0">
                 @endif
             </div>
 
