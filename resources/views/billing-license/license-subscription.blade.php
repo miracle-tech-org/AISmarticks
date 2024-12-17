@@ -18,6 +18,20 @@
             @endforeach
         </ul>
     </li>
+	@foreach ($agentsByMailbox as $mailboxName => $agents)
+		<li>
+			Mailbox: {{ $mailboxName }}
+			@if(count($agents) > 0)
+			<ul>
+				@foreach ($agents as $agent)
+					<li>
+						{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Cost: {{$agent->monthly_usage_limit * 0.002}}
+					</li>
+				@endforeach
+			</ul>
+			@endif
+		</li>
+	@endforeach
 </ul>
 <h3 class="subheader">{{ __('Monthly report of') }}</h3>
 
@@ -32,6 +46,44 @@
     <li>Number of outgoing WhatsApp messages initiated by us (Utility category): <b>{{ $data['whatsapp_outgoing_utility'] }}</b></li>
     <li>Number of outgoing WhatsApp messages initiated by us (Marketing category): <b>{{ $data['whatsapp_outgoing_marketing'] }}</b></li>
     <li>Number of set workflows: <b>{{ $data['number_of_set_workflows'] }}</b></li>
+	<li>
+		Total Monthly AI Usage: {{$totalUsage}}
+		<ul>
+		@foreach ($agentsByMailbox as $mailboxName => $agents)
+			<li>
+				Mailbox: {{ $mailboxName }}
+				@if(count($agents) > 0)
+					<ul>
+						@foreach ($agents as $agent)
+							<li>
+								{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Current Usage: {{$agent->current_usage}}
+							</li>
+						@endforeach
+					</ul>
+				@endif
+			</li>
+		@endforeach
+		</ul>
+	</li>
+	<li>
+		Total Monthly AI Cost: {{$totalUsage * 0.002}}
+		<ul>
+			@foreach ($agentsByMailbox as $mailboxName => $agents)
+				<li>
+					Mailbox: {{ $mailboxName }}
+					@if(count($agents) > 0)
+						<ul>
+							@foreach ($agents as $agent)
+								<li>
+									{{ $agent->ai_agent_name }} - Monthly Cost: {{ $agent->monthly_usage_limit * 0.002 }} - Current Cost: {{$agent->current_usage * 0.002}}
+								</li>
+							@endforeach
+						</ul>
+					@endif
+				</li>
+			@endforeach
+		</ul>
+	</li>
 </ul>
 
 <h3 class="subheader">{{ __('Monthly report (prev)') }}</h3>

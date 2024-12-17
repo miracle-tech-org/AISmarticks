@@ -23,23 +23,22 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <h3>AI Agents</h3>
-                    <ul>
-                        @foreach ($aiAgents as $agent)
-                        <li>
-                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->name }}</a>
-                        </li>
-                        @endforeach
-                    </ul>
-                </div>
-                <div class="col-md-6">
                     <h3>Mailboxes</h3>
                     <ul>
-                        @foreach ($mailboxes as $item)
+                    @foreach ($agentsByMailbox as $mailboxName => $agents)
                         <li>
-                            <a href="{{ route('reports.mailbox.show', ['id' => $item->id]) }}">{{ $item->name }}</a>
+                            <h4>{{ $mailboxName }}</h4>
+                            @if(count($agents) > 0)
+                                <ul>
+                                    @foreach ($agents as $agent)
+                                        <li>
+                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->ai_agent_name }} [Conversations: {{$agent->conversations}}, Tokens: {{$agent->tokens_used ?? 0}}]</a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
                         </li>
-                        @endforeach
+                    @endforeach
                     </ul>
                 </div>
             </div>

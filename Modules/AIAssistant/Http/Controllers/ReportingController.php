@@ -31,7 +31,19 @@ class ReportingController extends Controller
 
         $mailboxes = Mailbox::get();
 
-        return view('aiassistant::reporting', compact('aiAgents', 'monthlyTokens', 'mailboxes'));
+        $agentResult = DB::select("
+            SELECT b.id AS id,
+                c.name AS mailbox_name,
+                b.name AS ai_agent_name,
+                (SELECT SUM(tokens_used) FROM ai_interaction_logs AS d WHERE d.ai_agent_id = a.ai_agent_id) AS tokens_used,
+                (SELECT COUNT(*) FROM ai_interaction_logs AS d WHERE d.ai_agent_id = a.ai_agent_id) AS conversations
+            FROM ai_agent_assignments AS a
+            RIGHT JOIN ai_agents AS b ON a.ai_agent_id = b.id
+            RIGHT JOIN mailboxes AS c ON a.mailbox_id = c.id
+		");
+        $agentsByMailbox = collect($agentResult)->groupBy('mailbox_name');
+
+        return view('aiassistant::reporting', compact('aiAgents', 'monthlyTokens', 'mailboxes', 'agentsByMailbox'));
     }
 
     /**
@@ -58,24 +70,5 @@ class ReportingController extends Controller
         $conversationCount = count($result);
 
         return view('aiassistant::agent-report', compact('aiAgent', 'interactionLogs', 'monthlyTokens', 'conversationCount'));
-    }
-
-    public function showMailbox($mailbox_id)
-    {
-        $aiAgents = AIAgent::where('mailbox_id', $mailbox_id)->get();
-        $interactionLogs = AIInteractionLog::all();
-        $tokens = AIInteractionLog::select(DB::raw("SUM(tokens_used) as total_tokens"), DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"))
-            ->groupBy('month')
-            ->get();
-
-        $monthlyTokens = array_fill(0, 12, 0);
-        foreach ($tokens as $item) {
-            $monthIndex = (int) substr($item['month'], 5) - 1;
-            $monthlyTokens[$monthIndex] = (int) $item['total_tokens'];
-        }
-
-        $mailboxes = Mailbox::get();
-
-        return view('aiassistant::reportmailbox', compact('aiAgents', 'monthlyTokens', 'mailboxes')); 
     }
 }
