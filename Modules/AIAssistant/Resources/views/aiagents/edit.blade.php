@@ -29,6 +29,10 @@
             <input type="text" class="form-control" id="model" name="model" value="{{ $aiAgent->model }}" required>
         </div>
         <div class="form-group">
+            <label for="domain_specific_responses">Domain Specific Responses</label>
+            <input type="text" class="form-control" id="domain_specific_responses" name="domain_specific_responses" value="{{ $aiAgent->domain_specific_responses }}" required/>
+        </div>
+        <div class="form-group">
             <label for="system_prompt">System Prompt</label>
             <textarea class="form-control" id="system_prompt" name="system_prompt" rows="10">{{ $aiAgent->system_prompt }}</textarea>
         </div>
