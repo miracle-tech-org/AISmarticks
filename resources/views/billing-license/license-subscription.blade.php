@@ -18,20 +18,25 @@
             @endforeach
         </ul>
     </li>
-	@foreach ($agentsByMailbox as $mailboxName => $agents)
-		<li>
-			Mailbox: {{ $mailboxName }}
-			@if(count($agents) > 0)
-			<ul>
-				@foreach ($agents as $agent)
-					<li>
-						{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Cost: {{$agent->monthly_usage_limit * 0.002}}
-					</li>
-				@endforeach
-			</ul>
-			@endif
-		</li>
-	@endforeach
+	<li>
+		AI Assistance
+		<ul>
+			@foreach ($agentsByMailbox as $mailboxName => $agents)
+			<li>
+				Mailbox: {{ $mailboxName }}
+				@if(count($agents) > 0)
+				<ul>
+					@foreach ($agents as $agent)
+						<li>
+							{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Daily Limit: {{ $agent->daily_limit }} - Monthly Cost: {{$agent->monthly_usage_limit * 0.002}}
+						</li>
+					@endforeach
+				</ul>
+				@endif
+			</li>
+			@endforeach
+		</ul>
+	</li>
 </ul>
 <h3 class="subheader">{{ __('Monthly report of') }}</h3>
 
@@ -51,12 +56,12 @@
 		<ul>
 		@foreach ($agentsByMailbox as $mailboxName => $agents)
 			<li>
-				Mailbox: {{ $mailboxName }}
+				Mailbox: {{ $mailboxName }} Usage: {{$mailboxUsageArray[$mailboxName]}}
 				@if(count($agents) > 0)
 					<ul>
 						@foreach ($agents as $agent)
 							<li>
-								{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Current Usage: {{$agent->current_usage}}
+								{{ $agent->ai_agent_name }} - Current Usage: {{$agent->current_usage}}
 							</li>
 						@endforeach
 					</ul>
@@ -70,12 +75,12 @@
 		<ul>
 			@foreach ($agentsByMailbox as $mailboxName => $agents)
 				<li>
-					Mailbox: {{ $mailboxName }}
+					Mailbox: {{ $mailboxName }} Cost: {{$mailboxUsageArray[$mailboxName] * 0.002}}
 					@if(count($agents) > 0)
 						<ul>
 							@foreach ($agents as $agent)
 								<li>
-									{{ $agent->ai_agent_name }} - Monthly Cost: {{ $agent->monthly_usage_limit * 0.002 }} - Current Cost: {{$agent->current_usage * 0.002}}
+									{{ $agent->ai_agent_name }} - Current Cost: {{$agent->current_usage * 0.002}}
 								</li>
 							@endforeach
 						</ul>

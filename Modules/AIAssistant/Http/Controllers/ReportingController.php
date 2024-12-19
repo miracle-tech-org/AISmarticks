@@ -2,12 +2,14 @@
 
 namespace Modules\AIAssistant\Http\Controllers;
 
+use App\Jobs\SendAlert;
 use App\Mailbox;
 use DB;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Modules\AIAssistant\Models\AIAgent;
 use Modules\AIAssistant\Models\AIInteractionLog;
+use Modules\AIAssistant\Models\AIAgentAssignment;
 
 class ReportingController extends Controller
 {
@@ -70,5 +72,21 @@ class ReportingController extends Controller
         $conversationCount = count($result);
 
         return view('aiassistant::agent-report', compact('aiAgent', 'interactionLogs', 'monthlyTokens', 'conversationCount'));
+    }
+
+    public function showTestAlert()
+    {
+        $alert = new SendAlert("Hello. This is test alert");
+        $alert->handle();
+    }
+
+    public function initDailyUsage()
+    {
+        AIAgentAssignment::query()->update(['daily_usage' => 0]);
+    }
+
+    public function initMonthlyUsage()
+    {
+        AIAgentAssignment::query()->update(['current_usage' => 0]);
     }
 }

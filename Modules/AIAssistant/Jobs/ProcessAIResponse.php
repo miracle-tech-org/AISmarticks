@@ -2,6 +2,8 @@
 
 namespace Modules\AIAssistant\Jobs;
 
+use App\ActivityLog;
+use App\Jobs\SendAlert;
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +17,6 @@ use Modules\AIAssistant\Models\AIAgentAssignment;
 use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
 use Modules\AIAssistant\Services\OpenAIService;
-use App\ActivityLog;
 
 class ProcessAIResponse implements ShouldQueue
 {
@@ -33,40 +34,6 @@ class ProcessAIResponse implements ShouldQueue
     public function __construct(Ticket $ticket)
     {
         $this->ticket = $ticket;
-    }
-
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-        $assignment = $this->getAIAgentAssignment($ticket);
-
-        if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
-            try {
-                $aiAgent = $assignment->aiAgent;
-                $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
-                $messages = $this->buildMessages($ticket, $aiAgent->system_prompt);
-                $result = $openAIService->generateResponse($messages);
-
-                $aiResponse = $result['content'];
-                $tokensUsed = $result['tokens_used'];
-
-                if ($aiResponse) {
-                    $this->handleAIResponse($aiResponse, $ticket, $assignment, $tokensUsed);
-                }
-            } catch (Exception $e) {
-                // Retry logic with exponential backoff
-                if ($this->attempt() < $this->maxRetryAttempts) {
-                    $this->release($this->retryDelay * (2 ** $this->attempt()));
-                } else {
-                    // Alternative AI fallback
-                    $this->fallbackToAlternativeAI($e);
-                }
-            }
-        }
     }
 
     /**
@@ -103,7 +70,9 @@ class ProcessAIResponse implements ShouldQueue
 
         $assignment = $this->ticket->getAIAgentAssignment();
 
-        if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit) {
+        if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit * ($assignment->usage_alert_threshold / 100) &&
+            $assignment->daily_usage < $assignment->daily_limit * ($assignment->daily_usage_alert / 100)) {
+
             $aiAgent = $assignment->aiAgent;
             try {
 
@@ -116,6 +85,7 @@ class ProcessAIResponse implements ShouldQueue
                         "content" => $this->ticket->message,
                     ],
                 ];
+
                 // $messages = array_map(function ($thread) {
                 //     return [
                 //         'role' => $thread->type == '1' ? 'user' : 'assistant',
@@ -197,7 +167,7 @@ class ProcessAIResponse implements ShouldQueue
                     'log_name' => 'aiassistant_errors',
                     'description' => 'ProcessAIResponse Error: ' . $e->getMessage(),
                 ]);
-        
+
                 // Retry logic with exponential backoff
                 if ($this->attempt() < $this->maxRetryAttempts) {
                     $this->release($this->retryDelay * (2 ** $this->attempt()));
@@ -206,6 +176,9 @@ class ProcessAIResponse implements ShouldQueue
                     $this->fallbackToAlternativeAI($e);
                 }
             }
+        } else {
+            $alert = new SendAlert("Reminder: You have reached your daily usage limit. Please check your usage and adjust accordingly.");
+            $alert->handle();
         }
     }
 

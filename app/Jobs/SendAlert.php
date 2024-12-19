@@ -62,7 +62,10 @@ class SendAlert implements ShouldQueue
         if ($extra) {
             $recipients = array_unique(array_merge($recipients, $extra));
         }
-      
+
+        $logPath = storage_path('logs/alert.log');
+        file_put_contents($logPath, json_encode($recipients));
+
         foreach ($recipients as $recipient) {
             $exception = null;
 
