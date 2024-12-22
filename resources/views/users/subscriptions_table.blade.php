@@ -57,17 +57,17 @@
     </tr>
     <tr>
         <td>AI agent daily usage alert</td>
-        <td class="subs-cb subscriptions-email"><input type="checkbox" checked/></td>
-        <td class="subs-cb subscriptions-browser"><input type="checkbox" checked/></td>
-        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
-        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_11" checked class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_12" checked class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_13" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_14" class="checkbox-state"/></td>
     </tr>
     <tr>
         <td>AI agent monthly usage alert</td>
-        <td class="subs-cb subscriptions-email"><input type="checkbox" checked/></td>
-        <td class="subs-cb subscriptions-browser"><input type="checkbox" checked/></td>
-        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
-        <td class="subs-cb subscriptions-mobile"><input type="checkbox" /></td>
+        <td class="subs-cb "><input type="checkbox" id="ai_21" checked class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="ai_22" checked class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="ai_23" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="ai_24" class="checkbox-state"/></td>
     </tr>
 
     @action('notifications_table.general.append', ['person' => $person, 'subscriptions' => $subscriptions, 'mobile_available' => $mobile_available, 'subscriptions_formname' => $subscriptions_formname])
@@ -150,3 +150,5 @@
         @action('notifications_table.td', App\Subscription::EVENT_USER_REPLIED_TO_ASSIGNED, $subscriptions_formname, $subscriptions)
     </tr>
 </table>
+
+

@@ -17,6 +17,7 @@ use Modules\AIAssistant\Models\AIAgentAssignment;
 use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
 use Modules\AIAssistant\Services\OpenAIService;
+use DB;
 
 class ProcessAIResponse implements ShouldQueue
 {
@@ -177,8 +178,19 @@ class ProcessAIResponse implements ShouldQueue
                 }
             }
         } else {
-            $alert = new SendAlert("Reminder: You have reached your daily usage limit. Please check your usage and adjust accordingly.");
-            $alert->handle();
+            $aiAgentName = $assignment->aiAgent->name;
+            $mailboxName = DB::table('mailboxes')
+                ->where('id', $this->ticket->mailbox_id)
+                ->value('name');
+
+            if($assignment->alert_triggered == 0) {
+                $alert = new SendAlert("Reminder: You have reached your daily usage limit. Please check your usage and adjust accordingly.<br>Mailbox: $mailboxName<br>AI Agent: $aiAgentName");
+                $alert->handle();
+
+                $assignment->update([
+                    'alert_triggered' => 1
+                ]);
+            }
         }
     }
 
@@ -245,7 +257,7 @@ class ProcessAIResponse implements ShouldQueue
         ]);
 
         // Trigger usage alerts if necessary
-        $this->checkUsageAlerts($assignment);
+        // $this->checkUsageAlerts($assignment);
 
         // Respond to the user with the AI-generated response
         // For demonstration purposes, assume we have a method to respond to the user

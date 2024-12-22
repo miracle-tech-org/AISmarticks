@@ -22,11 +22,6 @@ class CreateAiInteractionLogsTable extends Migration
             $table->text('output_text');
             $table->integer('tokens_used');
             $table->timestamps();
-
-            // $table->foreign('ai_agent_id')->references('id')->on('ai_agents')->onDelete('cascade');
-            // $table->foreign('mailbox_id')->references('id')->on('mailboxes')->onDelete('cascade');
-            // $table->foreign('conversation_id')->references('id')->on('conversations')->onDelete('cascade');
-
         });
     }
 

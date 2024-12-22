@@ -28,7 +28,7 @@
 				<ul>
 					@foreach ($agents as $agent)
 						<li>
-							{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Daily Limit: {{ $agent->daily_limit }} - Monthly Cost: {{$agent->monthly_usage_limit * 0.002}}
+							{{ $agent->ai_agent_name }} - Monthly Limit: {{ $agent->monthly_usage_limit }} - Daily Limit: {{ $agent->daily_limit }} - Cost per token: {{/*$agent->monthly_usage_limit * */0.002}}
 						</li>
 					@endforeach
 				</ul>
