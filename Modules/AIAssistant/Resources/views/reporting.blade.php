@@ -26,9 +26,23 @@
                     <h3>Mailboxes</h3>
                     <ul>
                     @foreach ($agentsByMailbox as $mailboxName => $agents)
+                        @php
+                            $totalToken = 0;
+                            $totalConv = 0;
+                            
+                            if(count($agents) > 0) {
+                                foreach ($agents as $agent) {
+                                    $totalToken += ($agent->tokens_used ?? 0);
+                                    $totalConv += $agent->conversations;
+                                }
+                            }
+
+                        @endphp
                         <li>
-                            <h4>{{ $mailboxName }}</h4>
-                            @if(count($agents) > 0)
+                            <a href="{{route('reports.mailbox.show', $agents[0]->mailbox_id)}}">
+                                <h4>{{ $mailboxName }} [Conversations: {{$totalConv}} Tokens: {{$totalToken}}] </h4>
+                            </a>
+                            @if(count($agents) > 0 && $agents[0]->id != '')
                                 <ul>
                                     @foreach ($agents as $agent)
                                         <li>

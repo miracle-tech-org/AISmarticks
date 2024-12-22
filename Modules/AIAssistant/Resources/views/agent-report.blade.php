@@ -47,7 +47,7 @@
                                     <th width="40">Output Text</th>
                                     <th width="5">Tokens Used</th>
                                     <th width="5">DateTime</th>
-                                    <th width="5">Message Length</th>
+                                    <th width="5">AI Message Length</th>
                                 </tr>
                             </thead>
                             <tbody>
