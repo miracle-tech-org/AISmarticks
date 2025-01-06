@@ -1,4 +1,6 @@
 <li @if (\Helper::isMenuSelected('whatsapp'))class="active"@endif><a href="{{ route('mailboxes.whatsapp.settings', ['mailbox_id'=>$mailbox->id]) }}"><i class="glyphicon glyphicon-erase"></i> {{ __('WhatsApp') }}</a></li>
+@if (\Module::isActive('aiassistant'))
 <li @if (\Helper::isMenuSelected('ai-assistant'))class="active"@endif><a href="{{ route('aiagents.index', ['mailbox_id'=>$mailbox->id]) }}"><i class="glyphicon glyphicon-erase"></i> AI Assistant</a></li>
 <li @if (\Helper::isMenuSelected('agent-assignments'))class="active"@endif><a href="{{ route('assignments.index', ['mailbox_id'=>$mailbox->id]) }}"><i class="glyphicon glyphicon-erase"></i> AI Agent Assignment</a></li>
+@endif
 <li @if (\Helper::isMenuSelected('whatsapp-templates'))class="active"@endif><a href="{{ route('mailboxes.whatsapp.templates', ['mailbox_id'=>$mailbox->id]) }}"><i class="glyphicon glyphicon-th-large"></i> {{ __('WhatsApp Templates') }}</a></li>

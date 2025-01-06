@@ -47,7 +47,7 @@
                                     @elseif (is_object($row[$col]) && get_class($row[$col]) == 'App\Thread')
                                         <a href="{{ route('conversations.view', ['id' => $row[$col]->conversation_id]) }}#thread-{{ $row[$col]->id }}" target="_blank">#{{ $row[$col]->conversation->number }}</a>
                                     @else
-                                        {{ $row[$col] }}
+                                        {{ str_ireplace('Freescout', 'Smarticks', trim($row[$col])) }}
                                     @endif
                                 @else
                                     &nbsp;

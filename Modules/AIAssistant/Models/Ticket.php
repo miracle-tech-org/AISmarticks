@@ -89,7 +89,7 @@ class Ticket
 
         $assignment = AIAgentAssignment::where([
             ['mailbox_id', '=', $this->mailbox_id],
-            ['status', '=', $this->mailbox_id],
+            ['status', '=', 1],
         ])->first();
         return $assignment;
     }

@@ -68,7 +68,7 @@
 
                                 @if (strstr($mailbox->out_server ?? '', '.gmail.'))
                                     <div class="form-help">
-                                        {!! __("How to :%link_start%connect Gmail:%link_end% to FreeScout.", ['%link_start%' => '<a href="'.config('app.freescout_repo').'/wiki/Connect-Gmail-to-FreeScout" target="_blank">', '%link_end%' => '</a>']) !!}
+                                        {!! __("How to :%link_start%connect Gmail:%link_end% to Smarticks.", ['%link_start%' => '<a href="'.config('app.freescout_repo').'/wiki/Connect-Gmail-to-FreeScout" target="_blank">', '%link_end%' => '</a>']) !!}
                                     </div>
                                 @endif
 
