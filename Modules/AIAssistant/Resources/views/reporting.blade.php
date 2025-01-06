@@ -40,13 +40,13 @@
                         @endphp
                         <li>
                             <a href="{{route('reports.mailbox.show', $agents[0]->mailbox_id)}}">
-                                <h4>{{ $mailboxName }} [Conversations: {{$totalConv}} Tokens: {{$totalToken}}] </h4>
+                                <h4>{{ $mailboxName }} [Conversations: {{ $totalConv }} Tokens: {{ $totalToken }} Total Replies: {{ $totalConv }} Average of Reply: {{ $totalConv > 0 ? $totalConv / $totalConv : 0 }}]</h4>
                             </a>
                             @if(count($agents) > 0 && $agents[0]->id != '')
                                 <ul>
                                     @foreach ($agents as $agent)
                                         <li>
-                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->ai_agent_name }} [Conversations: {{$agent->conversations}}, Tokens: {{$agent->tokens_used ?? 0}}]</a>
+                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->ai_agent_name }} [Conversations: {{$agent->conversations}}, Tokens: {{$agent->tokens_used ?? 0}} Total Replies: {{ $agent->conversations }} Average of Reply: {{ $agent->conversations > 0 ? $agent->conversations / $agent->conversations : 0 }}]</a>
                                         </li>
                                     @endforeach
                                 </ul>
