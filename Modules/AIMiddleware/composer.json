@@ -1,0 +1,25 @@
+{
+    "name": "freescout/aimiddleware",
+    "description": "",
+    "authors": [
+        {
+            "name": "FreeScout",
+            "email": "support@freescout.net"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\AIMiddleware\\Providers\\AIMiddlewareServiceProvider"
+            ],
+            "aliases": {
+                
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\AIMiddleware\\": ""
+        }
+    }
+}
