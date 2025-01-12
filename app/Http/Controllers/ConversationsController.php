@@ -479,6 +479,7 @@ class ConversationsController extends Controller
             'from_aliases' => $mailbox->getAliases(true, true),
             'attachments'  => $attachments,
 			'whatsappenabled' => ($wsettings['initiate_enabled']??0)==1,
+			'whapienabled' => ($wsettings['initiate_enabled']??0)==1,
 			'whatsapp_templates' => $wtemplates,
 		]);
     }
