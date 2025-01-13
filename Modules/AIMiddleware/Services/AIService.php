@@ -1,154 +1,141 @@
 <?php
 namespace App\Modules\MyImprovements\Services;
 
-use App\Option;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
+
+use App\Misc\Helper;
+use App\Misc\Mail;
+use App\Thread;
+use App\User;
+use App\SendLog;
+use App\Option;
+use App\Logger\Logger;
+use GuzzleHttp\Client;
 
 /**
  * Core AI Service for handling OpenAI API interactions
  */
 class AIService
 {
-    // Constants for retry mechanism
-    private const MAX_RETRIES = 3;
-    private const BACKOFF_MS = 1000;
-
     protected Client $client;
     protected string $model;
-
+    
     /**
-     * Initialize the AI service with configuration
+     * Initialize using FreeScout's option system
      */
     public function __construct()
     {
         $this->client = new Client([
             'base_uri' => 'https://api.openai.com/v1/',
-            'timeout' => Option::get('ai_middleware.timeout', 30.0),
+            'timeout'  => Option::get('my_improvements.timeout', 30.0),
         ]);
-        $this->model = Option::get('ai_middleware.openai_model', 'gpt-4');
+        $this->model = Option::get('my_improvements.openai_model', 'gpt-4');
     }
 
     /**
-     * Generate AI response with retry mechanism
-     *
-     * @param array $messages Array of message objects
-     * @return array Response containing content and metadata
-     * @throws AIServiceException
+     * Process ticket with AI and create response
      */
-    public function generateResponse(array $messages): array
+    public function processTicket($ticket)
     {
-        $attempt = 0;
+        try {
+            // Generate AI response
+            $response = $this->generateResponse($ticket);
+            
+            // Create thread using FreeScout's system
+            $thread = Thread::create([
+                'type' => Thread::TYPE_NOTE,
+                'state' => Thread::STATE_PUBLISHED,
+                'status' => Thread::STATUS_ACTIVE,
+                'ticket_id' => $ticket->id,
+                'user_id' => User::getSystemUser()->id,
+                'body' => $response['content']
+            ]);
 
-        do {
-            try {
-                $startTime = microtime(true);
-                $response = $this->client->post('chat/completions', [
-                    'headers' => [
-                        'Authorization' => 'Bearer ' . Option::get('ai_middleware.openai_api_key'),
-                        'Content-Type' => 'application/json',
-                    ],
-                    'json' => [
-                        'model' => $this->model,
-                        'messages' => array_merge([
-                            [
-                                'role' => 'system',
-                                'content' => $this->buildSystemPrompt(),
-                            ],
-                        ], $messages),
-                        'temperature' => 0.7,
-                        'max_tokens' => Option::get('ai_middleware.max_tokens', 2000),
-                    ],
-                ]);
+            // Log using FreeScout's system
+            Logger::info('AI response generated', [
+                'ticket_id' => $ticket->id,
+                'thread_id' => $thread->id
+            ]);
 
-                $duration = (microtime(true) - $startTime) * 1000;
-
-                $this->logInfo('AI response generated', [
-                    'model' => $this->model,
-                    'duration_ms' => $duration,
-                ]);
-
-                $result = $this->processResponse($response);
-                $result['latency'] = $duration;
-
-                return $result;
-
-            } catch (RequestException $e) {
-                $this->logError('API request failed', [
-                    'attempt' => ++$attempt,
-                    'error' => $e->getMessage(),
-                ]);
-
-                if ($attempt >= self::MAX_RETRIES) {
-                    throw new AIServiceException("Max retries exceeded", 0, $e);
-                }
-
-                usleep(self::BACKOFF_MS * (2 ** ($attempt - 1)));
+            // Process tags using FreeScout's tag system
+            if (!empty($response['tags'])) {
+                $ticket->addTags($response['tags']);
             }
-        } while ($attempt < self::MAX_RETRIES);
+
+            // Send notifications using FreeScout's system
+            $this->sendNotifications($ticket, $response);
+
+            return $thread;
+
+        } catch (\Exception $e) {
+            Logger::error('AI processing failed', [
+                'ticket_id' => $ticket->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     /**
-     * Build the system prompt for AI
+     * Send notifications using FreeScout's systems
      */
-    private function buildSystemPrompt(): string
+    protected function sendNotifications($ticket, $response)
     {
-        return Option::get('ai_middleware.system_prompt',
-            'You are a helpful customer service AI assistant. ' .
-            'Output strictly in JSON format with the following structure:
-            {
-                "response": "<AI reply>",
-                "action": "<addTag|notifyTeam|none>",
-                "tags": ["<tag1>", "<tag2>"],
-                "ticketId": "<ticket_id>",
-                "sentiment": "<positive|negative|neutral>",
-                "confidence": <0.0-1.0>,
-                "priority": "<low|medium|high>"
-            }'
+        // Notify admins if needed
+        if ($response['action'] === 'notifyTeam') {
+            $admins = User::role('admin')->get();
+            Mail::sendToUsers(
+                $admins,
+                'ai_notification',
+                [
+                    'ticket' => $ticket,
+                    'response' => $response
+                ]
+            );
+        }
+
+        // Log email sending
+        SendLog::log($ticket->last_thread, 
+            User::getSystemUser(), 
+            SendLog::MAIL_TYPE_AUTO_REPLY
         );
     }
 
     /**
-     * Process and validate API response
+     * Build ticket context using FreeScout's helper methods
      */
-    private function processResponse($response): array
+    protected function buildTicketContext($ticket): string
     {
-        $body = json_decode($response->getBody(), true);
-
-        if (!isset($body['choices'][0]['message']['content'])) {
-            $this->logError('Invalid API response structure');
-            throw new InvalidResponseException("Invalid response structure");
+        $context = [];
+        $context[] = "Ticket #{$ticket->number}";
+        $context[] = "Subject: {$ticket->subject}";
+        
+        // Get conversation history using FreeScout's methods
+        $threads = $ticket->getThreads()
+            ->take(5)
+            ->reverse();
+            
+        foreach ($threads as $thread) {
+            $context[] = sprintf(
+                "%s: %s",
+                Helper::formatDateTime($thread->created_at),
+                Helper::sanitizeHTML($thread->body)
+            );
         }
 
+        return implode("\n\n", $context);
+    }
+
+    /**
+     * Process response using FreeScout's formatting
+     */
+    protected function processResponse($response)
+    {
         return [
-            'content' => $body['choices'][0]['message']['content'],
-            'tokens_used' => $body['usage']['total_tokens'] ?? 0,
-            'model' => $body['model'] ?? $this->model,
+            'content' => Helper::sanitizeHTML($response['content']),
+            'tokens_used' => $response['tokens_used'],
+            'model' => $response['model']
         ];
-    }
-
-    /**
-     * Log error with context
-     */
-    private function logError(string $message, array $context = []): void
-    {
-        Log::error($message, [
-            'source' => 'MyImprovements',
-            'user_id' => auth()->id(),
-            ...$context,
-        ]);
-    }
-
-    /**
-     * Log info with context
-     */
-    private function logInfo(string $message, array $context = []): void
-    {
-        Log::info($message, [
-            'source' => 'MyImprovements',
-            'user_id' => auth()->id(),
-            ...$context,
-        ]);
     }
 }
