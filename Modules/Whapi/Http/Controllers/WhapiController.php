@@ -311,10 +311,12 @@ class WhapiController extends Controller
 					\Whapi::processOwnMessage($user, $customer_phone, $body, $mailbox, $attachments, $customer_phone);
 				}
 
-				$ticket = new Ticket;
-				$ticket->message = $body;
-				$job = new ProcessAIResponse($ticket);
-				$job->execute();
+				if(\Module::isActive('aiassistant')) {
+					$ticket = new Ticket;
+					$ticket->message = $body;
+					$job = new ProcessAIResponse($ticket);
+					$job->execute();
+				}
 			}
 		}
 	}

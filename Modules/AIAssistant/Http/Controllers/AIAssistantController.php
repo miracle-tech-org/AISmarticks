@@ -13,7 +13,7 @@ class AIAssistantController extends Controller
      * Display a listing of the resource.
      * @return Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $credentials = [
             'email' => config('ai-assistant.aiagent_mail'),

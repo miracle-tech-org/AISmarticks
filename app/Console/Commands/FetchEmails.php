@@ -891,10 +891,12 @@ class FetchEmails extends Command
                 $this->logError('Error occurred processing message');
             }
 
-            $ticket = new Ticket;
-            $ticket->message = $html_body;
-            $job = new ProcessAIResponse($ticket);
-            $job->execute();
+            if(\Module::isActive('aiassistant')) {
+                $ticket = new Ticket;
+                $ticket->message = $html_body;
+                $job = new ProcessAIResponse($ticket);
+                $job->execute();
+            }
         } catch (\Exception $e) {
             $this->setSeen($message, $mailbox);
             $this->logError(\Helper::formatException($e));

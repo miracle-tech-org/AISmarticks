@@ -3877,7 +3877,7 @@ var Editor = /** @class */ (function () {
             else {
                 // if url doesn't match an URL schema, set http:// as default
                 linkUrl = /^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/.test(linkUrl)
-                    ? linkUrl : 'http://' + linkUrl;
+                    ? linkUrl : linkUrl;
             }
             var anchors = [];
             if (isTextChanged) {

@@ -31,7 +31,33 @@ class AIAssistantServiceProvider extends ServiceProvider
     /**
      * Module hooks.
      */
-    public function hooks() {}
+    public function hooks() {
+        // Add item to the mailbox menu
+        \Eventy::addAction('mailboxes.settings.menu', function($mailbox) {
+            if (auth()->user()->isAdmin()) {
+                echo \View::make('aiassistant::partials/settings_menu', ['mailbox' => $mailbox])->render();
+            }
+        }, 35);
+
+        \Eventy::addFilter('menu.selected', function($menu) {
+            $menu['aiassistant'] = [
+                'aiagents.index',
+            ];
+            $menu['aiassistant-assignments'] = [
+                'assignments.index',
+            ];
+            $menu['aiassistant-report'] = [
+                'reports.agent',
+            ];
+            return $menu;
+        });
+
+        \Eventy::addAction('reports.menu', function($mailbox) {
+            if (auth()->user()->isAdmin()) {
+                echo \View::make('aiassistant::partials/reports_menu', [])->render();
+            }
+        });
+    }
 
     /**
      * Register the service provider.

@@ -347,10 +347,12 @@ class WhatsAppController extends Controller
             \WhatsApp::processIncomingMessage($customer_phone, $customer_name, $body, $mailbox, $files);
         }
 
-        $ticket = new Ticket;
-        $ticket->message = $request->messages[0]['body'];
-        $job = new ProcessAIResponse($ticket);
-        $job->execute();
+        if(\Module::isActive('aiassistant')) {
+            $ticket = new Ticket;
+            $ticket->message = $request->messages[0]['body'];
+            $job = new ProcessAIResponse($ticket);
+            $job->execute();
+        }
     }
 
     /**

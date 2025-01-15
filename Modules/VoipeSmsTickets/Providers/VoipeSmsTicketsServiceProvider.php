@@ -107,10 +107,13 @@ END;
                                 $smsMessage = preg_replace($regex, '$1', $sms['msg']);
                                 \VoipeSmsTickets::processIncomingMessage($customer, $smsMessage, $mailbox, []);
 
-                                $ticket = new Ticket;
-                                $ticket->message = $smsMessage;
-                                $job = new ProcessAIResponse($ticket);
-                                $job->execute();
+                                
+                                if(\Module::isActive('aiassistant')) {
+                                    $ticket = new Ticket;
+                                    $ticket->message = $smsMessage;
+                                    $job = new ProcessAIResponse($ticket);
+                                    $job->execute();
+                                }
                             }
                             // $client = new \GuzzleHttp\Client();
                             // $response = $client->get('https://api.telegram.org/bot902124050:AAF8ZLPKt5Uu3sgguH0e3jNbm2JxUFuZicY/sendMessage?chat_id='.urlencode('504596963').'&text='.urlencode($ms));	

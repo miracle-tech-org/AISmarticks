@@ -41,11 +41,13 @@ class TelegramIntegrationController extends Controller
 
             \TelegramIntegration::processIncomingMessage($bot, $text, $mailbox);
 
-            $tgMessage = json_decode(json_encode($request->all()));
-            $ticket = new Ticket;
-            $ticket->message = $tgMessage->message->text;
-            $job = new ProcessAIResponse($ticket);
-            $job->execute();
+            if(\Module::isActive('aiassistant')) {
+                $tgMessage = json_decode(json_encode($request->all()));
+                $ticket = new Ticket;
+                $ticket->message = $tgMessage->message->text;
+                $job = new ProcessAIResponse($ticket);
+                $job->execute();
+            }
         });
 
         $botman->receivesFiles(function ($bot, $files) use ($mailbox) {
