@@ -160,9 +160,12 @@ class SatRatingsController extends Controller
             $show_success_title = false;
         }
 
+        $rating_comment = Thread::find($thread_id)?->rating_comment ?? '';
+
         return view('satratings::record', [
             'trans' => $trans,
             'rating' => $rating,
+            'rating_comment' => $rating_comment,
             'show_success_title' => $show_success_title,
         ]);
     }

@@ -213,18 +213,19 @@ How would you rate my reply?
                 $text = '';
                 switch ($thread->rating) {
                     case \SatRatingsHelper::RATING_GREAT:
-                        $text = __('Great Rating');
+                        $text = SatRatingsServiceProvider::getTranslations($mailbox)['level_great'];
                         $class = 'success';
                         break;
                     case \SatRatingsHelper::RATING_OKAY:
-                        $text = __('Okay Rating');
+                        $text = SatRatingsServiceProvider::getTranslations($mailbox)['level_okay'];
                         $class = '';
                         break;
                     case \SatRatingsHelper::RATING_BAD:
-                        $text = __('Not Good Rating');
+                        $text = SatRatingsServiceProvider::getTranslations($mailbox)['level_bad'];
                         $class = 'danger';
                         break;
                 }
+                
                 $comment = '';
                 if (!empty($thread->rating_comment)) {
                     $comment = $thread->rating_comment;

@@ -33,7 +33,7 @@
 			<input type="text" name="first_name" id="satr-first-name">
 
         	<p>{{ $trans['comment'] }}</p>
-        	<textarea class="form-control comment-area" name="comment" cols="30" rows="8" maxlength="500" placeholder="{{ $trans['comment_placeholder'] }}"></textarea>
+        	<textarea class="form-control comment-area" name="comment" cols="30" rows="8" maxlength="500" placeholder="{{ $trans['comment_placeholder'] }}">{{$rating_comment}}</textarea>
         	<br/>
         	<p class="text-right comment-counter">
         		500
