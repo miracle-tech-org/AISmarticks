@@ -3,9 +3,12 @@
 @section('title_full', __('Agent Specializations'))
 
 @section('content')
+
     <div class="section-heading">
-        <h2 class="section-title">{{ __('Agent Specializations') }}</h2>
+        {{ __('Agent Specializations') }}
     </div>
+
+    <br>
 
     <div class="container">
         <div class="rules-container">

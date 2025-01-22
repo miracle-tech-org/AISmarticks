@@ -4,14 +4,16 @@
 
 @section('content')
     <div class="section-heading">
-        <h2 class="section-title">{{ __('Edit Agent Specializations') }}</h2>
-        <a href="{{route('specializations.create', $agent->id)}}" class="btn btn-primary add-rule">
-            {{ __('Create New') }}
-        </a>
+        {{ __('Edit Agent Specializations') }}
     </div>
-
+    <br>
     <div class="container">
         <div class="rules-container">
+            <a href="{{route('specializations.create', $agent->id)}}" class="btn btn-primary add-rule">
+                {{ __('Create New') }}
+            </a>
+            <br>
+            <br>
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>

@@ -3,8 +3,10 @@
 
 @section('content')
     <div class="section-heading">
-        <h2 class="section-title">{{ __('Create New Routing Rule') }}</h2>
+        {{ __('Create New Routing Rule') }}
     </div>
+
+    <br>
 
     <div class="container">
         <div class="rules-container">

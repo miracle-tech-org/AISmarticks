@@ -4,9 +4,11 @@
 
 @section('content')
     <div class="section-heading">
-        <h2 class="section-title">{{ __('Update Agent Specializations') }}</h2>
+        {{ __('Update Agent Specializations') }}
     </div>
 
+    <br>
+    
     <div class="container">
         <div class="rules-container">
             <form action="{{ route('specializations.update', $agentId) }}" method="post" class="container">

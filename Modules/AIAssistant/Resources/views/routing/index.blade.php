@@ -3,15 +3,20 @@
 @section('title_full', 'Routing Rules')
 
 @section('content')
-    <div class="section-heading">
-        <h2 class="section-title">{{ __('Routing Rules') }}</h2>
-        <a href="{{ route('routing.create') }}" class="btn btn-primary add-rule">
-            {{ __('Add Rule') }}
-        </a>
+    <div class="section-heading margin-bottom">
+        {{ __('Routing Rules') }}
     </div>
+    <br>
 
     <div class="container">
         <div class="rules-container">
+            <a href="{{ route('routing.create') }}" class="btn btn-primary add-rule">
+                {{ __('Add Rule') }}
+            </a>
+
+            <br>
+            <br>
+
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>

@@ -2,8 +2,8 @@
 @section('title_full', 'Edit Routing Rule')
 
 @section('content')
-    <div class="section-heading">
-        <h2 class="section-title">{{ __('Edit Routing Rule') }}</h2>
+    <div class="section-heading margin-bottom">
+        {{ __('Edit Routing Rule') }}
     </div>
 
     <div class="container">
