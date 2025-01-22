@@ -29,7 +29,7 @@
                                 @if (count($agents) > 0 && $agents[0]->id != '')
                                     @foreach ($agents as $agent)
                                         <li>
-                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->ai_agent_name }} [Conversations: {{$agent->conversations}}, Tokens: {{$agent->tokens_used ?? 0}} Total Replies: {{ $agent->conversations }} Average of Reply: {{ $agent->conversations > 0 ? $agent->conversations / $agent->conversations : 0 }}]</a>
+                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->ai_agent_name }} [Conversations: {{$agent->conversations}}, Tokens: {{$agent->tokens_used ?? 0}} Total Replies: {{ $agent->conversations }} Average of Reply: {{ $agent->conversations > 0 ? (int)($agent->tokens_used / $agent->conversations) : 0 }}]</a>
                                         </li>
                                     @endforeach
                                 @endif
