@@ -26,12 +26,18 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     Route::get('/init-daily-usage',                         "ReportingController@initDailyUsage");
     Route::get('/init-monthly-usage',                       "ReportingController@initMonthlyUsage");
 
-    Route::get('/team',                                    "TeamController@index");
-
     Route::get('/routing-rules',                           "RoutingRulesController@index")->name("routing.index");
     Route::get('/routing-rules/create',                    "RoutingRulesController@create")->name("routing.create");
     Route::post('/routing-rules/store',                    "RoutingRulesController@store")->name("routing.store");
     Route::get('/routing-rules/{id}/edit',                 "RoutingRulesController@edit")->name("routing.edit");
     Route::post('/routing-rules/{id}/update',              "RoutingRulesController@update")->name("routing.update");
     Route::post('/routing-rules/{id}/destroy',             "RoutingRulesController@destroy")->name("routing.destroy");
+
+    Route::get('/specializations',                         "AgentSpecializationController@index")->name('specializations.index');
+    Route::get('/specializations/{id}/show',               "AgentSpecializationController@show")->name('specializations.show');
+    Route::get('/specializations/{id}/create',             "AgentSpecializationController@create")->name('specializations.create');
+    Route::post('/specializations/{id}/store',             "AgentSpecializationController@store")->name('specializations.store');
+    Route::get('/specializations/{id}/edit/{specId}',      "AgentSpecializationController@edit")->name('specializations.edit');
+    Route::post('/specializations/{id}/update',            "AgentSpecializationController@update")->name('specializations.update');
+    Route::post('/specializations/{id}/destory',           "AgentSpecializationController@destroy")->name('specializations.destroy');
 });
