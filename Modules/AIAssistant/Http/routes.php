@@ -40,4 +40,6 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     Route::get('/specializations/{id}/edit/{specId}',      "AgentSpecializationController@edit")->name('specializations.edit');
     Route::post('/specializations/{id}/update',            "AgentSpecializationController@update")->name('specializations.update');
     Route::post('/specializations/{id}/destory',           "AgentSpecializationController@destroy")->name('specializations.destroy');
+
+    Route::get('/workloads',                               "WorkloadController@index")->name('workloads.index');
 });

@@ -11,6 +11,9 @@ use Modules\AIAssistant\Models\AIAgent;
 use Modules\AIAssistant\Models\AIAgentAssignment;
 use Modules\AIAssistant\Models\AIInteractionLog;
 
+use Modules\AIAssistant\Jobs\ProcessAIResponse;
+use Modules\AIAssistant\Models\Ticket;
+
 class ReportingController extends Controller
 {
     /**
@@ -100,8 +103,13 @@ class ReportingController extends Controller
 
     public function showTestAlert()
     {
-        $alert = new SendAlert("Hello. This is test alert");
-        $alert->handle();
+        // $alert = new SendAlert("Hello. This is test alert");
+        // $alert->handle();
+
+        $ticket = new Ticket;
+        $ticket->message = "How can I create laravel new project?";
+        $job = new ProcessAIResponse($ticket);
+        $job->execute();
     }
 
     public function initDailyUsage()

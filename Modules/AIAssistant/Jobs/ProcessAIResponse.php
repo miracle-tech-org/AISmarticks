@@ -17,6 +17,7 @@ use Modules\AIAssistant\Events\APIUsageLimitReached;
 use Modules\AIAssistant\Models\AIAgentAssignment;
 use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
+use Modules\AIAssistant\Models\Workload;
 use Modules\AIAssistant\Services\OpenAIService;
 
 class ProcessAIResponse implements ShouldQueue
@@ -59,23 +60,74 @@ class ProcessAIResponse implements ShouldQueue
     public function execute()
     {
         if (\Module::isActive('aiassistant')) {
-            $client = new Client();
-            $response = $client->get(route('aiagents.session'));
-
-            $userId = json_decode($response->getBody(), true)['userId'];
-
-            $strCookie = '';
-            foreach ($response->getHeaders()['Set-Cookie'] as $cookie) {
-                if (strpos($cookie, 'laravel_session=') !== false) {
-                    $strCookie = $cookie;
-                    break;
-                }
-            }
-
             $assignment = $this->ticket->getAIAgentAssignment();
+
+            $client = new Client(['base_uri' => 'https://api.openai.com/v1/']);
+            try {
+                $response = $client->post('chat/completions', [
+                    'headers' => [
+                        'Authorization' => 'Bearer sk-svcacct-zxGljF843UXf9F7Y7ynj0T2tayiaK7YZfix2U0sr0QWH9blfjTU3bSWz3BeMIT3BlbkFJJz1G8KDCAkQlUzQgwaeCADe2OyXXO7S9aL1nsT4k7CXuxiupAxf5cfkmVr_sQA',
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => [
+                        'model' => 'gpt-4',
+                        'messages' => [
+                            [
+                                "role" => "system",
+                                "content" => "You are an AI model designed to evaluate whether a user's input is related to Smarticks.com. Smarticks.com includes the following sections:\nHome: General information about the platform.\nAbout: Details about the company, its mission, and vision.\nFeatures: Information about Smarticks.com features such as interactive tools, or user experience.\nPricing: Details about subscription plans, costs, and payment options.\nHelp Center: Information on account management, troubleshooting, deleting accounts, and customer support.\nAPI Docs: Technical documentation for developers using Smarticks.com's API.\nPerform the following:\nIf the message is a greeting (e.g., Hello, Hi there, or similar), always return 100%.\nIf the message is directly related to any of the above sections, analyze the content and return a high confidence percentage.\nIf the message is unrelated to Smarticks.com, return a low confidence percentage.\nImportant:\nResponse message can be only like this: x%"
+                            ],
+                            [
+                                "role" => "user",
+                                "content" => $this->ticket->message
+                            ]
+                        ],
+                    ],
+                    'timeout' => 15,
+                ]);
+
+                $body = json_decode($response->getBody(), true);
+                $aiResponse = $body['choices'][0]['message']['content'] ?? '';
+
+                $pro = (float)preg_replace('/[^0-9]/', '', $aiResponse);
+                if($pro < 40) {
+                    Workload::create([
+                        'ticket_id' => $this->ticket->thread_id
+                    ]);
+                    return;
+                }
+            } catch (Exception $e) {
+                ActivityLog::create([
+                    'properties' => '[]',
+                    'log_name' => 'aiassistant_errors',
+                    'description' => 'AIMiddleware: Out of knowledge base',
+                ]);
+                return;
+            }
 
             if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit * ($assignment->usage_alert_threshold / 100) &&
                 $assignment->daily_usage < $assignment->daily_limit * ($assignment->daily_usage_alert / 100)) {
+
+                try {
+                    $client = new Client();
+                    $response = $client->get(route('aiagents.session'));
+
+                    $userId = json_decode($response->getBody(), true)['userId'];
+
+                    $strCookie = '';
+                    foreach ($response->getHeaders()['Set-Cookie'] as $cookie) {
+                        if (strpos($cookie, 'laravel_session=') !== false) {
+                            $strCookie = $cookie;
+                            break;
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    ActivityLog::create([
+                        'properties' => '[]',
+                        'log_name' => 'aiassistant_errors',
+                        'description' => 'ProcessAIResponse Error: AIAgent account not found',
+                    ]);
+                    return;
+                }
 
                 $aiAgent = $assignment->aiAgent;
                 try {
@@ -186,6 +238,12 @@ class ProcessAIResponse implements ShouldQueue
                     $mailboxName = DB::table('mailboxes')
                         ->where('id', $this->ticket->mailbox_id)
                         ->value('name');
+
+                    ActivityLog::create([
+                        'properties' => '[]',
+                        'log_name' => 'aiassistant_errors',
+                        'description' => 'Reached out daily limit',
+                    ]);
 
                     if ($assignment->alert_triggered == 0) {
                         $alert = new SendAlert("Reminder: You have reached your daily usage limit. Please check your usage and adjust accordingly.<br>Mailbox: $mailboxName<br>AI Agent: $aiAgentName");
