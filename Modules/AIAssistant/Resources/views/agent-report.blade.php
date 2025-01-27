@@ -37,7 +37,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <h3>Interaction Logs</h3>
-                    <h3 style="text-align: center">Conversations: {{count($interactionLogs)}} &nbsp;&nbsp;&nbsp;Interactions: {{count($interactionLogs)}}</h3>
+                    <h3 style="text-align: center">Conversations: {{count(App\Conversation::where('mailbox_id', $aiAgent->mailbox_id)->get())}} &nbsp;&nbsp;&nbsp;Replies: {{count($interactionLogs)}}</h3>
                     <div class="table-responsive" style="padding: 1%">
                         <table class="table table-striped" id="reportTable">
                             <thead>
@@ -61,7 +61,7 @@
                                     <td class="fixed-width">{{ $log->output_text }}</td>
                                     <td>{{ $log->tokens_used }}</td>
                                     <td>{{ $log->created_at }}</td>
-                                    <td>{{ substr_count($log->output_text, '.') }}</td>
+                                    <td>{{ str_word_count($log->output_text) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

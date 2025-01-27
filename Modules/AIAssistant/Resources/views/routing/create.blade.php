@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('title_full', 'Create Routing Rule')
+@section('sidebar')
+@include('partials/sidebar_menu_toggle')
+@include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
     <div class="section-heading">
@@ -10,7 +14,7 @@
 
     <div class="container">
         <div class="rules-container">
-            <form action="{{ route('routing.store') }}" method="post" class="container">
+            <form action="{{ route('routing.store', ['mailbox_id' => $mailbox->id]) }}" method="post" class="container">
                 {{ csrf_field() }}
                 <div class="form-group">
                     <label for="name">Name</label>

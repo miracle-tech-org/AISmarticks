@@ -19,7 +19,7 @@
 
 <div class="col-xs-12">
     @if (session('success'))
-        <div class="alert alert-primary" role="alert" style="background-color: #2a3663;">
+        <div class="alert alert-primary" role="alert">
             {{ session('success') }}
         </div>
     @endif

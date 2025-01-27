@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('title_full', __('Edit Agent Specializations'))
+@section('sidebar')
+@include('partials/sidebar_menu_toggle')
+@include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
     <div class="section-heading">
@@ -9,7 +13,7 @@
     <br>
     <div class="container">
         <div class="rules-container">
-            <a href="{{route('specializations.create', $agent->id)}}" class="btn btn-primary add-rule">
+            <a href="{{route('specializations.create', ['id' => $agent->id, 'mailbox_id' => $mailbox->id])}}" class="btn btn-primary add-rule">
                 {{ __('Create New') }}
             </a>
             <br>
@@ -32,7 +36,7 @@
                             <td>{{ $specialization->proficiency_level }}</td>
                             <td>{{ $specialization->is_primary ? 'Yes' : 'No' }}</td>
                             <td>
-                                <a href="{{ route('specializations.edit', ['id' => $agent->id, 'specId' => $specialization->id]) }}"
+                                <a href="{{ route('specializations.edit', ['id' => $agent->id, 'spec_id' => $specialization->id, 'mailbox_id' => $mailbox->id]) }}"
                                     class="btn btn-primary btn-sm">Edit</a>
                                 <form action="{{ route('specializations.destroy', $specialization->id) }}" method="POST"
                                     style="display:inline;"

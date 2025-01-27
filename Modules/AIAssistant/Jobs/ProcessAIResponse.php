@@ -239,19 +239,36 @@ class ProcessAIResponse implements ShouldQueue
                         ->where('id', $this->ticket->mailbox_id)
                         ->value('name');
 
-                    ActivityLog::create([
-                        'properties' => '[]',
-                        'log_name' => 'aiassistant_errors',
-                        'description' => 'Reached out daily limit',
-                    ]);
+                    if ($assignment->current_usage > $assignment->monthly_usage_limit * ($assignment->usage_alert_threshold / 100)) {
+                        $alert = new SendAlert("Reminder: You have reached your monthly usage limit. Please check your usage and adjust accordingly.<br>Mailbox: $mailboxName<br>AI Agent: $aiAgentName");
+                        $alert->handle();
 
-                    if ($assignment->alert_triggered == 0) {
+                        $assignment->update([
+                            'alert_triggered' => 2,
+                        ]);
+
+                        ActivityLog::create([
+                            'properties' => '[]',
+                            'log_name' => 'aiassistant_errors',
+                            'description' => 'Reached out monthly limit',
+                        ]);
+                        return;
+                    }
+
+                    if($assignment->daily_usage > $assignment->daily_limit * ($assignment->daily_usage_alert / 100)) {
                         $alert = new SendAlert("Reminder: You have reached your daily usage limit. Please check your usage and adjust accordingly.<br>Mailbox: $mailboxName<br>AI Agent: $aiAgentName");
                         $alert->handle();
 
                         $assignment->update([
                             'alert_triggered' => 1,
                         ]);
+
+                        ActivityLog::create([
+                            'properties' => '[]',
+                            'log_name' => 'aiassistant_errors',
+                            'description' => 'Reached out daily limit',
+                        ]);
+                        return;
                     }
                 }
             }

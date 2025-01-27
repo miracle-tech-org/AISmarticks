@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('title_full', 'Forwarded Tickets')
+@section('sidebar')
+@include('partials/sidebar_menu_toggle')
+@include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
     <div class="section-heading margin-bottom">

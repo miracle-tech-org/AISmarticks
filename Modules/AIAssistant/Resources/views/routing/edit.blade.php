@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('title_full', 'Edit Routing Rule')
+@section('sidebar')
+@include('partials/sidebar_menu_toggle')
+@include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
     <div class="section-heading margin-bottom">
@@ -8,7 +12,7 @@
 
     <div class="container">
         <div class="rules-container">
-            <form action="{{route('routing.update', $rule->id)}}" method="post" class="container">
+            <form action="{{route('routing.update', ['id' => $rule->id, 'mailbox_id' => $mailbox->id])}}" method="post" class="container">
                 {{ csrf_field() }}
                 <input type="hidden" name="id" value="{{$rule->id}}">
                 <div class="form-group">

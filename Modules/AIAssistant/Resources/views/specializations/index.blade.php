@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('title_full', __('Agent Specializations'))
+@section('sidebar')
+@include('partials/sidebar_menu_toggle')
+@include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
 
@@ -32,7 +36,7 @@
                                 </ul>
                             </td>
                             <td>
-                                <a href="{{ route('specializations.show', $agent->id) }}"
+                                <a href="{{ route('specializations.show', ['id' => $agent->id, 'mailbox_id' => $mailbox->id]) }}"
                                     class="btn btn-primary btn-sm">Edit</a>
                             </td>
                         </tr>

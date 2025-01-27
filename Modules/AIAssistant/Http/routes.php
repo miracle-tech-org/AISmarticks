@@ -37,7 +37,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     Route::get('/specializations/{id}/show',               "AgentSpecializationController@show")->name('specializations.show');
     Route::get('/specializations/{id}/create',             "AgentSpecializationController@create")->name('specializations.create');
     Route::post('/specializations/{id}/store',             "AgentSpecializationController@store")->name('specializations.store');
-    Route::get('/specializations/{id}/edit/{specId}',      "AgentSpecializationController@edit")->name('specializations.edit');
+    Route::get('/specializations/{id}/edit',               "AgentSpecializationController@edit")->name('specializations.edit');
     Route::post('/specializations/{id}/update',            "AgentSpecializationController@update")->name('specializations.update');
     Route::post('/specializations/{id}/destory',           "AgentSpecializationController@destroy")->name('specializations.destroy');
 
