@@ -348,10 +348,12 @@ class WhatsAppController extends Controller
         }
 
         if(\Module::isActive('aiassistant')) {
-            $ticket = new Ticket;
-            $ticket->message = $request->messages[0]['body'];
-            $job = new ProcessAIResponse($ticket);
-            $job->execute();
+            if (isset($request->messages[0]['body']) && !empty($request->messages[0]['body'])) {
+                $ticket = new Ticket;
+                $ticket->message = $request->messages[0]['body'];
+                $job = new ProcessAIResponse($ticket);
+                $job->execute();
+            }
         }
     }
 
