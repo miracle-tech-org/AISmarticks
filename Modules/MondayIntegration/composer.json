@@ -1,0 +1,25 @@
+{
+    "name": "freescout/mondayintegration",
+    "description": "",
+    "authors": [
+        {
+            "name": "FreeScout",
+            "email": "support@freescout.net"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\MondayIntegration\\Providers\\MondayIntegrationServiceProvider"
+            ],
+            "aliases": {
+                
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\MondayIntegration\\": ""
+        }
+    }
+}
