@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('title_full', __('Edit Agent Specializations'))
-@section('sidebar')
-@include('partials/sidebar_menu_toggle')
-@include('mailboxes/sidebar_menu')
-@endsection
 
 @section('content')
     <div class="section-heading">
@@ -14,7 +10,7 @@
     <br>
     <div class="container">
         <div class="rules-container">
-            <form action="{{ route('specializations.store', ['id' => $agentId, 'mailbox_id' => $mailbox->id]) }}" method="post" class="container">
+            <form action="{{ route('specializations.store', $agentId) }}" method="post" class="container">
                 {{ csrf_field() }}
                 <div class="form-group">
                     <label for="skill">Skill</label>

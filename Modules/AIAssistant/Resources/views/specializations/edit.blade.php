@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('title_full', __('Update Agent Specializations'))
-@section('sidebar')
-@include('partials/sidebar_menu_toggle')
-@include('mailboxes/sidebar_menu')
-@endsection
 
 @section('content')
     <div class="section-heading">
@@ -15,7 +11,7 @@
     
     <div class="container">
         <div class="rules-container">
-            <form action="{{ route('specializations.update', ['id' => $agentId, 'mailbox_id' => $mailbox->id]) }}" method="post" class="container">
+            <form action="{{ route('specializations.update', $agentId) }}" method="post" class="container">
                 {{ csrf_field() }}
                 <input type="hidden" name="id" value="{{$spec->id}}">
                 <div class="form-group">

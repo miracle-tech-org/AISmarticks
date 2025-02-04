@@ -7,7 +7,6 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
 use Modules\AIAssistant\Models\Workload;
-use App\Mailbox;
 
 class WorkloadController extends Controller
 {
@@ -15,13 +14,10 @@ class WorkloadController extends Controller
      * Display a listing of the resource.
      * @return Response
      */
-    public function index(Request $request)
+    public function index()
     {
-        $mailbox_id = $request->query('mailbox_id');
-        $mailbox = Mailbox::findOrFail($mailbox_id);
-
         $tickets = Workload::get();
-        return view('aiassistant::workloads.index', compact('tickets', 'mailbox'));
+        return view('aiassistant::workloads.index', compact('tickets'));
     }
 
     /**

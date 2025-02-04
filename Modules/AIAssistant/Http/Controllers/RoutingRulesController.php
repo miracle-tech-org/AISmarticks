@@ -7,7 +7,6 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
 use Modules\AIAssistant\Models\RoutingRule;
-use App\Mailbox;
 
 class RoutingRulesController extends Controller
 {
@@ -17,15 +16,12 @@ class RoutingRulesController extends Controller
      */
     public function index(Request $request)
     {
-        $mailbox_id = $request->query('mailbox_id');
-        $mailbox = Mailbox::findOrFail($mailbox_id);
-
         $rules = RoutingRule::with('team')
             ->orderBy('priority')
             ->get();
         $teams = \Team::getTeams();
 
-        return view('aiassistant::routing.index', compact('rules', 'teams', 'mailbox'));
+        return view('aiassistant::routing.index', compact('rules', 'teams'));
     }
 
     /**
@@ -34,11 +30,8 @@ class RoutingRulesController extends Controller
      */
     public function create(Request $request)
     {
-        $mailbox_id = $request->query('mailbox_id');
-        $mailbox = Mailbox::findOrFail($mailbox_id);
-
         $teams = \Team::getTeams();
-        return view('aiassistant::routing.create', compact('teams', 'mailbox'));
+        return view('aiassistant::routing.create', compact('teams'));
     }
 
     /**
@@ -48,8 +41,6 @@ class RoutingRulesController extends Controller
      */
     public function store(Request $request)
     {
-        $mailbox_id = $request->query('mailbox_id');
-        
         $rule = new RoutingRule;
         $rule->name = $request->name;
         $rule->conditions = json_encode($request->conditions);
@@ -59,7 +50,7 @@ class RoutingRulesController extends Controller
         $rule->is_active = $request->is_active;
         $rule->save();
 
-        return redirect()->route('routing.index', ['mailbox_id' => $mailbox_id]);
+        return redirect()->route('routing.index');
     }
 
     /**
@@ -68,12 +59,9 @@ class RoutingRulesController extends Controller
      */
     public function edit($id, Request $request)
     {
-        $mailbox_id = $request->query('mailbox_id');
-        $mailbox = Mailbox::findOrFail($mailbox_id);
-
         $teams = \Team::getTeams();
         $rule = RoutingRule::find($id);
-        return view('aiassistant::routing.edit', compact('teams', 'rule', 'mailbox'));
+        return view('aiassistant::routing.edit', compact('teams', 'rule'));
     }
 
     /**
@@ -83,8 +71,6 @@ class RoutingRulesController extends Controller
      */
     public function update(Request $request)
     {
-        $mailbox_id = $request->query('mailbox_id');
-
         RoutingRule::find($request->id)->update([
             'name' => $request->name,
             'conditions' => json_encode($request->conditions),
@@ -93,17 +79,16 @@ class RoutingRulesController extends Controller
             'required_skills' => json_encode($request->required_skills),
             'is_active' => $request->is_active,
         ]);
-        return redirect()->route('routing.index', ['mailbox_id' => $mailbox_id]);
+        return redirect()->route('routing.index');
     }
 
     /**
      * Remove the specified resource from storage.
      * @return Response
      */
-    public function destroy($id, Request $request)
+    public function destroy($id)
     {
         RoutingRule::find($id)->delete();
-        $mailbox_id = $request->query('mailbox_id');
-        return redirect()->route('routing.index', ['mailbox_id' => $mailbox_id]);
+        return redirect()->route('routing.index');
     }
 }

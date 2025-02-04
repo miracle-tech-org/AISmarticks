@@ -39,6 +39,11 @@ class AIAssistantServiceProvider extends ServiceProvider
             }
         }, 35);
 
+        \Eventy::addAction('menu.manage.after_mailboxes', function($mailbox) {
+            echo \View::make('aiassistant::partials/manage_menu', ['mailbox' => $mailbox])->render();
+        }, 15);
+
+
         \Eventy::addFilter('menu.selected', function($menu) {
             $menu['aiassistant'] = [
                 'aiagents.index',
@@ -48,6 +53,15 @@ class AIAssistantServiceProvider extends ServiceProvider
             ];
             $menu['aiassistant-report'] = [
                 'reports.agent',
+            ];
+            $menu['aiassistant-specializations'] = [
+                'specializations.index',
+            ];
+            $menu['aiassistant-workloads'] = [
+                'workloads.index',
+            ];
+            $menu['aiassistant-routing-rule'] = [
+                'routing.index',
             ];
             return $menu;
         });

@@ -1,11 +1,6 @@
 @extends('layouts.app')
 
-@section('title_full', 'Routing Rules'.' - '.$mailbox->name)
-
-@section('sidebar')
-@include('partials/sidebar_menu_toggle')
-@include('mailboxes/sidebar_menu')
-@endsection
+@section('title_full', 'AI Routing Rules')
 
 @section('content')
     <div class="section-heading margin-bottom">
@@ -15,7 +10,7 @@
 
     <div class="container">
         <div class="rules-container">
-            <a href="{{ route('routing.create', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-primary add-rule">
+            <a href="{{ route('routing.create') }}" class="btn btn-primary add-rule">
                 {{ __('Add Rule') }}
             </a>
 
@@ -65,8 +60,8 @@
                             <td>{{ $rule->is_active ? 'Active' : 'Inactive' }}</td>
                             <td>
                                 <!-- Add action buttons here (e.g., edit, delete) -->
-                                <a href="{{ route('routing.edit', ['id' => $rule->id, 'mailbox_id' => $mailbox->id]) }}" class="btn btn-primary btn-sm">Edit</a>
-                                <form action="{{ route('routing.destroy', ['id' => $rule->id, 'mailbox_id' => $mailbox->id]) }}" method="POST"
+                                <a href="{{ route('routing.edit', $rule->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                <form action="{{ route('routing.destroy', $rule->id) }}" method="POST"
                                     style="display:inline;">
                                     {{ csrf_field() }}
                                     <button type="submit" class="delete-btn btn btn-danger btn-sm"
