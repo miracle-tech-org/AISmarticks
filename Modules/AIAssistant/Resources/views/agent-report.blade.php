@@ -37,7 +37,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <h3>Interaction Logs</h3>
-                    <h3 style="text-align: center">Conversations: {{count(App\Conversation::where('mailbox_id', $aiAgent->mailbox_id)->get())}} &nbsp;&nbsp;&nbsp;Replies: {{count($interactionLogs)}}</h3>
+                    <h3 style="text-align: center">Conversations: {{count(App\Conversation::where('mailbox_id', $aiAgent->mailbox_id)->get())}} &nbsp;&nbsp;&nbsp;Replies: {{count($interactionLogs)}}&nbsp;&nbsp;&nbsp;Average of Reply: {{(int)(count($interactionLogs) / count(App\Conversation::where('mailbox_id', $aiAgent->mailbox_id)->get()))}}</h3>
                     <div class="table-responsive" style="padding: 1%">
                         <table class="table table-striped" id="reportTable">
                             <thead>
