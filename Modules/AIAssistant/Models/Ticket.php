@@ -2,15 +2,10 @@
 
 namespace Modules\AIAssistant\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use App\Notifications\UserNotifiedOfResponse;
-use Modules\AIAssistant\Models\AIAgent;
-use App\Thread;
 use App\Conversation;
+use App\Thread;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class Ticket
 {
@@ -88,11 +83,8 @@ class Ticket
         $conversation = Conversation::find($this->conversation_id);
         $this->folder_id = $conversation ? $conversation->folder_id : '0';
         $this->mailbox_id = $conversation ? $conversation->mailbox_id : '0';
-        
-        $assignment = AIAgentAssignment::where([
-            ['mailbox_id', '=', $this->mailbox_id],
-            ['status', '=', 1],
-        ])->first();
+
+        $assignment = AIAgentAssignment::where('mailbox_id', $this->mailbox_id)->first();
         return $assignment;
     }
 }

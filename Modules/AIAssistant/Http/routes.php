@@ -2,7 +2,7 @@
 
 Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'namespace' => 'Modules\AIAssistant\Http\Controllers'], function()
 {
-    Route::get('/ai-agents/session', 'AIAssistantController@index')->name("aiagents.session");
+    Route::get('/ai-agents/session',                        'AIAssistantController@index')->name("aiagents.session");
 
     Route::get('/ai-assistant/limits',                      'AIAssistantController@showLimits')->name('ai-assistant.limits');
     Route::post('/ai-assistant/limits',                     'AIAssistantController@saveLimits')->name('ai-assistant.save-limits');
@@ -20,7 +20,6 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     
     Route::get('/ai-assignments/{id}',                      "AIAssignmentController@index")->name("assignments.index");
     Route::post('/ai-assignments/{id}/store',               "AIAssignmentController@store")->name("assignments.store");
-    Route::post('/ai-assignments/{id}/get',                 "AIAssignmentController@get")->name("assignments.get");
 
     Route::get('/alert-test',                               "ReportingController@showTestAlert");
     Route::get('/init-daily-usage',                         "ReportingController@initDailyUsage");
