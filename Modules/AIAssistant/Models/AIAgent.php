@@ -16,7 +16,6 @@ class AIAgent extends Model
         'model',
         'system_prompt',
         'faqs',
-        'mailbox_id',
         'domain_specific_responses', // New field for domain-specific responses
     ];
 

@@ -6,29 +6,26 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Crypt;
-
 use Modules\AIAssistant\Http\Requests\AIAgentRequest;
 use Modules\AIAssistant\Models\AIAgent;
 use Modules\AIAssistant\Models\AIAgentAssignment;
-use App\Mailbox;
 
 class AIAgentController extends Controller
 {
 
-    public function __construct() {
+    public function __construct()
+    {
         // $this->middleware('can:manage_ai_agents');
     }
     /**
      * Display a listing of the resource.
      * @return Response
      */
-    public function index($mailbox_id)
+    public function index()
     {
-        $aiAgents = AIAgent::where('mailbox_id', $mailbox_id)->get();
-        $mailbox = Mailbox::findOrFail($mailbox_id);
+        $aiAgents = AIAgent::get();
         return view('aiassistant::aiagents.index', [
-            'mailbox' => $mailbox,
-            'aiAgents' => $aiAgents
+            'aiAgents' => $aiAgents,
         ]);
     }
 
@@ -36,12 +33,9 @@ class AIAgentController extends Controller
      * Show the form for creating a new resource.
      * @return Response
      */
-    public function create($mailbox_id)
+    public function create()
     {
-        $mailbox = Mailbox::findOrFail($mailbox_id);
-        return view('aiassistant::aiagents.create', [
-            'mailbox' => $mailbox
-        ]);
+        return view('aiassistant::aiagents.create');
     }
 
     /**
@@ -49,19 +43,16 @@ class AIAgentController extends Controller
      * @param  Request $request
      * @return Response
      */
-    public function store(AIAgentRequest $request, $mailbox_id)
+    public function store(AIAgentRequest $request)
     {
         $validatedInputs = $request->validated();
-        
         $data = $request->all();
-        $data['mailbox_id'] = $mailbox_id;
 
         $aiAgent = AIAgent::create($data);
 
         // Create default assignment with rate limiting
         AIAgentAssignment::create([
             'ai_agent_id' => $aiAgent->id,
-            'mailbox_id' => $mailbox_id,
             'monthly_usage_limit' => 10000, // Default monthly usage limit
             'daily_limit' => 350, // Default daily usage limit
             'current_usage' => 0, // Default usage alert threshold
@@ -70,24 +61,21 @@ class AIAgentController extends Controller
             'daily_usage_alert' => 80, // Default usage alert threshold
         ]);
 
-        return redirect()->route('aiagents.index', ['mailbox_id' => $mailbox_id])->with('success', 'AI Agent created successfully!');
+        return redirect()->route('aiagents.index')->with('success', 'AI Agent created successfully!');
     }
 
     /**
      * Show the form for editing the specified resource.
      * @return Response
      */
-    public function edit($mailbox_id)
+    public function edit($id)
     {
-        $id = request()->query('id');
         $aiAgent = AIAgent::find($id);
 
         $aiAgent->openai_api_key = Crypt::encryptString($aiAgent->openai_api_key);
 
-        $mailbox = Mailbox::findOrFail($mailbox_id);
         return view('aiassistant::aiagents.edit', [
-            'mailbox' => $mailbox,
-            'aiAgent' => $aiAgent
+            'aiAgent' => $aiAgent,
         ]);
     }
 
@@ -96,29 +84,29 @@ class AIAgentController extends Controller
      * @param  Request $request
      * @return Response
      */
-    public function update(AIAgentRequest $request, $mailbox_id, $id)
+    public function update(AIAgentRequest $request, $id)
     {
         $validatedInputs = $request->validated();
 
         $aiAgent = AIAgent::find($id);
         $data = $request->all();
-        if (!str_starts_with($data['openai_api_key'], 'sk-')) {
+        if (substr($data['openai_api_key'], 0, 3) !== 'sk-') {
             unset($data['openai_api_key']);
         }
-    
+
         $aiAgent->update($data);
 
-        return redirect()->route('aiagents.index', ['mailbox_id' => $mailbox_id])->with('success', 'AI Agent updated successfully!');
+        return redirect()->route('aiagents.index')->with('success', 'AI Agent updated successfully!');
     }
 
     /**
      * Remove the specified resource from storage.
      * @return Response
      */
-    public function destroy($mailbox_id, $id)
+    public function destroy($id)
     {
         $aiAgent = AIAgent::find($id);
         $aiAgent->delete();
-        return redirect()->route('aiagents.index', ['mailbox_id' => $mailbox_id])->with('success', 'AI Agent deleted successfully!');
+        return redirect()->route('aiagents.index')->with('success', 'AI Agent deleted successfully!');
     }
 }

@@ -1,11 +1,6 @@
 @extends('layouts.app')
 
-@section('title_full', "AIAssistant".' - '.$mailbox->name)
-
-@section('sidebar')
-@include('partials/sidebar_menu_toggle')
-@include('mailboxes/sidebar_menu')
-@endsection
+@section('title_full', "AIAssistant Create")
 
 @section('content')
 <div class="section-heading margin-bottom">
@@ -13,7 +8,7 @@
 </div>
 
 <div class="col-xs-12">
-    <form method="POST" action="{{ route('aiagents.store', ['mailbox_id'=>$mailbox->id]) }}">
+    <form method="POST" action="{{ route('aiagents.store') }}">
         {{ csrf_field() }}
         <div class="form-group">
             <label for="name">Name</label>
