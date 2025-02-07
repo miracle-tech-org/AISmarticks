@@ -74,7 +74,7 @@ class ProcessAIResponse implements ShouldQueue
                         'messages' => [
                             [
                                 "role" => "system",
-                                "content" => "You are an AI model designed to evaluate whether a user's input is related to Smarticks.com. Smarticks.com includes the following sections:\nHome: General information about the platform.\nAbout: Details about the company, its mission, and vision.\nFeatures: Information about Smarticks.com features such as interactive tools, or user experience.\nPricing: Details about subscription plans, costs, and payment options.\nHelp Center: Information on account management, troubleshooting, deleting accounts, and customer support.\nAPI Docs: Technical documentation for developers using Smarticks.com's API.\nPerform the following:\nIf the message is a greeting (e.g., Hello, Hi there, or similar), always return 100%.\nIf the message is directly related to any of the above sections, analyze the content and return a high confidence percentage.\nIf the message is unrelated to Smarticks.com, return a low confidence percentage.\nImportant:\nResponse message can be only like this: x%"
+                                "content" => "You are an AI model designed to evaluate whether a user's input is related to Smarticks.com. Smarticks.com includes the following sections:\nHome: General information about the platform.\nAbout: Details about the company, its mission, and vision.\nFeatures: Information about Smarticks.com features such as interacti,ve tools, or user experience.\nPricing: Details about subscription plans, costs, and payment options.\nHelp Center: Information on account management, troubleshooting, deleting accounts, and customer support.\nAPI Docs: Technical documentation for developers using Smarticks.com's API.\nPerform the following:\nIf the message is a greeting (e.g., Hello, Hi there, or similar), always return 100%.\nIf the message is directly related to any of the above sections, analyze the content and return a high confidence percentage.\nIf the message is unrelated to Smarticks.com, return a low confidence percentage.\nImportant:\nResponse message can be only like this(json): \"{\"level\": \"x%\", \"reason\": \"xxx...\"}"
                             ],
                             [
                                 "role" => "user",
@@ -86,12 +86,14 @@ class ProcessAIResponse implements ShouldQueue
                 ]);
 
                 $body = json_decode($response->getBody(), true);
-                $aiResponse = $body['choices'][0]['message']['content'] ?? '';
+                $aiResponse = $body['choices'][0]['message']['content'] ?? '{"level": "0%", "reason": ""}';
+                $jsonMiddleware = json_decode($aiResponse);
 
-                $pro = (float)preg_replace('/[^0-9]/', '', $aiResponse);
+                $pro = (float)preg_replace('/[^0-9]/', '', $jsonMiddleware->level);
                 if($pro < 40) {
                     Workload::create([
-                        'ticket_id' => $this->ticket->thread_id
+                        'ticket_id' => $this->ticket->thread_id,
+                        'review' => $aiResponse
                     ]);
                     return;
                 }

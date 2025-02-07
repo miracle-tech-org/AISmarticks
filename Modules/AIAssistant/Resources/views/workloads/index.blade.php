@@ -15,6 +15,7 @@
                     <tr>
                         <th>Ticket ID</th>
                         <th>Message</th>
+                        <th>JSON</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -22,6 +23,7 @@
                         <tr>
                             <td>{{ $ticket->thread->id }}</td>
                             <td>{{ $ticket->thread->body }}</td>
+                            <td>{{ $ticket->review }}</td>
                         </tr>
                     @endforeach
                 </tbody>
