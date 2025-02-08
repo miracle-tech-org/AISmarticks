@@ -74,7 +74,7 @@ class AIAgent extends Model
      */
     public function assignments()
     {
-        return $this->hasMany(AIAgentAssignment::class);
+        return $this->hasOne(AIAgentAssignment::class, 'ai_agent_id');
     }
 
     protected $casts = [
