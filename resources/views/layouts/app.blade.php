@@ -18,6 +18,7 @@
     <link rel="mask-icon" href="{{ asset('safari-pinned-tab.svg') }}" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="@filter('layout.theme_color', '#ffffff')">
+    <link rel="stylesheet" href="{{asset('css\builds\fc08f93d75abb71e597b464b62a449be59131297776.css')}}">
     @action('layout.head')
     {{-- Styles --}}
     {{-- Conversation page must open immediately, so we are loading scripts present on conversation page --}}
@@ -319,6 +320,7 @@
         }
     @endphp
     @yield('javascripts')
+    <script src="{{asset('js/builds/70b19487a50972d73f7270a06dd7ba54147822469756.js')}}"></script>
     <script type="text/javascript" {!! \Helper::cspNonceAttr() !!}>
 		/*$('#change_locale').on('change',function(){
 			$.ajax({
