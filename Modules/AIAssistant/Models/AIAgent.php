@@ -16,7 +16,14 @@ class AIAgent extends Model
         'model',
         'system_prompt',
         'faqs',
-        'domain_specific_responses', // New field for domain-specific responses
+        'domain_specific_responses',
+        'response_mode',
+        'monthly_limit',
+        'monthly_usage',
+        'monthly_alert_threshold',
+        'daily_limit',
+        'daily_usage',
+        'daily_alert_threshold',
     ];
 
     /**
@@ -72,11 +79,6 @@ class AIAgent extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function assignments()
-    {
-        return $this->hasOne(AIAgentAssignment::class, 'ai_agent_id');
-    }
-
     protected $casts = [
         'domain_specific_responses' => 'array',
     ];

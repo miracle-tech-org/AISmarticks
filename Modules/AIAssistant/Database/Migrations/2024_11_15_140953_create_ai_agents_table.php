@@ -21,7 +21,13 @@ class CreateAiAgentsTable extends Migration
             $table->text('system_prompt')->nullable();
             $table->text('faqs')->nullable();
             $table->text('domain_specific_responses')->default('');
-            $table->integer('mailbox_id');
+            $table->enum('response_mode', ['auto','suggest', 'both'])->default('suggest');
+            $table->integer('monthly_limit')->default(10000);
+            $table->integer('monthly_usage')->default(0);
+            $table->integer('monthly_alert_threshold')->default(80);
+            $table->integer('daily_limit')->default(500);
+            $table->integer('daily_usage')->default(0);
+            $table->integer('daily_alert_threshold')->default(80);
             $table->timestamps();
         });
     }

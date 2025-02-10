@@ -7,7 +7,6 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Modules\AIAssistant\Jobs\ProcessAIResponse;
 use Modules\AIAssistant\Models\AIAgent;
-use Modules\AIAssistant\Models\AIAgentAssignment;
 use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
 
@@ -80,15 +79,5 @@ class ReportingController extends Controller
         $ticket->message = "How can I create laravel new project?";
         $job = new ProcessAIResponse($ticket);
         $job->execute();
-    }
-
-    public function initDailyUsage()
-    {
-        AIAgentAssignment::query()->update(['daily_usage' => 0]);
-    }
-
-    public function initMonthlyUsage()
-    {
-        AIAgentAssignment::query()->update(['current_usage' => 0]);
     }
 }
