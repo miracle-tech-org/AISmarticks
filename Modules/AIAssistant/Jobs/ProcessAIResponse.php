@@ -4,51 +4,35 @@ namespace Modules\AIAssistant\Jobs;
 
 use App\ActivityLog;
 use App\Jobs\SendAlert;
-use DB;
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Modules\AIAssistant\Events\APIUsageLimitApproaching;
-use Modules\AIAssistant\Events\APIUsageLimitReached;
-use Modules\AIAssistant\Models\AIAgentAssignment;
+
+use Modules\AIAssistant\Models\AIAgent;
 use Modules\AIAssistant\Models\AIInteractionLog;
 use Modules\AIAssistant\Models\Ticket;
 use Modules\AIAssistant\Models\Workload;
 use Modules\AIAssistant\Services\OpenAIService;
+use DB;
 
 class ProcessAIResponse implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $ticket;
-    protected $maxRetryAttempts = 3; // Maximum retry attempts
-    protected $retryDelay = 300; // Retry delay in seconds
+    protected $maxRetryAttempts = 3;
+    protected $retryDelay = 300;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
     public function __construct(Ticket $ticket)
     {
         $this->ticket = $ticket;
     }
 
-    /**
-     * Fallback to alternative AI service
-     *
-     * @param \Exception $e
-     *
-     * @return void
-     */
     private function fallbackToAlternativeAI(\Exception $e)
     {
-        // Implement alternative AI service logic
-        // For demonstration purposes, a simple log is written
         \Log::error('Fallback to alternative AI service due to error: ' . $e->getMessage());
         ActivityLog::create([
             'properties' => '[]',
@@ -106,8 +90,9 @@ class ProcessAIResponse implements ShouldQueue
                 return;
             }
 
-            if ($assignment && $assignment->current_usage < $assignment->monthly_usage_limit * ($assignment->usage_alert_threshold / 100) &&
-                $assignment->daily_usage < $assignment->daily_limit * ($assignment->daily_usage_alert / 100)) {
+            if ($assignment && 
+                $assignment->monthly_usage < $assignment->monthly_limit * ($assignment->monthly_alert_threshold / 100) &&
+                $assignment->daily_usage < $assignment->daily_limit * ($assignment->daily_alert_threshold / 100)) {
 
                 try {
                     $client = new Client();
@@ -131,12 +116,10 @@ class ProcessAIResponse implements ShouldQueue
                     return;
                 }
 
-                $aiAgent = $assignment->aiAgent;
                 try {
 
-                    $openAIService = new OpenAIService($aiAgent->openai_api_key, $aiAgent->model);
+                    $openAIService = new OpenAIService($assignment->openai_api_key, $assignment->model);
 
-                    // $threads = DB::select('SELECT * FROM threads WHERE customer_id = ' . $this->ticket->customer_id);
                     $messages = [
                         [
                             "role" => "user",
@@ -144,16 +127,9 @@ class ProcessAIResponse implements ShouldQueue
                         ],
                     ];
 
-                    // $messages = array_map(function ($thread) {
-                    //     return [
-                    //         'role' => $thread->type == '1' ? 'user' : 'assistant',
-                    //         'content' => $thread->body,
-                    //     ];
-                    // }, $threads);
-
-                    $system = $aiAgent->system_prompt;
-                    if ($aiAgent->faqs != "") {
-                        $system .= "\nHere are faqs:\n" . $aiAgent->faqs;
+                    $system = $assignment->system_prompt;
+                    if ($assignment->faqs != "") {
+                        $system .= "\nHere are faqs:\n" . $assignment->faqs;
                     }
 
                     array_unshift($messages, ["role" => "system", "content" => $system]);
@@ -166,7 +142,7 @@ class ProcessAIResponse implements ShouldQueue
                         $this->handleAIResponse($aiResponse, $this->ticket, $assignment, $tokensUsed);
 
                         $data = [
-                            'ai_agent_id' => $aiAgent->id,
+                            'ai_agent_id' => $assignment->id,
                             'conversation_id' => $this->ticket->conversation_id,
                             'input_text' => $this->ticket->message,
                             'output_text' => $aiResponse,
@@ -236,18 +212,14 @@ class ProcessAIResponse implements ShouldQueue
                 }
             } else {
                 if (!is_null($assignment)) {
-                    $aiAgentName = $assignment->aiAgent->name;
+                    $aiAgentName = $assignment->name;
                     $mailboxName = DB::table('mailboxes')
                         ->where('id', $this->ticket->mailbox_id)
                         ->value('name');
 
-                    if ($assignment->current_usage > $assignment->monthly_usage_limit * ($assignment->usage_alert_threshold / 100)) {
+                    if ($assignment->monthly_usage > $assignment->monthly_limit * ($assignment->monthly_alert_threshold / 100)) {
                         $alert = new SendAlert("Reminder: You have reached your monthly usage limit. Please check your usage and adjust accordingly.<br>Mailbox: $mailboxName<br>AI Agent: $aiAgentName");
                         $alert->handle();
-
-                        $assignment->update([
-                            'alert_triggered' => 2,
-                        ]);
 
                         ActivityLog::create([
                             'properties' => '[]',
@@ -257,13 +229,9 @@ class ProcessAIResponse implements ShouldQueue
                         return;
                     }
 
-                    if($assignment->daily_usage > $assignment->daily_limit * ($assignment->daily_usage_alert / 100)) {
+                    if($assignment->daily_usage > $assignment->daily_limit * ($assignment->daily_alert_threshold / 100)) {
                         $alert = new SendAlert("Reminder: You have reached your daily usage limit. Please check your usage and adjust accordingly.<br>Mailbox: $mailboxName<br>AI Agent: $aiAgentName");
                         $alert->handle();
-
-                        $assignment->update([
-                            'alert_triggered' => 1,
-                        ]);
 
                         ActivityLog::create([
                             'properties' => '[]',
@@ -277,93 +245,12 @@ class ProcessAIResponse implements ShouldQueue
         }
     }
 
-    /**
-     * Get AI Agent Assignment for the given ticket
-     *
-     * @param mixed $ticket
-     *
-     * @return AIAgentAssignment|null
-     */
-    private function getAIAgentAssignment(Ticket $ticket)
-    {
-        // Retrieve assignment based on ticket (conversation or mailbox)
-        // For demonstration purposes, assume we have a method to fetch the assignment
-        return $ticket->getAIAgentAssignment();
-    }
-
-    /**
-     * Build messages for the AI response generation
-     *
-     * @param mixed $ticket
-     * @param string|null $systemPrompt
-     *
-     * @return array
-     */
-    private function buildMessages(Ticket $ticket, $systemPrompt = null)
-    {
-        // Construct messages array for AI response generation
-        // Include system prompt (if provided) and user input (from the ticket)
-        $messages = [];
-
-        if ($systemPrompt) {
-            $messages[] = [
-                'role' => 'system',
-                'content' => $systemPrompt,
-            ];
-        }
-
-        // Add user input from the ticket
-        $messages[] = [
-            'role' => 'user',
-            'content' => $ticket->message,
-        ];
-
-        return $messages;
-    }
-
-    /**
-     * Handle AI Response
-     *
-     * @param string $aiResponse
-     * @param mixed $ticket
-     * @param AIAgentAssignment $assignment
-     * @param int $tokensUsed
-     *
-     * @return void
-     */
-    private function handleAIResponse($aiResponse, $ticket, AIAgentAssignment $assignment, $tokensUsed)
+    private function handleAIResponse($aiResponse, $ticket, AIAgent $assignment, $tokensUsed)
     {
         // Update assignment usage
         $assignment->update([
-            'current_usage' => $assignment->current_usage + $tokensUsed,
+            'monthly_usage' => $assignment->monthly_usage + $tokensUsed,
             'daily_usage' => $assignment->daily_usage + $tokensUsed,
         ]);
-
-        // Trigger usage alerts if necessary
-        // $this->checkUsageAlerts($assignment);
-
-        // Respond to the user with the AI-generated response
-        // For demonstration purposes, assume we have a method to respond to the user
-        // $ticket->respondToUser($aiResponse);
-    }
-
-    /**
-     * Check if usage alerts should be triggered
-     *
-     * @param AIAgentAssignment $assignment
-     *
-     * @return void
-     */
-    private function checkUsageAlerts(AIAgentAssignment $assignment)
-    {
-        // Calculate usage percentage
-        $usagePercentage = ($assignment->current_usage / $assignment->monthly_usage_limit) * 100;
-
-        // Trigger alerts based on the usage threshold
-        if ($usagePercentage >= $assignment->usage_alert_threshold) {
-            event(new APIUsageLimitApproaching($assignment));
-        } elseif ($usagePercentage >= 100) {
-            event(new APIUsageLimitReached($assignment));
-        }
     }
 }

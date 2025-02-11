@@ -35,32 +35,7 @@ class BillingLicenseController extends Controller
 //            ['meta' => json_decode($new)] // Данные для обновления или создания новой записи
 //        );exit;
 
-		$agentResult = DB::select("
-			SELECT c.name AS mailbox_name, 
-               b.name AS ai_agent_name, 
-               a.monthly_usage_limit,
-               a.daily_limit,
-			   a.current_usage
-        	FROM ai_agent_assignments AS a 
-        	RIGHT JOIN ai_agents AS b ON a.ai_agent_id = b.id 
-        	RIGHT JOIN mailboxes AS c ON a.mailbox_id = c.id
-		");
-		$agentsByMailbox = collect($agentResult)->groupBy('mailbox_name');
-
-		$mailboxUsageSums = $agentsByMailbox->map(function ($items) {
-			return $items->sum('current_usage');
-		});
-		$mailboxUsageArray = $mailboxUsageSums->toArray();
-
-		$result = DB::select("
-        SELECT SUM(a.current_usage) as total_usage
-			FROM ai_agent_assignments AS a
-			RIGHT JOIN ai_agents AS b ON a.ai_agent_id = b.id
-			RIGHT JOIN mailboxes AS c ON a.mailbox_id = c.id
-		");
-
-		// Access the first result (there's only one row returned for SUM)
-		$totalUsage = $result[0]->total_usage;
+		$agents = DB::select("SELECT * FROM ai_agents");
 
         $section_name = 'License and subscription';
         if ($section == 'license')
@@ -255,7 +230,7 @@ class BillingLicenseController extends Controller
                 ];
         }
 
-        return view('billing-license/view', ['section' => $section, 'section_name' => $section_name, 'data' => $data, 'agentsByMailbox' => $agentsByMailbox, 'totalUsage' => $totalUsage, 'mailboxUsageArray' => $mailboxUsageArray]);
+        return view('billing-license/view', ['section' => $section, 'section_name' => $section_name, 'data' => $data, 'agents' => $agents]);
     }
 
     public function viewSave($section, Request $request)

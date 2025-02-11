@@ -28,11 +28,7 @@
                             @if (count($agents) > 0 && $agents[0]->id != '')
                                 @foreach ($agents as $agent)
                                     <li>
-                                        @if ($agent->assignments)
-                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->name }} [Monthly Limit: {{$agent->assignments->monthly_usage_limit}} Monthly Usage: {{$agent->assignments->current_usage}} Daily Limit: {{$agent->assignments->daily_limit}} Daily Usage: {{$agent->assignments->daily_usage}} Replies: {{$agent->count}}]</a>
-                                        @else
-                                            <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->name }} [Monthly Limit: 0 Monthly Usage: 0 Daily Limit: 0 Daily Usage: 0 Replies: 0]</a>
-                                        @endif
+                                        <a href="{{ route('reports.show', ['id' => $agent->id]) }}">{{ $agent->name }} [Monthly Limit: {{$agent->monthly_limit}} Monthly Usage: {{$agent->monthly_usage}} Daily Limit: {{$agent->daily_limit}} Daily Usage: {{$agent->daily_usage}} Replies: {{$agent->count}}]</a>
                                     </li>
                                 @endforeach
                             @endif
