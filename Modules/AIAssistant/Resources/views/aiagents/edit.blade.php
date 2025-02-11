@@ -86,6 +86,17 @@
                 <input type="text" id="daily_alert_threshold" name="daily_alert_threshold"
                     value="{{ $aiAgent->daily_alert_threshold }}" class="form-control">
             </div>
+
+            <div class="form-group">
+                <label for="user_id">Response Mode</label>
+                <select class="form-control" name="user_id" id="user_id" required>
+                    <option value="">Click to Select User</option>
+                    @foreach ($users as $item)
+                        <option value="{{$item->id}}">{{$item->first_name}} {{$item->last_name}}</option>
+                    @endforeach
+                </select>
+            </div>
+
             <button type="submit" class="btn btn-primary">Update AI Agent</button>
         </form>
     </div>
@@ -122,5 +133,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("response_mode").value = @json($aiAgent->response_mode);
+        document.getElementById("user_id").value = @json($aiAgent->user_id);
     });
 </script>

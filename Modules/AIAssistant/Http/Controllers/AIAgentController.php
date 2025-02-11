@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Crypt;
 use Modules\AIAssistant\Http\Requests\AIAgentRequest;
 use Modules\AIAssistant\Models\AIAgent;
+use App\User;
 
 class AIAgentController extends Controller
 {
@@ -34,7 +35,10 @@ class AIAgentController extends Controller
      */
     public function create()
     {
-        return view('aiassistant::aiagents.create');
+        $users = User::nonDeleted()->where('role', 1)->get();
+        $users = User::sortUsers($users);
+
+        return view('aiassistant::aiagents.create', compact('users'));
     }
 
     /**
@@ -59,9 +63,10 @@ class AIAgentController extends Controller
 
         $aiAgent->openai_api_key = Crypt::encryptString($aiAgent->openai_api_key);
 
-        return view('aiassistant::aiagents.edit', [
-            'aiAgent' => $aiAgent,
-        ]);
+        $users = User::nonDeleted()->where('role', 1)->get();
+        $users = User::sortUsers($users);
+
+        return view('aiassistant::aiagents.edit', compact('aiAgent', 'users'));
     }
 
     /**

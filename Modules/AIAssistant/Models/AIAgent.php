@@ -24,6 +24,7 @@ class AIAgent extends Model
         'daily_limit',
         'daily_usage',
         'daily_alert_threshold',
+        'user_id',
     ];
 
     /**
