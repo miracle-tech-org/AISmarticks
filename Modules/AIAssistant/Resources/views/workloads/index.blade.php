@@ -14,8 +14,13 @@
                 <thead>
                     <tr>
                         <th>Ticket ID</th>
-                        <th>Message</th>
-                        <th>JSON</th>
+                        <th>User Query</th>
+                        <th>AI Response</th>
+                        <th>Tags Applied</th>
+                        <th>Action</th>
+                        <th>Rating</th>
+                        <th>Date</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -23,7 +28,11 @@
                         <tr>
                             <td>{{ $ticket->thread->id }}</td>
                             <td>{{ $ticket->thread->body }}</td>
-                            <td>{{ $ticket->review }}</td>
+                            <td>{{ json_decode($ticket->review)->reason }}</td>
+                            <td>{{ 'needs-human' }}</td>
+                            <td>{{ 'addTag' }}</td>
+                            <td>☆☆☆☆☆</td>
+                            <td>{{ $ticket->created_at }}</td>
                         </tr>
                     @endforeach
                 </tbody>
