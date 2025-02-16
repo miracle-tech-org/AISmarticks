@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Crypt;
 use Modules\AIAssistant\Http\Requests\AIAgentRequest;
 use Modules\AIAssistant\Models\AIAgent;
+use DB;
 use App\User;
 
 class AIAgentController extends Controller
@@ -35,10 +36,7 @@ class AIAgentController extends Controller
      */
     public function create()
     {
-        $users = User::nonDeleted()->where('role', 1)->get();
-        $users = User::sortUsers($users);
-
-        return view('aiassistant::aiagents.create', compact('users'));
+        return view('aiassistant::aiagents.create');
     }
 
     /**
@@ -49,6 +47,34 @@ class AIAgentController extends Controller
     public function store(AIAgentRequest $request)
     {
         $data = $request->all();
+        $parsedUrl = parse_url(route('aiagents.session'));
+        $host = $parsedUrl['host'];
+        $subdomain = explode('.', $host)[0];
+        $noSpaces = str_replace(' ', '', $request->name);
+
+        $user = DB::table('users')->insert([
+            'first_name' => 'AIAgent',
+            'last_name' => $request->name,
+            'email' => 'aiagent-' . $subdomain . '.' . $noSpaces . '@smarticks.com',
+            'password' => bcrypt('123$%^qweRTY'),
+            'role' => '1',
+            'timezone' => 'UTC',
+            'type' => '1',
+            'status' => '1',
+            'invite_state' => '1',
+            'time_format' => '2',
+            'enable_kb_shortcuts' => '1',
+            'locked' => '0',
+            'open_on_this_page' => '0',
+            'available' => '1',
+            'bot' => '1',
+            'photo_url' => 'robot.png',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $data['user_id'] = User::latest()->first()->id;
+
         AIAgent::create($data);
         return redirect()->route('aiagents.index')->with('success', 'AI Agent created successfully!');
     }
@@ -60,13 +86,8 @@ class AIAgentController extends Controller
     public function edit($id)
     {
         $aiAgent = AIAgent::find($id);
-
         $aiAgent->openai_api_key = Crypt::encryptString($aiAgent->openai_api_key);
-
-        $users = User::nonDeleted()->where('role', 1)->get();
-        $users = User::sortUsers($users);
-
-        return view('aiassistant::aiagents.edit', compact('aiAgent', 'users'));
+        return view('aiassistant::aiagents.edit', compact('aiAgent'));
     }
 
     /**

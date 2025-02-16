@@ -67,6 +67,7 @@ class ProcessAIResponse implements ShouldQueue
                         ],
                     ],
                     'timeout' => 15,
+                    'http_errors' => false,
                 ]);
 
                 $body = json_decode($response->getBody(), true);
@@ -120,9 +121,11 @@ class ProcessAIResponse implements ShouldQueue
                 $assignment->monthly_usage < $assignment->monthly_limit * ($assignment->monthly_alert_threshold / 100) &&
                 $assignment->daily_usage < $assignment->daily_limit * ($assignment->daily_alert_threshold / 100)) {
 
-            try {
+                try {
                     $client = new Client();
-                    $response = $client->get(route('aiagents.session')."?email=".$this->ticket->email);
+                    $response = $client->get(route('aiagents.session')."?email=".$this->ticket->email, [
+                        'http_errors' => false,
+                    ]);
 
                     $userId = json_decode($response->getBody(), true)['userId'];
 
@@ -141,6 +144,8 @@ class ProcessAIResponse implements ShouldQueue
                     ]);
                     return;
                 }
+
+
                 try {
 
                     $openAIService = new OpenAIService($assignment->openai_api_key, $assignment->model);
@@ -214,11 +219,16 @@ class ProcessAIResponse implements ShouldQueue
                             $body['action'] = 'save_draft';
                         }
 
-                        $request = $client->request('POST', "$appUrl/conversation/ajax?folder_id=$folderId", [
-                            'headers' => $headers,
-                            'json' => $body,
-                        ]);
-
+                        try {
+                            $request = $client->request('POST', "$appUrl/conversation/ajax?folder_id=$folderId", [
+                                'headers' => $headers,
+                                'json' => $body,
+                                'http_errors' => false,
+                            ]);
+                        } catch (Exception $e) {
+                            $logPath = storage_path('logs/custom.log');
+                            file_put_contents($logPath, $e->getMessage);
+                        }
                     }
                 } catch (Exception $e) {
                     ActivityLog::create([

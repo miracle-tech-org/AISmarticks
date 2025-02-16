@@ -81,16 +81,6 @@
                     class="form-control">
             </div>
 
-            <div class="form-group">
-                <label for="user_id">Response Mode</label>
-                <select class="form-control" name="user_id" id="user_id" required>
-                    <option value="">Click to Select User</option>
-                    @foreach ($users as $item)
-                        <option value="{{$item->id}}">{{$item->first_name}} {{$item->last_name}}</option>
-                    @endforeach
-                </select>
-            </div>
-
             <button type="submit" class="btn btn-primary">Create AI Agent</button>
         </form>
     </div>
