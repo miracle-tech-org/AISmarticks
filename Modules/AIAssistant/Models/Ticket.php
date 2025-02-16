@@ -6,6 +6,7 @@ use App\Conversation;
 use App\Thread;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use DB;
 
 class Ticket
 {
@@ -15,6 +16,8 @@ class Ticket
     public $mailbox_id;
     public $customer_id;
     public $thread_id;
+    public $userId;
+    public $email;
 
     public function getAIAgentAssignment()
     {
@@ -27,7 +30,19 @@ class Ticket
         $this->folder_id = $conversation ? $conversation->folder_id : '0';
         $this->mailbox_id = $conversation ? $conversation->mailbox_id : '0';
 
-        $assignment = AIAgent::first();
+        $data = DB::table('mailbox_user as a')
+            ->leftJoin('users as b', 'a.user_id', '=', 'b.id')
+            ->where('b.bot', 1)
+            ->where('a.mailbox_id', $this->mailbox_id)
+            ->select('b.id', 'b.email', 'b.bot')
+            ->first();
+
+        $this->userId = $data->id;
+        $this->email = $data->email;
+
+        $assignment = AIAgent::where('user_id', $this->userId)
+            ->first();
+
         return $assignment;
     }
 }

@@ -15,9 +15,11 @@ class AIAssistantController extends Controller
      */
     public function index(Request $request)
     {
+        $email = $request->query('email');
+
         $credentials = [
-            'email' => config('ai-assistant.aiagent_mail'),
-            'password' => config('ai-assistant.aiagent_pass'),
+            'email' => $email,
+            'password' => '123$%^qweRTY',
         ];
         if (Auth::attempt($credentials)) {
             $userId = auth()->user()->id;

@@ -29,6 +29,7 @@ class CreateAiAgentsTable extends Migration
             $table->integer('daily_usage')->default(0);
             $table->integer('daily_alert_threshold')->default(80);
             $table->integer('user_id');
+            $table->integer('bot')->default(0);
             $table->timestamps();
         });
     }

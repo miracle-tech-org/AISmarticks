@@ -75,10 +75,36 @@ class ProcessAIResponse implements ShouldQueue
 
                 $pro = (float)preg_replace('/[^0-9]/', '', $jsonMiddleware->level);
                 if($pro < 40) {
+                    $tag = DB::table('tags')->where('name', 'needs-human')
+                        ->where('counter', 0)
+                        ->where('color', 2)
+                        ->first();
+
+                    if (!$tag) {
+                        $tag = DB::table('tags')->insert([
+                            'name' => 'needs-human',
+                            'counter' => 0,
+                            'color' => 2,
+                        ]);
+                    }
+
+                    $convTag = DB::table('conversation_tag')
+                        ->where('conversation_id', $this->ticket->conversation_id)
+                        ->where('tag_id', $tag->id)
+                        ->first();
+
+                    if (!$convTag) {
+                        $tag = DB::table('conversation_tag')->insert([
+                            'conversation_id' => $this->ticket->conversation_id,
+                            'tag_id' => $tag->id,
+                        ]);
+                    }
+                    
                     Workload::create([
                         'ticket_id' => $this->ticket->thread_id,
                         'review' => $aiResponse
                     ]);
+
                     return;
                 }
             } catch (Exception $e) {
@@ -94,9 +120,9 @@ class ProcessAIResponse implements ShouldQueue
                 $assignment->monthly_usage < $assignment->monthly_limit * ($assignment->monthly_alert_threshold / 100) &&
                 $assignment->daily_usage < $assignment->daily_limit * ($assignment->daily_alert_threshold / 100)) {
 
-                try {
+            try {
                     $client = new Client();
-                    $response = $client->get(route('aiagents.session'));
+                    $response = $client->get(route('aiagents.session')."?email=".$this->ticket->email);
 
                     $userId = json_decode($response->getBody(), true)['userId'];
 
@@ -107,7 +133,7 @@ class ProcessAIResponse implements ShouldQueue
                             break;
                         }
                     }
-                } catch (\Throwable $th) {
+                } catch (\Exception $e) {
                     ActivityLog::create([
                         'properties' => '[]',
                         'log_name' => 'aiassistant_errors',
@@ -115,7 +141,6 @@ class ProcessAIResponse implements ShouldQueue
                     ]);
                     return;
                 }
-
                 try {
 
                     $openAIService = new OpenAIService($assignment->openai_api_key, $assignment->model);
@@ -137,7 +162,7 @@ class ProcessAIResponse implements ShouldQueue
 
                     $aiResponse = $result['content'];
                     $tokensUsed = $result['tokens_used'];
-
+                    
                     if ($aiResponse) {
                         $this->handleAIResponse($aiResponse, $this->ticket, $assignment, $tokensUsed);
 
@@ -211,6 +236,7 @@ class ProcessAIResponse implements ShouldQueue
                     }
                 }
             } else {
+                return;
                 if (!is_null($assignment)) {
                     $aiAgentName = $assignment->name;
                     $mailboxName = DB::table('mailboxes')
