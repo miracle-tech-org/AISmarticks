@@ -8,65 +8,71 @@ use Illuminate\Routing\Controller;
 
 class WebhookController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     * @return Response
-     */
-    public function index()
+    protected $security;
+
+    public function __construct(SecurityService $security)
     {
-        return view('mondayintegration::index');
+        $this->security = $security;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * @return Response
-     */
-    public function create()
+    public function handle(Request $request)
     {
-        return view('mondayintegration::create');
+        try {
+            // Verify webhook signature if provided
+            $signature = $request->header('X-Monday-Signature');
+            if ($signature && !$this->verifySignature($request, $signature)) {
+                throw new \Exception('Invalid webhook signature');
+            }
+
+            // Process webhook data
+            $event = $request->input('event');
+            $data = $request->input('data');
+
+            // Handle different event types
+            switch ($event['type']) {
+                case 'item_created':
+                    $this->handleItemCreated($data);
+                    break;
+                case 'item_updated':
+                    $this->handleItemUpdated($data);
+                    break;
+                default:
+                    \Log::info('Unhandled Monday.com webhook event', ['event' => $event]);
+            }
+
+            return response()->json(['status' => 'success']);
+
+        } catch (\Exception $e) {
+            \Log::error('Monday.com webhook error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function store(Request $request)
+    protected function verifySignature(Request $request, $signature)
     {
+        $secret = config('monday.security.webhook_secret');
+        if (!$secret) {
+            return true;
+        }
+
+        $payload = $request->getContent();
+        $expectedSignature = hash_hmac('sha256', $payload, $secret);
+
+        return hash_equals($expectedSignature, $signature);
     }
 
-    /**
-     * Show the specified resource.
-     * @return Response
-     */
-    public function show()
+    protected function handleItemCreated($data)
     {
-        return view('mondayintegration::show');
+        // Implement item creation logic
+        \Log::info('Monday.com item created', $data);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     * @return Response
-     */
-    public function edit()
+    protected function handleItemUpdated($data)
     {
-        return view('mondayintegration::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function update(Request $request)
-    {
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @return Response
-     */
-    public function destroy()
-    {
+        // Implement item update logic
+        \Log::info('Monday.com item updated', $data);
     }
 }

@@ -6,67 +6,112 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
+use Modules\MondayIntegration\Models\MondaySettings;
+use Modules\MondayIntegration\Services\MondayApiService;
+use Modules\MondayIntegration\Services\SecurityService;
+
 class SettingsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     * @return Response
-     */
+    protected $apiService;
+    protected $security;
+
+    public function __construct(MondayApiService $apiService, SecurityService $security)
+    {
+        $this->apiService = $apiService;
+        $this->security = $security;
+    }
+
     public function index()
     {
-        return view('mondayintegration::index');
+        // Get current settings
+        $settings = MondaySettings::pluck('value', 'key')
+            ->map(function ($value, $key) {
+                return $this->security->isEncrypted($key) ? 
+                    $this->security->decrypt($value) : 
+                    $value;
+            })
+            ->toArray();
+
+        // Get boards if API token is set
+        $boards = [];
+        if (!empty($settings['api_token'])) {
+            try {
+                $boards = $this->apiService->getBoards();
+            } catch (\Exception $e) {
+                // Token might be invalid, we'll show empty boards list
+            }
+        }
+
+        return view('mondayintegration::settings.index', compact('settings', 'boards'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * @return Response
-     */
-    public function create()
+    public function save(Request $request)
     {
-        return view('mondayintegration::create');
+        $this->validate($request, [
+            'api_token' => 'required',
+            'board_id' => 'required',
+            'sync_frequency' => 'required|integer|min:5|max:60',
+            'sync_direction' => 'required|in:both,to_monday,from_monday',
+            'error_notification' => 'required|in:none,immediate,daily',
+            'notification_email' => 'nullable|email',
+            'rate_limit' => 'required|integer|min:1|max:1000',
+            'retry_attempts' => 'required|integer|min:0|max:10'
+        ]);
+
+        try {
+            // Test connection with new token
+            $this->apiService->testConnection($request->api_token);
+
+            // Save settings
+            foreach ($request->except('_token') as $key => $value) {
+                if ($this->security->isEncrypted($key)) {
+                    $value = $this->security->encrypt($value);
+                }
+
+                MondaySettings::updateOrCreate(
+                    ['key' => $key],
+                    [
+                        'value' => $value,
+                        'is_encrypted' => $this->security->isEncrypted($key)
+                    ]
+                );
+            }
+
+            return response()->json([
+                'message' => __('Settings saved successfully')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function store(Request $request)
+    public function testConnection(Request $request)
     {
+        try {
+            $token = $request->input('api_token');
+            if ($token) {
+                $this->apiService->testConnection($token);
+            } else {
+                $this->apiService->testConnection();
+            }
+
+            return response()->json([
+                'message' => __('Connection successful')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
-    /**
-     * Show the specified resource.
-     * @return Response
-     */
-    public function show()
+    protected function isEncrypted($key)
     {
-        return view('mondayintegration::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     * @return Response
-     */
-    public function edit()
-    {
-        return view('mondayintegration::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function update(Request $request)
-    {
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @return Response
-     */
-    public function destroy()
-    {
+        return in_array($key, [
+            'api_token',
+            'webhook_secret'
+        ]);
     }
 }

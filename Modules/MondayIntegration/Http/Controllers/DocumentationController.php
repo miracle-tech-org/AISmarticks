@@ -8,65 +8,93 @@ use Illuminate\Routing\Controller;
 
 class DocumentationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     * @return Response
-     */
+    protected $pages = [
+        'getting-started' => [
+            'title' => 'Getting Started',
+            'file' => 'getting-started.md'
+        ],
+        'configuration' => [
+            'title' => 'Configuration',
+            'file' => 'configuration.md'
+        ],
+        'field-mapping' => [
+            'title' => 'Field Mapping',
+            'file' => 'field-mapping.md'
+        ],
+        'webhooks' => [
+            'title' => 'Webhooks',
+            'file' => 'webhooks.md'
+        ],
+        'troubleshooting' => [
+            'title' => 'Troubleshooting',
+            'file' => 'troubleshooting.md'
+        ]
+    ];
+
     public function index()
     {
-        return view('mondayintegration::index');
+        return $this->show('getting-started');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * @return Response
-     */
-    public function create()
+    public function show($page)
     {
-        return view('mondayintegration::create');
+        if (!isset($this->pages[$page])) {
+            abort(404);
+        }
+
+        $pageInfo = $this->pages[$page];
+        $content = $this->getPageContent($pageInfo['file']);
+        $title = __($pageInfo['title']);
+
+        return view('mondayintegration::docs.index', compact('page', 'content', 'title'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function store(Request $request)
+    protected function getPageContent($file)
     {
+        $path = module_path('MondayIntegration', 'Resources/docs/' . $file);
+        
+        if (!file_exists($path)) {
+            return __('Documentation page not found.');
+        }
+
+        $content = file_get_contents($path);
+        return $this->parseMarkdown($content);
     }
 
-    /**
-     * Show the specified resource.
-     * @return Response
-     */
-    public function show()
+    protected function parseMarkdown($content)
     {
-        return view('mondayintegration::show');
-    }
+        // Convert headers
+        $content = preg_replace('/^# (.*?)$/m', '<h1>$1</h1>', $content);
+        $content = preg_replace('/^## (.*?)$/m', '<h2>$1</h2>', $content);
+        $content = preg_replace('/^### (.*?)$/m', '<h3>$1</h3>', $content);
 
-    /**
-     * Show the form for editing the specified resource.
-     * @return Response
-     */
-    public function edit()
-    {
-        return view('mondayintegration::edit');
-    }
+        // Convert code blocks
+        $content = preg_replace('/```(.*?)\n(.*?)```/s', '<pre><code>$2</code></pre>', $content);
 
-    /**
-     * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function update(Request $request)
-    {
-    }
+        // Convert inline code
+        $content = preg_replace('/`(.*?)`/', '<code>$1</code>', $content);
 
-    /**
-     * Remove the specified resource from storage.
-     * @return Response
-     */
-    public function destroy()
-    {
+        // Convert lists
+        $content = preg_replace('/^\* (.*?)$/m', '<li>$1</li>', $content);
+        $content = preg_replace('/(<li>.*?<\/li>\n)+/', "<ul>\n$0</ul>\n", $content);
+
+        // Convert numbered lists
+        $content = preg_replace('/^\d+\. (.*?)$/m', '<li>$1</li>', $content);
+        $content = preg_replace('/(<li>.*?<\/li>\n)+/', "<ol>\n$0</ol>\n", $content);
+
+        // Convert links
+        $content = preg_replace('/\[(.*?)\]\((.*?)\)/', '<a href="$2">$1</a>', $content);
+
+        // Convert emphasis
+        $content = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $content);
+        $content = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $content);
+
+        // Convert blockquotes
+        $content = preg_replace('/^> (.*?)$/m', '<blockquote>$1</blockquote>', $content);
+
+        // Convert paragraphs
+        $content = preg_replace('/^(?!<[a-z])(.*?)$/m', '<p>$1</p>', $content);
+
+        return $content;
     }
 }

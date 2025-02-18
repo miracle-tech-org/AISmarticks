@@ -44,6 +44,27 @@ class MondayIntegrationServiceProvider extends ServiceProvider
     public function register()
     {
         $this->registerTranslations();
+
+        // Register services
+        $this->app->singleton(MondayApiService::class, function ($app) {
+            return new MondayApiService(
+                $app->make(SecurityService::class)
+            );
+        });
+
+        $this->app->singleton(SecurityService::class, function ($app) {
+            return new SecurityService();
+        });
+
+        $this->app->singleton(WebhookService::class, function ($app) {
+            return new WebhookService(
+                $app->make(SecurityService::class)
+            );
+        });
+
+        $this->app->singleton(DataTransformer::class, function ($app) {
+            return new DataTransformer();
+        });
     }
 
     /**
@@ -110,5 +131,29 @@ class MondayIntegrationServiceProvider extends ServiceProvider
     public function provides()
     {
         return [];
+    }
+
+    protected function registerSidebarItem()
+    {
+        \App\Sidebar\Sidebar::register(function($sidebar) {
+            $sidebar->addItem(
+                'monday',
+                'Monday.com',
+                route('monday.dashboard'),
+                'glyphicon glyphicon-calendar',
+                10
+            );
+        });
+    }
+
+    private function getPublishableViewPaths(): array
+    {
+        $paths = [];
+        foreach (\Config::get('view.paths') as $path) {
+            if (is_dir($path . '/modules/' . $this->moduleNameLower)) {
+                $paths[] = $path . '/modules/' . $this->moduleNameLower;
+            }
+        }
+        return $paths;
     }
 }

@@ -1,0 +1,251 @@
+@extends('layouts.app')
+
+@section('title', __('Monday.com Settings'))
+
+@section('content')
+<div class="section-heading">
+    {{ __('Monday.com Integration Settings') }}
+</div>
+
+<div class="row-container">
+    <div class="col-md-12">
+        <form action="{{ route('monday.settings.save') }}" method="POST" class="form-horizontal">
+            @csrf
+
+            <!-- API Configuration -->
+            <div class="form-section">
+                <h3>{{ __('API Configuration') }}</h3>
+                
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('API Token') }}</label>
+                    <div class="col-sm-9">
+                        <input type="password" name="api_token" class="form-control" 
+                               value="{{ old('api_token', $settings['api_token'] ?? '') }}" required>
+                        <p class="help-block">
+                            {{ __('Your Monday.com API token. Get it from your Monday.com account settings.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Board ID') }}</label>
+                    <div class="col-sm-9">
+                        <select name="board_id" class="form-control" required>
+                            <option value="">{{ __('Select Board') }}</option>
+                            @foreach($boards as $board)
+                                <option value="{{ $board['id'] }}" 
+                                    {{ (old('board_id', $settings['board_id'] ?? '') == $board['id']) ? 'selected' : '' }}>
+                                    {{ $board['name'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="help-block">
+                            {{ __('Select the Monday.com board to sync with.') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Settings -->
+            <div class="form-section">
+                <h3>{{ __('Sync Settings') }}</h3>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Sync Frequency') }}</label>
+                    <div class="col-sm-9">
+                        <select name="sync_frequency" class="form-control">
+                            <option value="5" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '5' ? 'selected' : '' }}>
+                                {{ __('Every 5 minutes') }}
+                            </option>
+                            <option value="15" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '15' ? 'selected' : '' }}>
+                                {{ __('Every 15 minutes') }}
+                            </option>
+                            <option value="30" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '30' ? 'selected' : '' }}>
+                                {{ __('Every 30 minutes') }}
+                            </option>
+                            <option value="60" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '60' ? 'selected' : '' }}>
+                                {{ __('Every hour') }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Sync Direction') }}</label>
+                    <div class="col-sm-9">
+                        <select name="sync_direction" class="form-control">
+                            <option value="both" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'both' ? 'selected' : '' }}>
+                                {{ __('Bidirectional') }}
+                            </option>
+                            <option value="to_monday" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'to_monday' ? 'selected' : '' }}>
+                                {{ __('FreeScout to Monday.com only') }}
+                            </option>
+                            <option value="from_monday" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'from_monday' ? 'selected' : '' }}>
+                                {{ __('Monday.com to FreeScout only') }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="sync_attachments" value="1" 
+                                    {{ old('sync_attachments', $settings['sync_attachments'] ?? '') ? 'checked' : '' }}>
+                                {{ __('Sync attachments') }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="form-section">
+                <h3>{{ __('Notification Settings') }}</h3>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Error Notifications') }}</label>
+                    <div class="col-sm-9">
+                        <select name="error_notification" class="form-control">
+                            <option value="none" {{ old('error_notification', $settings['error_notification'] ?? '') == 'none' ? 'selected' : '' }}>
+                                {{ __('Disabled') }}
+                            </option>
+                            <option value="immediate" {{ old('error_notification', $settings['error_notification'] ?? '') == 'immediate' ? 'selected' : '' }}>
+                                {{ __('Immediate') }}
+                            </option>
+                            <option value="daily" {{ old('error_notification', $settings['error_notification'] ?? '') == 'daily' ? 'selected' : '' }}>
+                                {{ __('Daily Summary') }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Notification Email') }}</label>
+                    <div class="col-sm-9">
+                        <input type="email" name="notification_email" class="form-control" 
+                               value="{{ old('notification_email', $settings['notification_email'] ?? '') }}">
+                        <p class="help-block">
+                            {{ __('Email address for error notifications. Leave empty to use system default.') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div class="form-section">
+                <h3>{{ __('Advanced Settings') }}</h3>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('API Rate Limit') }}</label>
+                    <div class="col-sm-9">
+                        <input type="number" name="rate_limit" class="form-control" 
+                               value="{{ old('rate_limit', $settings['rate_limit'] ?? '100') }}" min="1" max="1000">
+                        <p class="help-block">
+                            {{ __('Maximum API requests per minute. Default: 100') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Retry Attempts') }}</label>
+                    <div class="col-sm-9">
+                        <input type="number" name="retry_attempts" class="form-control" 
+                               value="{{ old('retry_attempts', $settings['retry_attempts'] ?? '3') }}" min="0" max="10">
+                        <p class="help-block">
+                            {{ __('Number of retry attempts for failed operations. Default: 3') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group margin-top">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <button type="submit" class="btn btn-primary">
+                        {{ __('Save Settings') }}
+                    </button>
+                    <a href="{{ route('monday.dashboard') }}" class="btn btn-link">
+                        {{ __('Cancel') }}
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('css')
+<style>
+    .form-section {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .margin-top {
+        margin-top: 20px;
+    }
+
+    .help-block {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Refresh board list when API token changes
+    $('input[name="api_token"]').change(function() {
+        if ($(this).val()) {
+            refreshBoardList();
+        }
+    });
+
+    function refreshBoardList() {
+        var token = $('input[name="api_token"]').val();
+        var select = $('select[name="board_id"]');
+        var currentValue = select.val();
+
+        select.prop('disabled', true);
+        
+        $.ajax({
+            url: '{{ route("monday.boards.list") }}',
+            method: 'POST',
+            data: { api_token: token },
+            success: function(response) {
+                select.empty().append($('<option>', {
+                    value: '',
+                    text: '{{ __("Select Board") }}'
+                }));
+
+                response.boards.forEach(function(board) {
+                    select.append($('<option>', {
+                        value: board.id,
+                        text: board.name,
+                        selected: board.id == currentValue
+                    }));
+                });
+            },
+            error: function(xhr) {
+                showFloatingAlert('danger', xhr.responseJSON.message || 'Failed to fetch boards');
+            },
+            complete: function() {
+                select.prop('disabled', false);
+            }
+        });
+    }
+});
+</script>
+@endpush
