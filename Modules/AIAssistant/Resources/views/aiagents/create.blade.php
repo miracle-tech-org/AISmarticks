@@ -81,6 +81,31 @@
                     class="form-control">
             </div>
 
+            <div class="form-group">
+                <label for="numberOfRetries">Number Of Retries</label>
+                <input type="text" class="form-control" id="numberOfRetries" name="numberOfRetries" required>
+            </div>
+
+            <div class="form-group">
+                <label for="delayOfRetries">Retries Delay</label>
+                <input type="text" class="form-control" id="delayOfRetries" name="delayOfRetries" required>
+            </div>
+
+            <div class="form-group">
+                <label for="timeoutMessage">Timeout Message</label>
+                <input type="text" class="form-control" id="timeoutMessage" name="timeoutMessage" required>
+            </div>
+
+            <div class="form-group">
+                <label for="failoverMessage">Failover Message</label>
+                <input type="text" class="form-control" id="failoverMessage" name="failoverMessage" required>
+            </div>
+
+            <div class="form-group">
+                <label for="failoverAction">Failover Action</label>
+                <input type="text" class="form-control" id="failoverAction" name="failoverAction" required>
+            </div>
+
             <button type="submit" class="btn btn-primary">Create AI Agent</button>
         </form>
     </div>

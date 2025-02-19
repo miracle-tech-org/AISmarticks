@@ -25,6 +25,11 @@ class AIAgent extends Model
         'daily_usage',
         'daily_alert_threshold',
         'user_id',
+        'numberOfRetries',
+        'delayOfRetries',
+        'timeoutMessage',
+        'failoverMessage',
+        'failoverAction',
     ];
 
     /**

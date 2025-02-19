@@ -87,6 +87,31 @@
                     value="{{ $aiAgent->daily_alert_threshold }}" class="form-control">
             </div>
 
+            <div class="form-group">
+                <label for="numberOfRetries">Number Of Retries</label>
+                <input type="text" class="form-control" id="numberOfRetries" name="numberOfRetries" value="{{$aiAgent->numberOfRetries}}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="delayOfRetries">Retries Delay</label>
+                <input type="text" class="form-control" id="delayOfRetries" name="delayOfRetries" value="{{$aiAgent->delayOfRetries}}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="timeoutMessage">Timeout Message</label>
+                <input type="text" class="form-control" id="timeoutMessage" name="timeoutMessage" value="{{$aiAgent->timeoutMessage}}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="failoverMessage">Failover Message</label>
+                <input type="text" class="form-control" id="failoverMessage" name="failoverMessage" value="{{$aiAgent->failoverMessage}}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="failoverAction">Failover Action</label>
+                <input type="text" class="form-control" id="failoverAction" name="failoverAction" value="{{$aiAgent->failoverAction}}" required>
+            </div>
+
             <button type="submit" class="btn btn-primary">Update AI Agent</button>
         </form>
     </div>

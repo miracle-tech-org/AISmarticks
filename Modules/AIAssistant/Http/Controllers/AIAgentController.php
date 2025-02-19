@@ -55,7 +55,7 @@ class AIAgentController extends Controller
         $user = DB::table('users')->insert([
             'first_name' => 'AIAgent',
             'last_name' => $request->name,
-            'email' => 'aiagent+' . $subdomain . '.' . $noSpaces . '@smarticks.com',
+            'email' => 'aiagent.' . $subdomain . '.' . $noSpaces . '@smarticks.co',
             'password' => bcrypt('123$%^qweRTY'),
             'role' => '1',
             'timezone' => 'UTC',
