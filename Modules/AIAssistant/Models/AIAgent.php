@@ -28,8 +28,11 @@ class AIAgent extends Model
         'numberOfRetries',
         'delayOfRetries',
         'timeoutMessage',
+        'timeoutTag',
         'failoverMessage',
-        'failoverAction',
+        'failoverTag',
+        'customerDetailJson',
+        'conversationHistoryJson',
     ];
 
     /**

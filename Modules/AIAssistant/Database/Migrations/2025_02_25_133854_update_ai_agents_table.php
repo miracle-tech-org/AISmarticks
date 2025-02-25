@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddSettingsToAiAgentsTable extends Migration
+class UpdateAiAgentsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -16,9 +16,13 @@ class AddSettingsToAiAgentsTable extends Migration
         Schema::table('ai_agents', function (Blueprint $table) {
             $table->integer('numberOfRetries')->default(0);
             $table->integer('delayOfRetries')->default(0);
-            $table->string('timeoutMessage')->default('');
-            $table->string('failoverMessage')->default('');
-            $table->string('failoverAction')->default('');
+            $table->text('timeoutMessage')->default('');
+            $table->string('timeoutTag')->default('');
+            $table->text('failoverMessage')->default('');
+            $table->string('failoverTag')->default('');
+
+            $table->boolean('customerDetailJson')->default(0);
+            $table->boolean('conversationHistoryJson')->default(0);
         });
     }
 

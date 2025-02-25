@@ -89,27 +89,44 @@
 
             <div class="form-group">
                 <label for="numberOfRetries">Number Of Retries</label>
-                <input type="text" class="form-control" id="numberOfRetries" name="numberOfRetries" value="{{$aiAgent->numberOfRetries}}" required>
+                <input type="text" value="{{ $aiAgent->numberOfRetries }}" class="form-control" id="numberOfRetries" name="numberOfRetries" required>
             </div>
 
             <div class="form-group">
                 <label for="delayOfRetries">Retries Delay</label>
-                <input type="text" class="form-control" id="delayOfRetries" name="delayOfRetries" value="{{$aiAgent->delayOfRetries}}" required>
+                <input type="text" value="{{ $aiAgent->delayOfRetries }}" class="form-control" id="delayOfRetries" name="delayOfRetries" required>
             </div>
 
             <div class="form-group">
                 <label for="timeoutMessage">Timeout Message</label>
-                <input type="text" class="form-control" id="timeoutMessage" name="timeoutMessage" value="{{$aiAgent->timeoutMessage}}" required>
+                <textarea id="timeoutMessage" rows="10" class="form-control" name="timeoutMessage" required>{{ $aiAgent->timeoutMessage }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="timeoutTag">Timeout Tag</label>
+                <input type="text" value="{{ $aiAgent->timeoutTag }}" class="form-control" id="timeoutTag" name="timeoutTag" required>
             </div>
 
             <div class="form-group">
                 <label for="failoverMessage">Failover Message</label>
-                <input type="text" class="form-control" id="failoverMessage" name="failoverMessage" value="{{$aiAgent->failoverMessage}}" required>
+                <textarea id="failoverMessage" rows="10" class="form-control" name="failoverMessage" required>{{ $aiAgent->failoverMessage }}</textarea>
             </div>
 
             <div class="form-group">
-                <label for="failoverAction">Failover Action</label>
-                <input type="text" class="form-control" id="failoverAction" name="failoverAction" value="{{$aiAgent->failoverAction}}" required>
+                <label for="failoverTag">Failover Tag</label>
+                <input type="text" class="form-control" value="{{ $aiAgent->failoverTag }}" id="failoverTag" name="failoverTag" required>
+            </div>
+
+            <div class="form-group">
+                <input type="hidden" id="customerDetailJson" name="customerDetailJson" value="0"/>
+                <input type="checkbox" id="chkCustomer" name="chkCustomer"/>
+                <label for="chkCustomer">Enable Sending JSON with Customer's details</label>
+            </div>
+
+            <div class="form-group">
+                <input type="hidden" id="conversationHistoryJson" name="conversationHistoryJson" value="0"/>
+                <input type="checkbox" id="chkConversation" name="chkConversation"/>
+                <label for="chkConversation">Enable Sending JSON with Conversation's history</label>
             </div>
 
             <button type="submit" class="btn btn-primary">Update AI Agent</button>
@@ -144,9 +161,36 @@
 
             reader.readAsText(files[0]); // Read the first selected file as text
         });
+
+        document.getElementById("chkCustomer").addEventListener("change", function() {
+            document.getElementById('customerDetailJson').value = this.checked ? 1 : 0;
+        });
+
+        document.getElementById("chkConversation").addEventListener("change", function() {
+            document.getElementById('conversationHistoryJson').value = this.checked ? 1 : 0;
+        });
     };
 
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("response_mode").value = @json($aiAgent->response_mode);
+        var customerJson = @json($aiAgent->customerDetailJson);
+        var conversationJson = @json($aiAgent->conversationHistoryJson);
+
+        if(customerJson == 1) {
+            document.getElementById('chkCustomer').checked = true;
+            document.getElementById('customerDetailJson').value = "1";
+        } else {
+            document.getElementById('chkCustomer').checked = false;
+            document.getElementById('customerDetailJson').value = "0";
+        }
+
+        if(conversationJson == 1) {
+            document.getElementById('chkConversation').checked = true;
+            document.getElementById('conversationHistoryJson').value = "1";
+        } else {
+            document.getElementById('chkConversation').checked = false;
+            document.getElementById('conversationHistoryJson').value = "0";
+        }
     });
+    
 </script>

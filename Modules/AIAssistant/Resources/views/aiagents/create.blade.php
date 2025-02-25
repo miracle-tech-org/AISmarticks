@@ -93,17 +93,34 @@
 
             <div class="form-group">
                 <label for="timeoutMessage">Timeout Message</label>
-                <input type="text" class="form-control" id="timeoutMessage" name="timeoutMessage" required>
+                <textarea id="timeoutMessage" rows="10" class="form-control" name="timeoutMessage" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="timeoutTag">Timeout Tag</label>
+                <input type="text" class="form-control" id="timeoutTag" name="timeoutTag" required>
             </div>
 
             <div class="form-group">
                 <label for="failoverMessage">Failover Message</label>
-                <input type="text" class="form-control" id="failoverMessage" name="failoverMessage" required>
+                <textarea id="failoverMessage" rows="10" class="form-control" name="failoverMessage" required></textarea>
             </div>
 
             <div class="form-group">
-                <label for="failoverAction">Failover Action</label>
-                <input type="text" class="form-control" id="failoverAction" name="failoverAction" required>
+                <label for="failoverTag">Failover Tag</label>
+                <input type="text" class="form-control" id="failoverTag" name="failoverTag" required>
+            </div>
+
+            <div class="form-group">
+                <input type="hidden" id="customerDetailJson" name="customerDetailJson" value="0"/>
+                <input type="checkbox" id="chkCustomer" name="chkCustomer"/>
+                <label for="chkCustomer">Enable Sending JSON with Customer's details</label>
+            </div>
+
+            <div class="form-group">
+                <input type="hidden" id="conversationHistoryJson" name="conversationHistoryJson" value="0"/>
+                <input type="checkbox" id="chkConversation" name="chkConversation"/>
+                <label for="chkConversation">Enable Sending JSON with Conversation's history</label>
             </div>
 
             <button type="submit" class="btn btn-primary">Create AI Agent</button>
@@ -137,6 +154,14 @@
             };
 
             reader.readAsText(files[0]); // Read the first selected file as text
+        });
+
+        document.getElementById("chkCustomer").addEventListener("change", function() {
+            document.getElementById('customerDetailJson').value = this.checked ? 1 : 0;
+        });
+
+        document.getElementById("chkConversation").addEventListener("change", function() {
+            document.getElementById('conversationHistoryJson').value = this.checked ? 1 : 0;
         });
     };
 </script>
