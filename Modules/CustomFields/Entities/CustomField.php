@@ -38,7 +38,7 @@ class CustomField extends Model
 	];
 
     protected $fillable = [
-    	'name', 'type', 'required', 'options'
+    	'name', 'type', 'required', 'options', 'field_type'
     ];
 
 	protected $attributes = [

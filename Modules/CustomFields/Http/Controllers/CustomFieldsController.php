@@ -134,6 +134,7 @@ class CustomFieldsController extends Controller
                         }
                         $custom_field->required = $request->filled('required');
                         $custom_field->show_in_list = $request->filled('show_in_list');
+                        $custom_field->field_type = $request->field_type;
                         $custom_field->save();
 
                         $response['id']     = $custom_field->id;
