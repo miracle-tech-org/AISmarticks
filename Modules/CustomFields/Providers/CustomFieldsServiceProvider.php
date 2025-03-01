@@ -387,8 +387,7 @@ class CustomFieldsServiceProvider extends ServiceProvider
         }, 20, 6);
 
         \Eventy::addFilter('workflows.actions_config', function($actions, $mailbox_id = null) {
-            $custom_fields = CustomField::getMailboxCustomFields($mailbox_id, true);
-
+            $custom_fields = CustomField::getMailboxCustomFieldsByFieldType($mailbox_id, 'Set Custom Field', true);
             $operators = [];
             foreach ($custom_fields as $custom_field) {
                 $operators[$custom_field->id] = $custom_field->name;
@@ -399,11 +398,36 @@ class CustomFieldsServiceProvider extends ServiceProvider
                 'operators' => $operators,
                 'values_custom' => true
             ];
+
+            $custom_fields = CustomField::getMailboxCustomFieldsByFieldType($mailbox_id, 'Set Customer Field', true);
+            $operators = [];
+            foreach ($custom_fields as $custom_field) {
+                $operators[$custom_field->id] = $custom_field->name;
+            }
+
+            $actions['dummy']['items']['set_customer_field'] = [
+                'title' => __('Set Customer Field'),
+                'operators' => $operators,
+                'values_custom' => true
+            ];
+
+            $custom_fields = CustomField::getMailboxCustomFieldsByFieldType($mailbox_id, 'Set User Field', true);
+            $operators = [];
+            foreach ($custom_fields as $custom_field) {
+                $operators[$custom_field->id] = $custom_field->name;
+            }
+
+            $actions['dummy']['items']['set_user_field'] = [
+                'title' => __('Set User Field'),
+                'operators' => $operators,
+                'values_custom' => true
+            ];
+            
             return $actions;
         }, 20, 2);
 
         \Eventy::addAction('workflows.values_custom', function($type, $value, $mode, $and_i, $row_i, $data) {
-            if ($type != 'set_custom_field') {
+            if (!($type == 'set_custom_field' || $type == 'set_customer_field' || $type == 'set_user_field')) {
                 return;
             }
             $custom_fields = CustomField::getMailboxCustomFields($data['mailbox']->id, true);

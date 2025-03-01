@@ -90,6 +90,17 @@ class CustomField extends Model
         return $query->get();
     }
 
+    public static function getMailboxCustomFieldsByFieldType($mailbox_id, $field_type, $cache = false)
+    {
+    	$query = CustomField::where('mailbox_id', $mailbox_id)
+            ->where('field_type', $field_type)
+            ->orderby('sort_order');
+        if ($cache) {
+            $query->rememberForever();
+        }
+        return $query->get();
+    }
+
     public static function getCustomFieldsWithValues($mailbox_id, $conversation_id)
     {
         return CustomField::where('custom_fields.mailbox_id', $mailbox_id)
