@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', __('Monday.com Settings'))
+@section('title', __('Monday.com Settings').' - '.$mailbox->name)
+@section('sidebar')
+    @include('partials/sidebar_menu_toggle')
+    @include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
 <div class="section-heading">
@@ -10,8 +14,6 @@
 <div class="row-container">
     <div class="col-md-12">
         <form action="{{ route('monday.settings.save') }}" method="POST" class="form-horizontal">
-            @csrf
-
             <!-- API Configuration -->
             <div class="form-section">
                 <h3>{{ __('API Configuration') }}</h3>
@@ -19,7 +21,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('API Token') }}</label>
                     <div class="col-sm-9">
-                        <input type="password" name="api_token" class="form-control" 
+                        <input type="password" name="api_token" id="api_token" class="form-control" 
                                value="{{ old('api_token', $settings['api_token'] ?? '') }}" required>
                         <p class="help-block">
                             {{ __('Your Monday.com API token. Get it from your Monday.com account settings.') }}
@@ -32,12 +34,13 @@
                     <div class="col-sm-9">
                         <select name="board_id" class="form-control" required>
                             <option value="">{{ __('Select Board') }}</option>
-                            @foreach($boards as $board)
-                                <option value="{{ $board['id'] }}" 
-                                    {{ (old('board_id', $settings['board_id'] ?? '') == $board['id']) ? 'selected' : '' }}>
-                                    {{ $board['name'] }}
-                                </option>
-                            @endforeach
+                            @isset($boards['boards'])
+                                @foreach($boards['boards'] as $board)
+                                    <option value="{{ $board['id'] }}" {{ (old('board_id', $settings['board_id'] ?? '') == $board['id']) ? 'selected' : '' }}>
+                                        {{ $board['name'] }}
+                                    </option>
+                                @endforeach
+                            @endisset
                         </select>
                         <p class="help-block">
                             {{ __('Select the Monday.com board to sync with.') }}
@@ -78,10 +81,10 @@
                                 {{ __('Bidirectional') }}
                             </option>
                             <option value="to_monday" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'to_monday' ? 'selected' : '' }}>
-                                {{ __('FreeScout to Monday.com only') }}
+                                {{ __('Smarticks to Monday.com only') }}
                             </option>
                             <option value="from_monday" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'from_monday' ? 'selected' : '' }}>
-                                {{ __('Monday.com to FreeScout only') }}
+                                {{ __('Monday.com to Smarticks only') }}
                             </option>
                         </select>
                     </div>
@@ -202,50 +205,47 @@
     }
 </style>
 @endpush
+@endsection
 
-@push('scripts')
+
 <script>
-$(document).ready(function() {
-    // Refresh board list when API token changes
-    $('input[name="api_token"]').change(function() {
-        if ($(this).val()) {
-            refreshBoardList();
-        }
-    });
+    window.onload = function() {
+        document.getElementById("api_token").addEventListener("change", function() {
+            var token = $('input[name="api_token"]').val();
+            var select = $('select[name="board_id"]');
+            var currentValue = select.val();
 
-    function refreshBoardList() {
-        var token = $('input[name="api_token"]').val();
-        var select = $('select[name="board_id"]');
-        var currentValue = select.val();
-
-        select.prop('disabled', true);
-        
-        $.ajax({
-            url: '{{ route("monday.boards.list") }}',
-            method: 'POST',
-            data: { api_token: token },
-            success: function(response) {
-                select.empty().append($('<option>', {
-                    value: '',
-                    text: '{{ __("Select Board") }}'
-                }));
-
-                response.boards.forEach(function(board) {
-                    select.append($('<option>', {
-                        value: board.id,
-                        text: board.name,
-                        selected: board.id == currentValue
+            select.prop('disabled', true);
+            
+            $.ajax({
+                url: '{{ route("monday.boards.list") }}',
+                method: 'POST',
+                data: { api_token: token },
+                success: function(response) {
+                    select.empty().append($('<option>', {
+                        value: '',
+                        text: '{{ __("Select Board") }}'
                     }));
-                });
-            },
-            error: function(xhr) {
-                showFloatingAlert('danger', xhr.responseJSON.message || 'Failed to fetch boards');
-            },
-            complete: function() {
-                select.prop('disabled', false);
-            }
+
+                    if(response == "error") {
+                        showFloatingAlert('danger', 'Failed to fetch boards');
+                    }
+
+                    response.boards.forEach(function(board) {
+                        select.append($('<option>', {
+                            value: board.id,
+                            text: board.name,
+                            selected: board.id == currentValue
+                        }));
+                    });
+                },
+                error: function(xhr) {
+                    showFloatingAlert('danger', xhr.responseJSON.message || 'Failed to fetch boards');
+                },
+                complete: function() {
+                    select.prop('disabled', false);
+                }
+            });
         });
     }
-});
 </script>
-@endpush

@@ -33,7 +33,21 @@ class MondayIntegrationServiceProvider extends ServiceProvider
      */
     public function hooks()
     {
-        
+        \Eventy::addAction('menu.manage.after_mailboxes', function($mailbox) {
+        }, 15);
+
+        \Eventy::addAction('mailboxes.settings.menu', function($mailbox) {
+            if (auth()->user()->isAdmin()) {
+                echo \View::make('mondayintegration::partials/settings_menu', ['mailbox' => $mailbox])->render();
+            }
+        }, 35);
+
+        \Eventy::addFilter('menu.selected', function($menu) {
+            $menu['monday.settings'] = [
+                'monday.settings',
+            ];
+            return $menu;
+        });
     }
 
     /**

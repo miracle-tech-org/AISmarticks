@@ -11,21 +11,17 @@ use Modules\MondayIntegration\Exceptions\MondayApiException;
 class MondayApiService
 {
     protected $client;
-    protected $security;
     protected $maxRetries = 3;
     protected $retryDelay = 5;
 
-    public function __construct(SecurityService $security)
+    public function __construct()
     {
-        $this->security = $security;
         $this->initializeClient();
     }
 
     protected function initializeClient()
     {
-        $encryptedToken = Option::get('mondayintegration.api_token');
-        $apiToken = $encryptedToken ? 
-            $this->security->decrypt($encryptedToken) : '';
+        $apiToken = Option::get('mondayintegration.api_token');
 
         $this->client = new Client([
             'base_uri' => config('monday.api.base_url'),
@@ -38,23 +34,48 @@ class MondayApiService
         ]);
     }
 
-    public function getBoards()
+    public function getBoards($apiToken)
     {
-        $query = '
-            query {
-                boards {
-                    id
-                    name
-                    columns {
-                        id
-                        title
-                        type
-                    }
-                }
-            }
-        ';
+        $this->client = new Client([
+            'base_uri' => config('monday-integration.api.base_url'),
+            'timeout' => config('monday-integration.api.timeout'),
+            'headers' => [
+                'Authorization' => $apiToken,
+                'Content-Type' => 'application/json',
+                'API-Version' => config('monday-integration.api.version'),
+            ]
+        ]);
 
+        $query = 'query { boards { id name columns { id title type } } }';
         return $this->executeQuery($query);
+    }
+
+    protected function executeQuery($query, $variables = [])
+    {
+        try {
+            $response = $this->client->post('', [
+                'json' => [
+                    'query' => $query,
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            if (isset($data['errors'])) {
+                return "error";
+                // throw new MondayApiException(
+                //     'Monday.com API Error: ' . $data['errors'][0]['message']
+                // );
+            }
+
+            return $data['data'];
+
+        } catch (RequestException $e) {
+            return "error";
+            // throw new MondayApiException(
+            //     'Failed to communicate with Monday.com: ' . $e->getMessage()
+            // );
+        }
     }
 
     public function createItem($boardId, $itemName, $columnValues)
@@ -82,35 +103,18 @@ class MondayApiService
         ]);
     }
 
-    protected function executeQuery($query, $variables = [])
+    public function testConnection($apiToken)
     {
-        try {
-            $response = $this->client->post('', [
-                'json' => [
-                    'query' => $query,
-                    'variables' => $variables
-                ]
-            ]);
+        $this->client = new Client([
+            'base_uri' => config('monday-integration.api.base_url'),
+            'timeout' => config('monday-integration.api.timeout'),
+            'headers' => [
+                'Authorization' => $apiToken,
+                'Content-Type' => 'application/json',
+                'API-Version' => config('monday-integration.api.version'),
+            ]
+        ]);
 
-            $data = json_decode($response->getBody(), true);
-
-            if (isset($data['errors'])) {
-                throw new MondayApiException(
-                    'Monday.com API Error: ' . $data['errors'][0]['message']
-                );
-            }
-
-            return $data['data'];
-
-        } catch (RequestException $e) {
-            throw new MondayApiException(
-                'Failed to communicate with Monday.com: ' . $e->getMessage()
-            );
-        }
-    }
-
-    public function testConnection()
-    {
-        return $this->getBoards() !== null;
+        return $this->getBoards($apiToken) !== null;
     }
 }

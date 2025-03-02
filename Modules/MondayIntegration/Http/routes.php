@@ -4,11 +4,11 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
 {
     // Route::get('/', 'MondayIntegrationController@index');
 
-    Route::get('/', 'DashboardController@index')->name('dashboard');
+    Route::get('/monday-dashboard', 'DashboardController@index')->name('monday.dashboard');
     
     // Settings
-    Route::get('/settings', 'SettingsController@index')->name('settings');
-    Route::post('/settings', 'SettingsController@save')->name('settings.save');
+    Route::get('/mailbox/{mailbox_id}/monday-settings', 'SettingsController@index')->name('monday.settings');
+    Route::post('/settings', 'SettingsController@save')->name('monday.settings.save');
     Route::post('/settings/test-connection', 'SettingsController@testConnection')->name('test-connection');
 
     // Field Mappings
@@ -33,7 +33,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     Route::post('/sync/retry/{log}', 'SyncController@retry')->name('sync.retry');
 
     // API Operations
-    Route::post('/api/boards', 'ApiController@getBoards')->name('boards.list');
+    Route::post('/api/boards', 'SettingsController@getBoards')->name('monday.boards.list');
     Route::post('/api/columns', 'ApiController@getColumns')->name('columns.list');
 
 });

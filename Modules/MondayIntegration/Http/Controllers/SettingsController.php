@@ -8,55 +8,52 @@ use Illuminate\Routing\Controller;
 
 use Modules\MondayIntegration\Models\MondaySettings;
 use Modules\MondayIntegration\Services\MondayApiService;
-use Modules\MondayIntegration\Services\SecurityService;
+use App\Mailbox;
 
 class SettingsController extends Controller
 {
     protected $apiService;
-    protected $security;
 
-    public function __construct(MondayApiService $apiService, SecurityService $security)
+    public function __construct(MondayApiService $apiService)
     {
         $this->apiService = $apiService;
-        $this->security = $security;
     }
 
-    public function index()
+    public function index($mailbox_id)
     {
         // Get current settings
-        $settings = MondaySettings::pluck('value', 'key')
-            ->map(function ($value, $key) {
-                return $this->security->isEncrypted($key) ? 
-                    $this->security->decrypt($value) : 
-                    $value;
-            })
-            ->toArray();
+        $settings = MondaySettings::pluck('value', 'key')->toArray();
 
         // Get boards if API token is set
         $boards = [];
         if (!empty($settings['api_token'])) {
             try {
-                $boards = $this->apiService->getBoards();
+                $boards = $this->apiService->getBoards($settings['api_token']);
             } catch (\Exception $e) {
                 // Token might be invalid, we'll show empty boards list
             }
         }
+        
+		$mailbox = Mailbox::findOrFail($mailbox_id);
+        return view('mondayintegration::settings.index', compact('settings', 'boards', 'mailbox'));
+    }
 
-        return view('mondayintegration::settings.index', compact('settings', 'boards'));
+    public function getBoards(Request $request) {
+        return $this->apiService->getBoards($request->api_token);
     }
 
     public function save(Request $request)
     {
-        $this->validate($request, [
-            'api_token' => 'required',
-            'board_id' => 'required',
-            'sync_frequency' => 'required|integer|min:5|max:60',
-            'sync_direction' => 'required|in:both,to_monday,from_monday',
-            'error_notification' => 'required|in:none,immediate,daily',
-            'notification_email' => 'nullable|email',
-            'rate_limit' => 'required|integer|min:1|max:1000',
-            'retry_attempts' => 'required|integer|min:0|max:10'
-        ]);
+        // $this->validate($request, [
+        //     'api_token' => 'required',
+        //     'board_id' => 'required',
+        //     'sync_frequency' => 'required|integer|min:5|max:60',
+        //     'sync_direction' => 'required|in:both,to_monday,from_monday',
+        //     'error_notification' => 'required|in:none,immediate,daily',
+        //     'notification_email' => 'nullable|email',
+        //     'rate_limit' => 'required|integer|min:1|max:1000',
+        //     'retry_attempts' => 'required|integer|min:0|max:10'
+        // ]);
 
         try {
             // Test connection with new token
@@ -64,22 +61,14 @@ class SettingsController extends Controller
 
             // Save settings
             foreach ($request->except('_token') as $key => $value) {
-                if ($this->security->isEncrypted($key)) {
-                    $value = $this->security->encrypt($value);
-                }
-
                 MondaySettings::updateOrCreate(
                     ['key' => $key],
                     [
                         'value' => $value,
-                        'is_encrypted' => $this->security->isEncrypted($key)
                     ]
                 );
             }
-
-            return response()->json([
-                'message' => __('Settings saved successfully')
-            ]);
+            return redirect()->back();
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage()

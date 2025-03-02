@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', __('Monday.com Dashboard'))
+@section('title', __('Monday.com Dashboard').' - '.$mailbox->name)
+
+@section('sidebar')
+    @include('partials/sidebar_menu_toggle')
+    @include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
 <div class="section-heading">
