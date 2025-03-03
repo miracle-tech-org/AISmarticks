@@ -168,7 +168,7 @@
                     <button type="submit" class="btn btn-primary">
                         {{ __('Save Settings') }}
                     </button>
-                    <a href="{{ route('monday.dashboard') }}" class="btn btn-link">
+                    <a href="{{ route('monday.dashboard', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-link">
                         {{ __('Cancel') }}
                     </a>
                 </div>

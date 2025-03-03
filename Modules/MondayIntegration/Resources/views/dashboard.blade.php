@@ -97,18 +97,18 @@
                 </div>
                 <div class="widget-body">
                     <div class="action-buttons">
-                        <a href="{{ route('monday.settings') }}" class="btn btn-default">
+                        <a href="{{ route('monday.settings', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-default">
                             <i class="glyphicon glyphicon-cog"></i>
                             {{ __('Settings') }}
                         </a>
-                        <a href="{{ route('monday.test-connection') }}" class="btn btn-default test-connection">
+                        <button id="btn-test-connection" class="btn btn-default">
                             <i class="glyphicon glyphicon-refresh"></i>
                             {{ __('Test Connection') }}
-                        </a>
-                        <a href="{{ route('monday.sync-now') }}" class="btn btn-primary sync-now">
+                        </button>
+                        <button id="btn-sync-now" class="btn btn-primary">
                             <i class="glyphicon glyphicon-refresh"></i>
                             {{ __('Sync Now') }}
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -240,52 +240,50 @@
     }
 </style>
 @endpush
+@endsection
 
-@push('scripts')
 <script>
-$(document).ready(function() {
-    // Test Connection
-    $('.test-connection').click(function(e) {
-        e.preventDefault();
-        var btn = $(this);
-        btn.prop('disabled', true);
+    window.onload = function() {
         
-        $.ajax({
-            url: btn.attr('href'),
-            method: 'POST',
-            success: function(response) {
-                showFloatingAlert('success', response.message);
-            },
-            error: function(xhr) {
-                showFloatingAlert('danger', xhr.responseJSON.message || 'Connection test failed');
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-            }
+        // Test Connection
+        $('#btn-test-connection').click(function(e) {
+            var btn = $(this);
+            btn.prop('disabled', true);
+            
+            $.ajax({
+                url: "{{route('monday.test-connection')}}",
+                method: 'POST',
+                success: function(response) {
+                    showFloatingAlert('success', response.message);
+                },
+                error: function(xhr) {
+                    showFloatingAlert('danger', xhr.responseJSON.message || 'Connection test failed');
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                }
+            });
         });
-    });
-
-    // Sync Now
-    $('.sync-now').click(function(e) {
-        e.preventDefault();
-        var btn = $(this);
-        btn.prop('disabled', true);
-        
-        $.ajax({
-            url: btn.attr('href'),
-            method: 'POST',
-            success: function(response) {
-                showFloatingAlert('success', response.message);
-                setTimeout(function() {
-                    window.location.reload();
-                }, 2000);
-            },
-            error: function(xhr) {
-                showFloatingAlert('danger', xhr.responseJSON.message || 'Sync failed');
-                btn.prop('disabled', false);
-            }
+    
+        // Sync Now
+        $('#btn-sync-now').click(function(e) {
+            var btn = $(this);
+            btn.prop('disabled', true);
+            
+            $.ajax({
+                url: "{{route('monday.sync-now')}}",
+                method: 'POST',
+                success: function(response) {
+                    showFloatingAlert('success', response.message);
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                },
+                error: function(xhr) {
+                    showFloatingAlert('danger', xhr.responseJSON.message || 'Sync failed');
+                    btn.prop('disabled', false);
+                }
+            });
         });
-    });
-});
+    }
 </script>
-@endpush

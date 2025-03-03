@@ -4,12 +4,12 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
 {
     // Route::get('/', 'MondayIntegrationController@index');
 
-    Route::get('/monday-dashboard', 'DashboardController@index')->name('monday.dashboard');
-    
+    Route::get('/mailbox/{mailbox_id}/monday-dashboard', 'DashboardController@index')->name('monday.dashboard');
+
     // Settings
     Route::get('/mailbox/{mailbox_id}/monday-settings', 'SettingsController@index')->name('monday.settings');
-    Route::post('/settings', 'SettingsController@save')->name('monday.settings.save');
-    Route::post('/settings/test-connection', 'SettingsController@testConnection')->name('test-connection');
+    Route::post('/monday-settings', 'SettingsController@save')->name('monday.settings.save');
+    Route::post('/monday/test-connection', 'SettingsController@testConnection')->name('monday.test-connection');
 
     // Field Mappings
     Route::get('/mappings', 'FieldMappingController@index')->name('mappings');
@@ -28,9 +28,9 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     Route::get('/docs/{page}', 'DocumentationController@show')->name('docs.show');
 
     // Sync Operations
-    Route::post('/sync/now', 'SyncController@syncNow')->name('sync-now');
-    Route::get('/sync/status', 'SyncController@status')->name('sync.status');
-    Route::post('/sync/retry/{log}', 'SyncController@retry')->name('sync.retry');
+    Route::post('/sync/now', 'DashboardController@syncNow')->name('monday.sync-now');
+    Route::get('/sync/status', 'DashboardController@status')->name('monday.sync.status');
+    Route::post('/sync/retry/{log}', 'DashboardController@retry')->name('monday-sync.retry');
 
     // API Operations
     Route::post('/api/boards', 'SettingsController@getBoards')->name('monday.boards.list');

@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Modules\MondayIntegration\Models\MondaySyncLog;
 use Modules\MondayIntegration\Models\MondayWebhook;
 use Modules\MondayIntegration\Services\MondayApiService;
+use App\Mailbox;
 
 class DashboardController extends Controller
 {
@@ -19,7 +20,7 @@ class DashboardController extends Controller
         $this->apiService = $apiService;
     }
 
-    public function index()
+    public function index($mailbox_id)
     {
         // Check connection status
         $isConnected = $this->apiService->testConnection();
@@ -52,6 +53,7 @@ class DashboardController extends Controller
                 $log->details = $this->formatLogDetails($log);
                 return $log;
             });
+        $mailbox = Mailbox::findOrFail($mailbox_id);
 
         return view('mondayintegration::dashboard', compact(
             'isConnected',
@@ -62,7 +64,8 @@ class DashboardController extends Controller
             'activeWebhooks',
             'recentWebhookEvents',
             'failedWebhookEvents',
-            'recentActivity'
+            'recentActivity',
+            'mailbox',
         ));
     }
 
@@ -90,5 +93,22 @@ class DashboardController extends Controller
             default:
                 return __('Unknown action');
         }
+    }
+
+    public function syncNow()
+    {
+        return response()->json([
+            'message' => __('Sync successful')
+        ]);
+    }
+
+    public function status()
+    {
+
+    }
+
+    public function retry()
+    {
+
     }
 }

@@ -13,6 +13,7 @@ class MondayApiService
     protected $client;
     protected $maxRetries = 3;
     protected $retryDelay = 5;
+    protected $apiToken = '';
 
     public function __construct()
     {
@@ -21,21 +22,24 @@ class MondayApiService
 
     protected function initializeClient()
     {
-        $apiToken = Option::get('mondayintegration.api_token');
+        $this->apiToken = Option::get('mondayintegration.api_token');
 
         $this->client = new Client([
             'base_uri' => config('monday.api.base_url'),
             'timeout' => config('monday.api.timeout'),
             'headers' => [
-                'Authorization' => $apiToken,
+                'Authorization' => $this->apiToken,
                 'Content-Type' => 'application/json',
                 'API-Version' => config('monday.api.version'),
             ]
         ]);
     }
 
-    public function getBoards($apiToken)
+    public function getBoards($apiToken = "")
     {
+        if($apiToken == "") {
+            $apiToken = $this->apiToken;
+        }
         $this->client = new Client([
             'base_uri' => config('monday-integration.api.base_url'),
             'timeout' => config('monday-integration.api.timeout'),
@@ -103,8 +107,12 @@ class MondayApiService
         ]);
     }
 
-    public function testConnection($apiToken)
+    public function testConnection($apiToken = "")
     {
+        if($apiToken == "") {
+            $apiToken = $this->apiToken;
+        }
+
         $this->client = new Client([
             'base_uri' => config('monday-integration.api.base_url'),
             'timeout' => config('monday-integration.api.timeout'),

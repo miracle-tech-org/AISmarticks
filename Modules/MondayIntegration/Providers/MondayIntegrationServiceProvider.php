@@ -43,6 +43,9 @@ class MondayIntegrationServiceProvider extends ServiceProvider
         }, 35);
 
         \Eventy::addFilter('menu.selected', function($menu) {
+            $menu['monday.dashboard'] = [
+                'monday.dashboard',
+            ];
             $menu['monday.settings'] = [
                 'monday.settings',
             ];
