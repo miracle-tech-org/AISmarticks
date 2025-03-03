@@ -49,6 +49,9 @@ class MondayIntegrationServiceProvider extends ServiceProvider
             $menu['monday.settings'] = [
                 'monday.settings',
             ];
+            $menu['monday.mappings'] = [
+                'monday.mappings',
+            ];
             return $menu;
         });
     }

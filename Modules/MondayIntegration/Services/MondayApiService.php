@@ -7,13 +7,16 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Cache;
 use App\Option;
 use Modules\MondayIntegration\Exceptions\MondayApiException;
+use Modules\MondayIntegration\Models\MondaySettings;
 
 class MondayApiService
 {
     protected $client;
     protected $maxRetries = 3;
     protected $retryDelay = 5;
-    protected $apiToken = '';
+    public $apiToken = '';
+    protected $cacheEnabled = true;
+    protected $cacheTtl = 300; // 5 minutes cache by default
 
     public function __construct()
     {
@@ -22,11 +25,11 @@ class MondayApiService
 
     protected function initializeClient()
     {
-        $this->apiToken = Option::get('mondayintegration.api_token');
+        $this->apiToken = MondaySettings::where('key', 'api_token')->value('value') ?? '';
 
         $this->client = new Client([
-            'base_uri' => config('monday.api.base_url'),
-            'timeout' => config('monday.api.timeout'),
+            'base_uri' => config('monday-integration.api.base_url'),
+            'timeout' => config('monday-integration.api.timeout'),
             'headers' => [
                 'Authorization' => $this->apiToken,
                 'Content-Type' => 'application/json',
@@ -54,7 +57,7 @@ class MondayApiService
         return $this->executeQuery($query);
     }
 
-    protected function executeQuery($query, $variables = [])
+    public function executeQuery($query, $variables = [])
     {
         try {
             $response = $this->client->post('', [
@@ -64,14 +67,12 @@ class MondayApiService
             ]);
 
             $data = json_decode($response->getBody(), true);
-
             if (isset($data['errors'])) {
                 return "error";
                 // throw new MondayApiException(
                 //     'Monday.com API Error: ' . $data['errors'][0]['message']
                 // );
             }
-
             return $data['data'];
 
         } catch (RequestException $e) {
@@ -124,5 +125,15 @@ class MondayApiService
         ]);
 
         return $this->getBoards($apiToken) !== null;
+    }
+
+    public function getBoardColumns()
+    {
+        $boardId = MondaySettings::where('key', 'board_id')->value('value') ?? '';
+        $query = 'query { boards(ids: ' . $boardId . ') { columns { id title type settings_str } } }';
+        $response = $this->executeQuery($query);
+        $columns = $response['boards'][0]['columns'] ?? [];
+
+        return $columns;
     }
 }

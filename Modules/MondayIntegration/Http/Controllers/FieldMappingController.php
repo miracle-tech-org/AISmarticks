@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Modules\MondayIntegration\Models\MondayFieldMapping;
 use Modules\MondayIntegration\Services\MondayApiService;
+use App\Mailbox;
 
 class FieldMappingController extends Controller
 {
@@ -17,7 +18,7 @@ class FieldMappingController extends Controller
         $this->apiService = $apiService;
     }
 
-    public function index()
+    public function index($mailbox_id)
     {
         // Get current mappings
         $mappings = MondayFieldMapping::orderBy('order')->get();
@@ -27,32 +28,34 @@ class FieldMappingController extends Controller
 
         // Get Monday.com columns
         try {
-            $mondayColumns = $this->apiService->getBoardColumns();
+            $mondayColumns = $this->apiService->getBoards();
         } catch (\Exception $e) {
             $mondayColumns = [];
         }
 
         // Get available transform rules
         $transformRules = $this->getTransformRules();
+        $mailbox = Mailbox::findOrFail($mailbox_id);
 
         return view('mondayintegration::mappings.field_mapping', compact(
             'mappings',
             'freescoutFields',
             'mondayColumns',
-            'transformRules'
+            'transformRules',
+            'mailbox',
         ));
     }
 
     public function save(Request $request)
     {
-        $this->validate($request, [
-            'mappings' => 'required|array',
-            'mappings.*.smarticks_field' => 'required',
-            'mappings.*.monday_column' => 'required',
-            'mappings.*.transform_rule' => 'nullable',
-            'mappings.*.default_value' => 'nullable',
-            'mappings.*.is_required' => 'boolean'
-        ]);
+        // $this->validate($request, [
+        //     'mappings' => 'required|array',
+        //     'mappings.*.smarticks_field' => 'required',
+        //     'mappings.*.monday_column' => 'required',
+        //     'mappings.*.transform_rule' => 'nullable',
+        //     'mappings.*.default_value' => 'nullable',
+        //     'mappings.*.is_required' => 'boolean'
+        // ]);
 
         try {
             // Start transaction
