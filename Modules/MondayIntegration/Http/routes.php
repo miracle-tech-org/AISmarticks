@@ -21,6 +21,10 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
     Route::post('/mappings', 'FieldMappingController@save')->name('monday.mappings.save');
     Route::get('/mappings/fields', 'FieldMappingController@getFields')->name('monday.mappings.fields');
 
+    // Sidebar Widget
+    Route::get('/mailbox/{mailbox_id}/monday-sidebar/{conversation}', 'SidebarController@sidebarWidget')->name('sidebar-widget');
+    Route::post('/quick-action', 'SidebarController@executeQuickAction')->name('quick-action');
+
     // Webhooks
     Route::get('/webhooks', 'WebhookController@index')->name('webhooks');
     Route::post('/webhooks', 'WebhookController@store')->name('webhooks.store');

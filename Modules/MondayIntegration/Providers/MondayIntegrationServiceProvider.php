@@ -52,6 +52,9 @@ class MondayIntegrationServiceProvider extends ServiceProvider
             $menu['monday.mappings'] = [
                 'monday.mappings',
             ];
+            $menu['sidebar-widget'] = [
+                'sidebar-widget',
+            ];
             return $menu;
         });
     }
