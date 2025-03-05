@@ -717,35 +717,35 @@ class CrmServiceProvider extends ServiceProvider
             return false;
         }, 20, 6);
 
-        // \Eventy::addFilter('workflows.actions_config', function($actions, $mailbox_id = null) {
-        //     $custom_fields = CustomerField::getMailboxCustomFields($mailbox_id, true);
+        \Eventy::addFilter('workflows.actions_config', function($actions, $mailbox_id = null) {
+            $customer_fields = CustomerField::getCustomerFields(true);
 
-        //     $operators = [];
-        //     foreach ($custom_fields as $custom_field) {
-        //         $operators[$custom_field->id] = $custom_field->name;
-        //     }
+            $operators = [];
+            foreach ($customer_fields as $custom_field) {
+                $operators[$custom_field->id] = $custom_field->name;
+            }
 
-        //     $actions['dummy']['items']['set_custom_field'] = [
-        //         'title' => __('Set Custom Field'),
-        //         'operators' => $operators,
-        //         'values_custom' => true
-        //     ];
-        //     return $actions;
-        // }, 20, 2);
+            $actions['dummy']['items']['set_customer_field'] = [
+                'title' => __('Set Customer Field'),
+                'operators' => $operators,
+                'values_custom' => true
+            ];
+            return $actions;
+        }, 20, 2);
 
-        /*\Eventy::addAction('workflows.values_custom', function($type, $value, $mode, $and_i, $row_i, $data) {
-            if ($type != 'set_custom_field') {
+        \Eventy::addAction('workflows.values_custom', function($type, $value, $mode, $and_i, $row_i, $data) {
+            if ($type != 'set_customer_field') {
                 return;
             }
-            $custom_fields = CustomerField::getMailboxCustomFields($data['mailbox']->id, true);
+            $customer_fields = CustomerField::getCustomerFields(true);
 
-            foreach ($custom_fields as $custom_field) {
-                switch ($custom_field->type) {
+            foreach ($customer_fields as $customer_field) {
+                switch ($customer_field->type) {
 
                     case CustomerField::TYPE_DROPDOWN:
                         ?>
-                            <select class="form-control wf-multi-value wf-multi-value-<?php echo $custom_field->id ?>" name="<?php echo $mode ?>[<?php echo $and_i ?>][<?php echo $row_i ?>][value]" disabled>
-                                <?php foreach ($custom_field->options as $option_key => $option_value): ?>
+                            <select class="form-control wf-multi-value wf-multi-value-<?php echo $customer_field->id ?>" name="<?php echo $mode ?>[<?php echo $and_i ?>][<?php echo $row_i ?>][value]" disabled>
+                                <?php foreach ($customer_field->options as $option_key => $option_value): ?>
                                     <option value="<?php echo $option_key ?>" <?php if ($value == $option_key): ?> selected <?php endif ?>><?php echo $option_value ?></option>
                                 <?php endforeach ?>
                             </select>
@@ -754,14 +754,14 @@ class CrmServiceProvider extends ServiceProvider
 
                     default:
                         ?>
-                            <input type="<?php if ($custom_field->type == CustomerField::TYPE_NUMBER): ?>number<?php else: ?>text<?php endif ?>" class="form-control wf-multi-value wf-multi-value-<?php echo $custom_field->id ?> <?php if ($custom_field->type == CustomerField::TYPE_DATE): ?>input-date<?php endif ?>" value="<?php echo $value ?>" name="<?php echo $mode ?>[<?php echo $and_i ?>][<?php echo $row_i ?>][value]" disabled/>
+                            <input type="<?php if ($customer_field->type == CustomerField::TYPE_NUMBER): ?>number<?php else: ?>text<?php endif ?>" class="form-control wf-multi-value wf-multi-value-<?php echo $customer_field->id ?> <?php if ($customer_field->type == CustomerField::TYPE_DATE): ?>input-date<?php endif ?>" value="<?php echo $value ?>" name="<?php echo $mode ?>[<?php echo $and_i ?>][<?php echo $row_i ?>][value]" disabled/>
                         <?php
                         break;
                 }
             }
         }, 20, 6);
 
-        \Eventy::addFilter('workflow.perform_action', function($performed, $type, $operator, $value, $conversation, $workflow) {
+        /*\Eventy::addFilter('workflow.perform_action', function($performed, $type, $operator, $value, $conversation, $workflow) {
             if ($type == 'set_custom_field') {
                 $custom_field_id = $operator;
                 CustomerField::setValue($conversation->id, $custom_field_id, $value);

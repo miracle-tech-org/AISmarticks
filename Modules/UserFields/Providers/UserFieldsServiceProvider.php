@@ -162,6 +162,50 @@ class UserFieldsServiceProvider extends ServiceProvider
 
             return $vars;
         }, 20, 2);
+
+        \Eventy::addFilter('workflows.actions_config', function($actions, $mailbox_id = null) {
+            $user_fields = UserField::getUserFields($mailbox_id, true);
+
+            $operators = [];
+            foreach ($user_fields as $user_field) {
+                $operators[$user_field->id] = $user_field->name;
+            }
+
+            $actions['dummy']['items']['set_user_field'] = [
+                'title' => __('Set User Field'),
+                'operators' => $operators,
+                'values_custom' => true
+            ];
+            return $actions;
+        }, 20, 2);
+
+        \Eventy::addAction('workflows.values_custom', function($type, $value, $mode, $and_i, $row_i, $data) {
+            if ($type != 'set_user_field') {
+                return;
+            }
+            $user_fields = UserField::getUserFields(true);
+
+            foreach ($user_fields as $user_field) {
+                switch ($user_field->type) {
+
+                    case UserField::TYPE_DROPDOWN:
+                        ?>
+                            <select class="form-control wf-multi-value wf-multi-value-<?php echo $user_field->id ?>" name="<?php echo $mode ?>[<?php echo $and_i ?>][<?php echo $row_i ?>][value]" disabled>
+                                <?php foreach ($user_field->options as $option_key => $option_value): ?>
+                                    <option value="<?php echo $option_key ?>" <?php if ($value == $option_key): ?> selected <?php endif ?>><?php echo $option_value ?></option>
+                                <?php endforeach ?>
+                            </select>
+                        <?php
+                        break;
+
+                    default:
+                        ?>
+                            <input type="<?php if ($user_field->type == UserField::TYPE_NUMBER): ?>number<?php else: ?>text<?php endif ?>" class="form-control wf-multi-value wf-multi-value-<?php echo $user_field->id ?> <?php if ($user_field->type == UserField::TYPE_DATE): ?>input-date<?php endif ?>" value="<?php echo $value ?>" name="<?php echo $mode ?>[<?php echo $and_i ?>][<?php echo $row_i ?>][value]" disabled/>
+                        <?php
+                        break;
+                }
+            }
+        }, 20, 6);
     }
 
     /**
