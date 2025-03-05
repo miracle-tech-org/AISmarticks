@@ -482,7 +482,40 @@ class MailboxesController extends Controller
         } else {
             $tagId = $tag->id;
         }
-        
+
+        $threads = Thread::where('body', 'Sent template')
+            ->whereNotNull('meta')
+            ->where('meta', '<>', '')
+            ->get();
+
+        foreach ($threads as $thread) {
+            // Decode meta JSON safely
+
+            // Ensure wtemplate exists in meta
+            if (!isset($thread['meta'])) {
+                continue;
+            }
+
+            $wid = $thread['meta'];
+
+            // Get the components field
+            $components = DB::table('whatsapp_templates')->where('wid', $wid)->value('components');
+
+            // Decode components safely
+            $data = json_decode($components);
+
+            // Ensure data exists and has the required structure
+            if (!empty($data) && isset($data[0]->text)) {
+                // Update the thread's body
+                DB::statement('ALTER TABLE threads MODIFY body TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+                DB::statement('ALTER TABLE conversations MODIFY preview TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+                DB::table('threads')->where('id', $thread->id)->update(['body' => $data[0]->text]);
+                if (!empty($thread->conversation_id)) {
+                    DB::table('conversations')->where('id', $thread->conversation_id)->update(['preview' => $data[0]->text]);
+                }
+            }
+        }
+
         foreach ($conversations as $conversation) {
             $exists = DB::table('conversation_tag')
             ->where('conversation_id', $conversation->id)
