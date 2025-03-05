@@ -496,11 +496,16 @@ class MailboxesController extends Controller
                 continue;
             }
 
-            $wid = $thread['meta'];
+            $wid = $thread['meta']['wtemplate'];
 
             // Get the components field
-            $components = DB::table('whatsapp_templates')->where('wid', $wid)->value('components');
-            $subject = DB::table('whatsapp_templates')->where('wid', $wid)->value('name');
+            $components = DB::table('whatsapp_templates')
+                ->where('wid', $wid)
+                ->value('components');
+
+            $subject = DB::table('whatsapp_templates')
+                ->where('wid', "$wid")
+                ->value('name');
 
             // Decode components safely
             $data = json_decode($components);
