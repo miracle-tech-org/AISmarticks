@@ -500,18 +500,26 @@ class MailboxesController extends Controller
 
             // Get the components field
             $components = DB::table('whatsapp_templates')->where('wid', $wid)->value('components');
+            $subject = DB::table('whatsapp_templates')->where('wid', $wid)->value('name');
 
             // Decode components safely
             $data = json_decode($components);
 
             // Ensure data exists and has the required structure
             if (!empty($data) && isset($data[0]->text)) {
+                $preview = "Sent template $subject: " . $data[0]->text;
+
                 // Update the thread's body
                 DB::statement('ALTER TABLE threads MODIFY body TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
                 DB::statement('ALTER TABLE conversations MODIFY preview TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-                DB::table('threads')->where('id', $thread->id)->update(['body' => $data[0]->text]);
+
+                DB::table('threads')->where('id', $thread->id)->update(['body' => $preview]);
                 if (!empty($thread->conversation_id)) {
-                    DB::table('conversations')->where('id', $thread->conversation_id)->update(['preview' => $data[0]->text]);
+                    DB::table('conversations')->where('id', $thread->conversation_id)
+                        ->update([
+                            'preview' => $preview,
+                            'subject' => $subject
+                        ]);
                 }
             }
         }
