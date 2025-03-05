@@ -24,7 +24,7 @@
 				            	<span class="handle"><i class="glyphicon glyphicon-menu-hamburger"></i></span>
 				                <h4 class="panel-title">
 				                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse-{{ $custom_field->id }}">
-				                    	<span>{{ $custom_field->name }} [{{ $custom_field->field_type }}] @if ($custom_field->required)<i class="required-asterisk"></i>@endif</span>
+				                    	<span>{{ $custom_field->name }} @if ($custom_field->required)<i class="required-asterisk"></i>@endif</span>
 				                    </a>
 				                </h4>
 				            </div>

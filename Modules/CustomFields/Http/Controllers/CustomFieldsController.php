@@ -134,13 +134,10 @@ class CustomFieldsController extends Controller
                         }
                         $custom_field->required = $request->filled('required');
                         $custom_field->show_in_list = $request->filled('show_in_list');
-                        if($request->field_type) {
-                            $custom_field->field_type = $request->field_type;
-                        }
                         $custom_field->save();
 
                         $response['id']     = $custom_field->id;
-                        $response['name']   = $custom_field->name."[$custom_field->field_type]";
+                        $response['name']   = $custom_field->name;
                         $response['required']   = (int)$custom_field->required;
                         $response['show_in_list']   = (int)$custom_field->show_in_list;
                         $response['status'] = 'success';

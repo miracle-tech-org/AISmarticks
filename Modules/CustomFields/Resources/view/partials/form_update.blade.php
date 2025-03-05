@@ -135,16 +135,3 @@
         </div>
     </div>
 </div>
-
-
-<div class="form-group">
-    <label class="col-sm-2 control-label">{{ __('Field Type') }}</label>
-
-    <div class="col-sm-10">
-    	<select name="field_type" class="form-control" @if ($mode != 'create') disabled @endif>
-            <option value="Set Custom Field" @if ('Set Custom Field' == $custom_field->field_type) selected @endif>{{ __('Set Custom Field') }}</option>
-            <option value="Set Customer Field" @if ('Set Customer Field' == $custom_field->field_type) selected @endif>{{ __('Set Customer Field') }}</option>
-            <option value="Set User Field" @if ('Set User Field' == $custom_field->field_type) selected @endif>{{ __('Set User Field') }}</option>
-    	</select>
-    </div>
-</div>

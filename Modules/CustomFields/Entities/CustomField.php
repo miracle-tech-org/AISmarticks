@@ -38,7 +38,7 @@ class CustomField extends Model
 	];
 
     protected $fillable = [
-    	'name', 'type', 'required', 'options', 'field_type'
+    	'name', 'type', 'required', 'options'
     ];
 
 	protected $attributes = [
@@ -83,17 +83,6 @@ class CustomField extends Model
     public static function getMailboxCustomFields($mailbox_id, $cache = false)
     {
     	$query = CustomField::where('mailbox_id', $mailbox_id)
-            ->orderby('sort_order');
-        if ($cache) {
-            $query->rememberForever();
-        }
-        return $query->get();
-    }
-
-    public static function getMailboxCustomFieldsByFieldType($mailbox_id, $field_type, $cache = false)
-    {
-    	$query = CustomField::where('mailbox_id', $mailbox_id)
-            ->where('field_type', $field_type)
             ->orderby('sort_order');
         if ($cache) {
             $query->rememberForever();
