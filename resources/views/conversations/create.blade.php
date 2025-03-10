@@ -263,8 +263,17 @@
                                     @include('partials/field_error', ['field'=>'subject'])
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label for="tags" class="col-sm-2 control-label" z>{{ __('Tags') }}</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" id="tags" name="tags[]" required multiple>
+                                        @foreach ($tags as $tag)
+                                            <option>{{$tag}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             @action('conversation.create_form.after_subject', $conversation, $mailbox, $thread)
-
                             @php
                                 if (!isset($attachments)) {
                                     //$attachments = $conversation->getAttachments();
@@ -284,7 +293,7 @@
                                     @endforeach
                                 </ul>
                             </div>
-
+                            
                             <div class="form-group{{ $errors->has('body') ? ' has-error' : '' }} conv-reply-body">
                                 <div class="col-sm-12">
                                     <textarea id="body" class="form-control" name="body" rows="13" data-parsley-required="true" data-parsley-required-message="{{ __('Please enter a message') }}">{{ old('body', $thread->body) }}</textarea>
@@ -293,7 +302,8 @@
                                     </div>
                                 </div>
                             </div>
-
+                            
+                            
                         </form>
                     </div>
                 </div>
@@ -311,3 +321,13 @@
     initReplyForm(true, true, true);
     initNewConversation(@if ($conversation->type == App\Conversation::TYPE_PHONE){{ 'true' }}@endif);
 @endsection
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    window.onload = function() {
+        $('#tags').select2({
+            placeholder: "Select Tags",
+            allowClear: true,
+            tags: true, // Enables adding new options
+        });
+    }
+</script>

@@ -472,16 +472,16 @@ class MailboxesController extends Controller
         $conversations = Conversation::whereNotNull('created_by_user_id')
                    ->where('created_by_user_id', '!=', '')
                    ->get();
-        $tag = DB::table('tags')->where('name', 'שיחה יזומה')->first();
-        if (!$tag) {
-            // Insert new tag and get its ID
-            $tagId = DB::table('tags')->insertGetId([
-                'name' => 'שיחה יזומה',
-                'color' => '4',
-            ]);
-        } else {
-            $tagId = $tag->id;
-        }
+        // $tag = DB::table('tags')->where('name', 'שיחה יזומה')->first();
+        // if (!$tag) {
+        //     // Insert new tag and get its ID
+        //     $tagId = DB::table('tags')->insertGetId([
+        //         'name' => 'שיחה יזומה',
+        //         'color' => '4',
+        //     ]);
+        // } else {
+        //     $tagId = $tag->id;
+        // }
 
         $threads = Thread::where('body', 'Sent template')
             ->whereNotNull('meta')
@@ -529,19 +529,19 @@ class MailboxesController extends Controller
             }
         }
 
-        foreach ($conversations as $conversation) {
-            $exists = DB::table('conversation_tag')
-            ->where('conversation_id', $conversation->id)
-            ->where('tag_id', $tagId)
-            ->exists();
+        // foreach ($conversations as $conversation) {
+        //     $exists = DB::table('conversation_tag')
+        //     ->where('conversation_id', $conversation->id)
+        //     ->where('tag_id', $tagId)
+        //     ->exists();
 
-            if (!$exists) {
-                DB::table('conversation_tag')->insert([
-                    'conversation_id' => $conversation->id,
-                    'tag_id' => $tagId,
-                ]);
-            }
-        }
+        //     if (!$exists) {
+        //         DB::table('conversation_tag')->insert([
+        //             'conversation_id' => $conversation->id,
+        //             'tag_id' => $tagId,
+        //         ]);
+        //     }
+        // }
 
         $folders = $mailbox->getAssesibleFolders();
 
