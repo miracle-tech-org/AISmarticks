@@ -1426,7 +1426,28 @@ class ConversationsController extends Controller
                         if (!$is_whatsapp_template) {
                             $conversation->setPreview($body);
                         } else {
-                            $conversation->setPreview("Sent template");
+                            $components = DB::table('whatsapp_templates')
+                                ->where('wid', "$request->whatsapptemplate")
+                                ->value('components');
+                
+                            $subject = DB::table('whatsapp_templates')
+                                ->where('wid', "$request->whatsapptemplate")
+                                ->value('name');
+
+                            DB::statement('ALTER TABLE threads MODIFY body TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+                            DB::statement('ALTER TABLE conversations MODIFY preview TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+
+                            // Decode components safely
+                            $data = json_decode($components);
+                            $preview = "Sent template \"$subject\": " . $data[0]->text;
+                            $replacements = [];
+                            for ($x = 1; isset($request["wt_params_BODY_" . $x]); $x++) {
+                                $key = "{{".$x."}}";
+                                $replacements[$key] = $request["wt_params_BODY_" . $x];
+                            }
+                            $preview = str_replace(array_keys($replacements), array_values($replacements), $preview);
+                            $conversation->subject = $subject;
+                            $conversation->setPreview($preview);
                         }
                     }
                     //                    echo "<pre>";
@@ -1599,7 +1620,28 @@ class ConversationsController extends Controller
                     if (!$is_whatsapp_template) {
                         $thread->body = $body;
                     } else {
-                        $thread->body = "Sent template";
+                        $components = DB::table('whatsapp_templates')
+                            ->where('wid', "$request->whatsapptemplate")
+                            ->value('components');
+            
+                        $subject = DB::table('whatsapp_templates')
+                            ->where('wid', "$request->whatsapptemplate")
+                            ->value('name');
+
+                        DB::statement('ALTER TABLE threads MODIFY body TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+                        DB::statement('ALTER TABLE conversations MODIFY preview TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+
+                        // Decode components safely
+                        $data = json_decode($components);
+                        $preview = "Sent template \"$subject\": " . $data[0]->text;
+                        $replacements = [];
+                        for ($x = 1; isset($request["wt_params_BODY_" . $x]); $x++) {
+                            $key = "{{".$x."}}";
+                            $replacements[$key] = $request["wt_params_BODY_" . $x];
+                        }
+                        $preview = str_replace(array_keys($replacements), array_values($replacements), $preview);
+                        
+                        $thread->body = $preview;
                     }
                     if ($is_create && !$is_multiple && count($to_array) > 1) {
                         $thread->setTo($to_array);
