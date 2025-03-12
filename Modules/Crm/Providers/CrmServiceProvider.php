@@ -149,13 +149,13 @@ class CrmServiceProvider extends ServiceProvider
             }
         }, 20, 1);
 
-        // \Eventy::addFilter('customer.card.url', function($url, $customer) {
-        //     if (self::isCrm()) {
-        //         return route('customers.update', ['id' => $customer->id, 'x_embed' => 1]);
-        //     }
+        \Eventy::addFilter('customer.card.url', function($url, $customer) {
+            if (self::isCrm()) {
+                return route('customers.update', ['id' => $customer->id, 'x_embed' => 1]);
+            }
 
-        //     return $url;
-        // }, 20, 2);
+            return $url;
+        }, 20, 2);
         
         // Select main menu item.
         \Eventy::addFilter('menu.selected', function($menu) {
@@ -635,18 +635,18 @@ class CrmServiceProvider extends ServiceProvider
             return $conditions;
         }, 50, 2);
 
-        // \Eventy::addAction('crm.customer_field.value_updated', function($field, $customer_id) {
-        //     if (!\Module::isActive('workflows')) {
-        //         return;
-        //     }
-        //     $customer_field = CustomerField::find($field->customer_field_id);
-        //     if ($customer_field) {
-        //         $conversation = Conversation::find($conversation_id);
-        //         if ($conversation) {
-        //             \Workflow::runAutomaticForConversation($conversation, 'custom_field.value_updated');
-        //         }
-        //     }
-        // }, 20, 2);
+        \Eventy::addAction('crm.customer_field.value_updated', function($field, $customer_id) {
+            if (!\Module::isActive('workflows')) {
+                return;
+            }
+            $customer_field = CustomerField::find($field->customer_field_id);
+            if ($customer_field) {
+                $conversation = Conversation::find($conversation_id);
+                if ($conversation) {
+                    \Workflow::runAutomaticForConversation($conversation, 'crm.customer_field.value_updated');
+                }
+            }
+        }, 20, 2);
 
         \Eventy::addFilter('workflow.check_condition', function($result, $type, $operator, $value, $conversation, $workflow) {
             preg_match("/crf_(\d+)/", $type, $m);
@@ -678,7 +678,7 @@ class CrmServiceProvider extends ServiceProvider
                         return is_numeric($value) && (int)$customer_field_value < (int)$value;
                     } else {
                         return \Workflow::compareText($customer_field_value, $value, $operator);
-                    }                   
+                    }
                     break;
 
                 case CustomerField::TYPE_DATE:
@@ -761,15 +761,15 @@ class CrmServiceProvider extends ServiceProvider
             }
         }, 20, 6);
 
-        /*\Eventy::addFilter('workflow.perform_action', function($performed, $type, $operator, $value, $conversation, $workflow) {
-            if ($type == 'set_custom_field') {
+        \Eventy::addFilter('workflow.perform_action', function($performed, $type, $operator, $value, $conversation, $workflow) {
+            if ($type == 'set_customer_field') {
                 $custom_field_id = $operator;
                 CustomerField::setValue($conversation->id, $custom_field_id, $value);
                 return true;
             }
 
             return $performed;
-        }, 20, 6);*/
+        }, 20, 6);
 
         \Eventy::addFilter('workflow.validate_condition', function($has_error, $condition, $workflow) {
             if ($has_error) {
@@ -794,27 +794,27 @@ class CrmServiceProvider extends ServiceProvider
             }
         }, 20, 3);
 
-        // \Eventy::addFilter('workflow.validate_action', function($has_error, $action, $workflow) {
-        //     if ($has_error) {
-        //         return $has_error;
-        //     }
+        \Eventy::addFilter('workflow.validate_action', function($has_error, $action, $workflow) {
+            if ($has_error) {
+                return $has_error;
+            }
 
-        //     if ($action['type'] != 'set_custom_field') {
-        //         return $has_error;
-        //     }
+            if ($action['type'] != 'set_customer_field') {
+                return $has_error;
+            }
 
-        //     if (empty($action['operator'])) {
-        //         return true;
-        //     }
+            if (empty($action['operator'])) {
+                return true;
+            }
 
-        //     $custom_field_id = $action['operator'];
+            $custom_field_id = $action['operator'];
         
-        //     if (CustomerField::find($custom_field_id)) {
-        //         return false;
-        //     } else {
-        //         return true;
-        //     }
-        // }, 20, 3);
+            if (CustomerField::find($custom_field_id)) {
+                return false;
+            } else {
+                return true;
+            }
+        }, 20, 3);
     }
 
     public function isCrm()

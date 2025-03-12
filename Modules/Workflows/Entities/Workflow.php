@@ -1448,8 +1448,9 @@ class Workflow extends Model
                         $bcc = $value['bcc'] ?? '';
 
                         if ($body) {
-                            // $user = self::getUser();
+							// $user = self::getUser();
 							$user = User::where('id', $conversation->user_id)->first();
+                            error_log('smar142 Workflow reply '.$this->id.' User = '.json_encode($user));
                             $body = $conversation->replaceTextVars($body, ['user' => $user]);
                             $conversation->createUserThread(self::getUser(), $body, [
                                 'cc' => $cc,

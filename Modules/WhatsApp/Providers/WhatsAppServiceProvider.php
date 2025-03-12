@@ -107,14 +107,14 @@ class WhatsAppServiceProvider extends ServiceProvider
             if (auth()->user()->isAdmin()) {
                 echo \View::make('whatsapp::partials/settings_menu', ['mailbox' => $mailbox])->render();
             }
-        }, 35);
+        }, 35, 1);
 
         \Eventy::addFilter('menu.selected', function($menu) {
             $menu['whatsapp'] = [
                 'mailboxes.whatsapp.settings',
             ];
             return $menu;
-        });
+        }, 20, 1);
 
         \Eventy::addFilter('channel.name', function($name, $channel) {
             if ($name) {
@@ -130,7 +130,7 @@ class WhatsAppServiceProvider extends ServiceProvider
         \Eventy::addFilter('channels.list', function($channels) {
             $channels[self::CHANNEL] = self::CHANNEL_NAME;
             return $channels;
-        });
+        }, 20, 1);
 
 		\Eventy::addAction('conversation.created_by_user', function($conversation, $thread) {
 		    $thread = $thread->fresh();
@@ -226,22 +226,37 @@ class WhatsAppServiceProvider extends ServiceProvider
 			$thread->setMeta('channel','whatsapp');
 			$thread->save();
 			
-        }, 20, 3);
+        }, 20, 2);
 
-		\Eventy::addAction('voipeintegration.sendwhatsapp', function($conversation, $thread) {
+		\Eventy::addFilter('voipeintegration.senddefault', function($result, $conversation, $thread, $default_channel) {
+			error_log('voipeintegration.senddefault whatsapp');
+			error_log('voipeintegration.senddefault whatsapp in '.json_encode($result));
+			if ($default_channel==self::CHANNEL)
+			{
+				error_log('Lets use whatsapp (default)!');
+				$result['whatsapp'] = false;
+				$result['whatsapp'] = \Eventy::filter('voipeintegration.sendwhatsapp', $result['whatsapp'], $conversation, $thread);
+			}
+			error_log('voipeintegration.senddefault whatsapp out '.json_encode($result));
+			return $result;
+        }, 20, 4);
+
+		\Eventy::addFilter('voipeintegration.sendwhatsapp', function($result, $conversation, $thread) {
+//            error_log('Test whatsapp message!!!123');
 		    $thread = $thread->fresh();
             if ($thread->type!=Thread::TYPE_MESSAGE) return;
 			$customer=$conversation->customer;
+			$channel_id = false;
 			$channel_id = $customer->getChannelId(self::CHANNEL);
-            if (!$channel_id) $channel_id=$customer->getChannelId(\VoipeIntegration::CHANNEL);
-			if (!$channel_id) $channel_id=$customer->getChannelId(\VoipeSmsTickets::CHANNEL);
+			if (!$channel_id) $channel_id = \Eventy::filter('voipeintegration.channel_id', $channel_id, $customer);
+			
 			if (!$channel_id) {
                 error_log('Conversation #'.$conversation->number.'. Can not send a reply to the customer (ID '.$customer->id.'; Phone '.$customer->getMainPhoneValue().'): customer has no phone number.');
-                return;
+                return false;
             }
 
             if ($thread->isDraft() || $thread->imported) {
-                return;
+                return false;
             }
 
             $text = $thread->getBodyAsText();
@@ -250,84 +265,49 @@ class WhatsAppServiceProvider extends ServiceProvider
 
             if (self::getSystem($config) == self::SYSTEM_CHATAPI) {
                 
-				$response=self::sendMessage($channel_id,$text,$config,$thread->has_attachments?$thread->attachments:[]);
-				error_log('Whatsapp response = '.json_encode($response));
-				if (empty($response['sent'])) {
-					\WhatsApp::log('Error occurred sending WhatsApp message to '.$channel_id.': '.json_encode($response), $conversation->mailbox, true);
-				}
-				if (isset($response['id']))
+				$wsent=false;
+				if (isset($customer->meta['wlastdate'])) if (microtime(true)-$customer->meta['wlastdate']<86000)
 				{
-					$thread->setMeta('wid',$response['id']);
-					$thread->save();
+					$wsent=true;
+					$response=self::sendMessage($channel_id,$text,$config,$thread->has_attachments?$thread->attachments:[]);
+					error_log('Whatsapp response = '.json_encode($response));
+					if (empty($response['sent'])) {
+						\WhatsApp::log('Error occurred sending WhatsApp message to '.$channel_id.': '.json_encode($response), $conversation->mailbox, true);
+					}
+					if (isset($response['id']))
+					{
+						$thread->setMeta('wid',$response['id']);
+						$thread->save();
+					}
 				}
-            } else {
-                // Send attachments first.
-                if ($thread->has_attachments) {
-                    foreach ($thread->attachments as $attachment) {
-                        try {
-                            self::twilioSendMessage($conversation->mailbox, $channel_id, '', $attachment->url());
-                        } catch (\Exception $e) {
-                            \WhatsApp::log('Error occurred sending file via WhatsApp to '.$channel_id.': '.$e->getMessage(), $conversation->mailbox, true, self::SYSTEM_TWILIO);
-                        }
-                    }
-                }
-                try {
-                    self::twilioSendMessage($conversation->mailbox, $channel_id, $text);
-                } catch (\Exception $e) {
-                    \WhatsApp::log('Error occurred sending WhatsApp message to '.$channel_id.': '.$e->getMessage(), $conversation->mailbox, true, self::SYSTEM_TWILIO);
-                }
-            }
-			$thread->setMeta('channel','whatsapp');
-			$thread->save();
-		
-        }, 20, 3);
-
-		\Eventy::addAction('voipeintegration.sendwhatsapptemplate', function($conversation, $thread) {
-//            error_log('Test whatsapp message!!!123');
-		    $thread = $thread->fresh();
-            if ($thread->type!=Thread::TYPE_MESSAGE) return;
-			$customer=$conversation->customer;
-			$channel_id = $customer->getChannelId(self::CHANNEL);
-            if (!$channel_id) $channel_id=$customer->getChannelId(\VoipeIntegration::CHANNEL);
-			if (!$channel_id) $channel_id=$customer->getChannelId(\VoipeSmsTickets::CHANNEL);
-			if (!$channel_id) {
-                error_log('Conversation #'.$conversation->number.'. Can not send a reply to the customer (ID '.$customer->id.'; Phone '.$customer->getMainPhoneValue().'): customer has no phone number.');
-                return;
-            }
-
-            if ($thread->isDraft() || $thread->imported) {
-                return;
-            }
-
-            $text = $thread->getBodyAsText();
-
-            $config = $conversation->mailbox->meta[\WhatsApp::DRIVER] ?? [];
-
-            if (self::getSystem($config) == self::SYSTEM_CHATAPI) {
-                if (@$thread->meta['wtemplate']!='')
+				//send template
+				if (!$wsent)
 				{
-					$wsent=false;
-					$response=\WhatsApp::sendTemplate($channel_id,$thread->meta['wtemplate'],$config,$thread->meta);
-					if ($response)
-					{	
-						$wsent=true;
-						if (isset($response['id']))
+					if (@$thread->meta['wtemplate']!='')
+					{
+						$wsent=false;
+						$response=\WhatsApp::sendTemplate($channel_id,$thread->meta['wtemplate'],$config,$thread->meta);
+						if ($response)
+						{	
+							$wsent=true;
+							if (isset($response['id']))
+							{
+								$template=\Whatsapp::getTemplate($thread->meta['wtemplate'],$config);
+								$template=json_decode($template->full,true);
+								$thread->setMeta('wid',$response['id']);
+								$thread->setMeta('wtcat'.strtolower($template['category']),"true");
+								$thread->save();
+							}
+						}
+						if (!$wsent)
 						{
-							$template=\Whatsapp::getTemplate($thread->meta['wtemplate'],$config);
-							$template=json_decode($template->full,true);
-							$thread->setMeta('wid',$response['id']);
-							$thread->setMeta('wtcat'.strtolower($template['category']),"true");
-							$thread->save();
+
 						}
 					}
-					if (!$wsent)
+					else
 					{
-
+						error_log('ERROR wTemplate empty!');
 					}
-				}
-				else
-				{
-					error_log('ERROR wTemplate empty!');
 				}
             } else {
                 // // Send attachments first.
@@ -348,7 +328,8 @@ class WhatsAppServiceProvider extends ServiceProvider
             }
 			$thread->setMeta('channel','whatsapp');
 			$thread->save();
-		
+			return true;
+
         }, 20, 3);
 
 		\Eventy::addAction('conversation.user_forwarded', function($conversation, $thread, $forwarded_conversation, $forwarded_thread) {
@@ -446,7 +427,7 @@ class WhatsAppServiceProvider extends ServiceProvider
 			$thread->save();
 			\DB::insert('insert into billing_statistics (type,month,cnt) values (?, ?, ?) ON DUPLICATE KEY UPDATE `cnt`=`cnt`+?', ["whatsapp_out", date('Y-m'),1,1]);
 
-        }, 20, 3);
+        }, 20, 4);
 
 		\Eventy::addAction('conversation.user_replied', function($conversation, $thread) {
 			$thread = $thread->fresh();
@@ -543,7 +524,7 @@ class WhatsAppServiceProvider extends ServiceProvider
 			$thread->save();
 			\DB::insert('insert into billing_statistics (type,month,cnt) values (?, ?, ?) ON DUPLICATE KEY UPDATE `cnt`=`cnt`+?', ["whatsapp_out", date('Y-m'),1,1]);
 
-        }, 20, 3);
+        }, 20, 2);
 
 		\Eventy::addAction('conversation.send_reply_save', function($conversation, $request) {
 
@@ -556,7 +537,7 @@ class WhatsAppServiceProvider extends ServiceProvider
 				$conversation->save();
 
 			}
-        }, 20, 3);
+        }, 20, 2);
 
 		\Eventy::addAction('workflows.values_custom', function($type, $value, $mode, $and_i, $row_i, $data) {
 			if ($type != 'whatsapp') {
@@ -573,7 +554,7 @@ class WhatsAppServiceProvider extends ServiceProvider
                 'values_custom' => true,
 			];
 			return $actions;
-        });
+        }, 20, 1);
 
         \Eventy::addFilter('workflow.perform_action', function($performed, $type, $operator, $value, $conversation, $workflow) {
 			if ($type == 'whatsapp') {
@@ -785,6 +766,23 @@ class WhatsAppServiceProvider extends ServiceProvider
 			}
 			return $performed;
         }, 20, 6);
+
+		\Eventy::addFilter('voipe.default_channels', function($channels,$mailbox) {
+			$settings = $mailbox->meta[self::DRIVER] ?? [];
+			error_log('Default Whatsapp before = '.json_encode($channels));
+			$channels[]=[
+				'type'=>'whatsapp',
+				'name'=>'Whatsapp',
+				'id'=>self::CHANNEL,
+			];
+			error_log('Default Whatsapp after = '.json_encode($channels));
+			return $channels;
+		}, 20, 2);
+
+		\Eventy::addFilter('voipeintegration.channel_id', function($channel_id, $customer) {
+            if (!$channel_id) $channel_id = $customer->getChannelId(self::CHANNEL);
+            return $channel_id;
+        }, 20, 2);
     }
 
     public static function processIncomingMessage($user_phone, $user_name, $text, $mailbox, $attachments = [])
@@ -1068,18 +1066,27 @@ class WhatsAppServiceProvider extends ServiceProvider
             }
         }
 		// Check if there is already such message from support agent in this conversation.
-		$last_user_reply = Thread::where('conversation_id', $conversation->id)
-		    //->where('body', $text)
-		    ->where('type', Thread::TYPE_MESSAGE)
-		    ->orderBy('created_at', 'desc')
-		    ->first();
+		$last_user_reply = false;
+		if (!is_null($conversation))
+		{
+			$last_user_reply = Thread::where('conversation_id', $conversation->id)
+				//->where('body', $text)
+				->where('type', Thread::TYPE_MESSAGE)
+				->orderBy('created_at', 'desc')
+				->first();
+		}
+		else
+		{
+			error_log('WHATSAPP NULL CONVERSATION');
+		}
 		$text_prepared = html_entity_decode($text);
 		$text_prepared = \Helper::htmlToText($text_prepared, false);
 		$text_prepared = str_replace('💬 ', '', $text_prepared);
 		$text_prepared = preg_replace("#[\r\n\t ]#", '', $text_prepared);
-		$last_user_reply_text = preg_replace("#[\r\n\t ]#", '', $last_user_reply->getBodyAsText());
-		if ($last_user_reply && $last_user_reply_text == $text_prepared) {
-		    return;
+		if ($last_user_reply)
+		{
+			$last_user_reply_text = preg_replace("#[\r\n\t ]#", '', $last_user_reply->getBodyAsText());
+			if ($last_user_reply_text == $text_prepared) return;
 		}
 		
         if ($conversation) {
