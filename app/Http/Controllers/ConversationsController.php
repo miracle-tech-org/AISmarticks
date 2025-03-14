@@ -419,7 +419,10 @@ class ConversationsController extends Controller
             }
         }
 
-        $wsettings = $mailbox->meta[\WhatsApp::DRIVER] ?? [];
+		$wsettings=[];
+		$whapisettings=[];
+		if (class_exists('\WhatsApp')) $wsettings = $mailbox->meta[\WhatsApp::DRIVER] ?? [];
+		if (class_exists('\Whapi')) $whapisettings = $mailbox->meta[\Whapi::DRIVER] ?? [];
 
         return view($template, [
             "conversation" => $conversation,
@@ -443,6 +446,7 @@ class ConversationsController extends Controller
             "from_aliases" => $from_aliases,
             "from_alias" => $from_alias,
             "whatsappenabled" => ($wsettings["initiate_enabled"] ?? 0) == 1,
+			'whapienabled' => ($whapisettings['initiate_enabled']??0)==1,
         ]);
     }
 
@@ -553,6 +557,8 @@ class ConversationsController extends Controller
                 }
             };
         }
+		$whapisettings = [];
+		if (class_exists('\Whapi')) $whapisettings = $mailbox->meta[\Whapi::DRIVER] ?? [];
 
         $tagNames = DB::table('tags')->pluck('name')->toArray();
         array_push($tagNames, 'שיחה יזומה');
@@ -569,7 +575,7 @@ class ConversationsController extends Controller
             "from_aliases" => $mailbox->getAliases(true, true),
             "attachments" => $attachments,
             "whatsappenabled" => ($wsettings["initiate_enabled"] ?? 0) == 1,
-            "whapienabled" => ($wsettings["initiate_enabled"] ?? 0) == 1,
+            "whapienabled" => ($whapisettings['initiate_enabled']??0)==1,
             "whatsapp_templates" => $wtemplates,
             "tags" => $tagNames,
         ]);
@@ -913,6 +919,11 @@ class ConversationsController extends Controller
                     $is_whatsapp = true;
                 }
 
+				$is_whapi = false;
+				if ($request->is_whapi == 1) {
+					$is_whapi = true;
+				}
+
                 $is_custom = false;
                 if ($type == Conversation::TYPE_CUSTOM) {
                     $is_custom = true;
@@ -991,6 +1002,12 @@ class ConversationsController extends Controller
                             $validator = Validator::make($request->all(), [
                                 //                                'body'     => 'required|string',
                                 "whatsappphone" => "required|string",
+                            ]);
+                        } elseif ($request->is_whapi == 1) {
+                            // Whatsapp conversation.
+                            $validator = Validator::make($request->all(), [
+                                //                                'body'     => 'required|string',
+                                "whapiphone" => "required|string",
                             ]);
                         } elseif ($type == Conversation::TYPE_EMAIL) {
                             $validator = Validator::make($request->all(), [
@@ -1132,6 +1149,7 @@ class ConversationsController extends Controller
                     !$is_phone &&
                     !$is_sms &&
                     !$is_whatsapp &&
+					!$is_whapi &&
                     !$is_custom
                 ) {
                     if (!$to_array) {
@@ -1299,7 +1317,14 @@ class ConversationsController extends Controller
                         if (!$conversation->customer_id) {
                             $conversation->customer_id = $customer->id;
                         }
-                    } elseif ($is_custom) {
+                    }  else if ($is_whapi && $is_create) {
+						$phone_customer_data = $this->processWhapiCustomer($request);
+						$customer_email = $phone_customer_data['customer_email'];
+						$customer = $phone_customer_data['customer'];
+						if (!$conversation->customer_id) {
+							$conversation->customer_id = $customer->id;
+						}
+					} elseif ($is_custom) {
                         // No customer for custom conversations.
                     } else {
                         // Email or reply to a phone conversation.
@@ -4575,6 +4600,108 @@ class ConversationsController extends Controller
         ];
     }
 
+	public function processWhapiCustomer($request)
+    {
+		error_log('Process whapi customer = '.json_encode($request));
+        $customer_data = [];
+        $customer_email = '';
+        $customer = null;
+
+        // Check to prevent creating empty customers.
+        $request_name = '';
+        $request_phone = '';
+        if (trim($request->name ?? '') || trim($request->whapiphone ?? '')) {
+            $request_name = trim($request->name ?? '');
+			if ($request_name=='') $request_name=trim($request->whapiphone ?? '');
+            $request_phone = trim($request->whapiphone ?? '');
+
+			$request_phone=preg_replace('/[^01-9]+/uis','',$request_phone);
+			$request_phone=preg_replace('/^[0]+/uis','',$request_phone);
+			if (strlen($request_phone)>=8 && strlen($request_phone)<=10) $request_phone = '972'.$request_phone;
+
+			$customer_data['channel']=\Whapi::CHANNEL;
+			$customer_data['channel_id']=$request_phone;
+            $name_parts = explode(' ', $request_name);
+            $customer_data['first_name'] = $name_parts[0];
+            if (!empty($name_parts[1])) {
+                $customer_data['last_name'] = $name_parts[1];
+            }
+            $customer_data['phones'] = [$request_phone];
+        }
+		error_log('Customer data = '.json_encode($customer_data));
+
+		$customer = Customer::getCustomerByChannel(\Whapi::CHANNEL, $request_phone);
+
+        // Check if name field contains ID of the customer.
+        if (!$customer) if (!$request->customer_id && is_numeric($request_name)) {
+            // Try to find customer by ID.
+            $customer = Customer::find($request_name);
+			if ($customer) {
+                $customer->addChannel(\Whapi::CHANNEL, $request_phone);
+            }
+        }
+
+        if (!$customer && $request->to_email) {
+            // Try to get customer by email.
+            $customer = Customer::getByEmail($request->to_email);
+            if ($customer) {
+                $customer_email = $request->to_email;
+                $customer->addChannel(\Whapi::CHANNEL, $request_phone);
+            }
+        }
+
+        // Try to find customer by phone.
+        if (!$customer && $request_phone) {
+            $customer = Customer::findByPhone($request_phone);
+            if ($customer) {
+                $customer_email = $customer->getMainEmail();
+                $customer->addChannel(\Whapi::CHANNEL, $request_phone);
+            }
+        }
+
+        if (!$customer) {
+            // Create customer with passed name, email and phone
+            if (Email::sanitizeEmail($request->to_email)) {
+                $customer_email = $request->to_email;
+                // If new email entered, attach email to the current customer
+                // instead of creating a new customer
+                if ($request->customer_id) {
+                    $customer = Customer::find($request->customer_id);
+                    if ($customer) {
+                        // Add email to customer.
+                        $customer->addEmail($customer_email, true);
+                    } else {
+                        $customer = Customer::create($customer_email, $customer_data);
+                    }
+                } else {
+                    $customer = Customer::create($customer_email, $customer_data);
+                }
+            } elseif ($customer_data) {
+                if ($request->customer_id) {
+                    $customer = Customer::find($request->customer_id);
+                    if ($customer) {
+                        $customer->setData($customer_data, false, true);
+                    }
+                }
+
+                if (!$customer) {
+                    $customer = Customer::createWithoutEmail($customer_data);
+                }
+            }
+        } else {
+            $customer->setData($customer_data, false, true);
+            // Add email to customer.
+            if (Email::sanitizeEmail($request->to_email)) {
+                $customer->addEmail($request->to_email, true);
+            }
+        }
+
+        return [
+            'customer' => $customer,
+            'customer_email' => $customer_email,
+        ];
+    }
+	
     /**
      * Find or create customer when creating a Phone conversation.
      */
