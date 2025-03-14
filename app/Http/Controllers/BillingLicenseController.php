@@ -42,12 +42,13 @@ class BillingLicenseController extends Controller
             $section_name = 'License';
 
         switch ($section) {
-            case 'license':
+            case 'license': case 'license_quota':
+                $section_name = 'BLC';
                 $data = LicenseLimit::getLimits();
 				$data['mailboxes_list'] = Mailbox::get();
-				error_log('DATA = '.json_encode($data));
                 break;
             default:
+                $section_name = 'License and subscription';
                 $limits = LicenseLimit::getLimits();
                 $result = DB::select('SELECT table_schema AS `database`, SUM(data_length + index_length) / 1024 / 1024 AS `size_in_mb` FROM information_schema.tables WHERE table_schema = ? GROUP BY table_schema;', ['freescout']);
                 $folderSize = $this->getFolderSize('/var/www/html');
@@ -229,76 +230,114 @@ class BillingLicenseController extends Controller
 					'prev_monthes' => $prev_monthes
                 ];
         }
-
         return view('billing-license/view', ['section' => $section, 'section_name' => $section_name, 'data' => $data, 'agents' => $agents]);
     }
 
     public function viewSave($section, Request $request)
     {
-        $email = !empty($request->email)?$request->email:'';
-        $mailbox     = (!empty((int)$request->mailbox)   || (int)$request->mailbox   != 0) ? (int)$request->mailbox   : null;
-        $maxAdmins = (!empty((int)$request->max_admin) || (int)$request->max_admin != 0) ? (int)$request->max_admin : null;
-        $maxUsers  = (!empty((int)$request->max_user)  || (int)$request->max_user  != 0) ? (int)$request->max_user  : null;
-        $workflow  = (!empty((int)$request->workflow)  || (int)$request->workflow  != 0) ? (int)$request->workflow  : null;
+//        $this->appDebug($section);
+        switch ($section) {
+            case 'license':
+                $email = !empty($request->email)?$request->email:'';
+                $mailbox     = (!empty((int)$request->mailbox)   || (int)$request->mailbox   != 0) ? (int)$request->mailbox   : null;
+                $maxAdmins = (!empty((int)$request->max_admin) || (int)$request->max_admin != 0) ? (int)$request->max_admin : null;
+                $maxUsers  = (!empty((int)$request->max_user)  || (int)$request->max_user  != 0) ? (int)$request->max_user  : null;
+                $workflow  = (!empty((int)$request->workflow)  || (int)$request->workflow  != 0) ? (int)$request->workflow  : null;
 
-        $validator = Validator::make($request->all(), [
-            'mailbox'     => 'nullable|integer|min:0|max:255',
-            'max_admin'   => 'nullable|integer|min:0|max:255',
-            'max_user'    => 'nullable|integer|min:0|max:255',
-            'workflow'    => 'nullable|integer|min:0|max:255',
-        ]);
+                $validator = Validator::make($request->all(), [
+                    'mailbox'   => 'nullable|integer|min:0|max:255',
+                    'max_admin' => 'nullable|integer|min:0|max:255',
+                    'max_user'  => 'nullable|integer|min:0|max:255',
+                    'workflow'  => 'nullable|integer|min:0|max:255'
+                ]);
 
-        if ($validator->fails()) {
-            return redirect()->route('billing_license', ['section' => 'license'])
-                ->withErrors($validator)
-                ->withInput();
+                if ($validator->fails()) {
+                    return redirect()->route('billing_license', ['section' => $section])
+                        ->withErrors($validator)
+                        ->withInput();
+                }
+
+                $countWorkflows = DB::table('workflows')
+                    ->join('mailboxes', 'workflows.mailbox_id', '=', 'mailboxes.id')
+                    ->where('workflows.active',1)
+                    ->whereNotNull('mailboxes.id')->count();
+
+                if ($workflow<$countWorkflows)
+                {
+                    return redirect()->route('billing_license', ['section' => $section])
+                        ->withErrors(['workflow'=>'Please first disable workflows before editing the number of allowed workflows'])
+                        ->withInput();
+                }
+
+                $countUsers = User::nonDeleted()->where('status',1)->where(['role' => User::ROLE_USER])->get();
+                $countUsers = User::sortUsers($countUsers)->count();
+
+                if ($maxUsers<$countUsers)
+                {
+                    return redirect()->route('billing_license', ['section' => $section])
+                        ->withErrors(['max_user'=>'Please first disable users before editing the number of allowed users'])
+                        ->withInput();
+                }
+
+                $countAdmins = User::nonDeleted()->where('status',1)->where(['role' => User::ROLE_ADMIN])->get();
+                $countAdmins = User::sortUsers($countAdmins)->count();
+
+                if ($maxAdmins<$countAdmins)
+                {
+                    return redirect()->route('billing_license', ['section' => $section])
+                        ->withErrors(['max_admin'=>'Please first disable admins before editing the number of allowed admins'])
+                        ->withInput();
+                }
+
+                if ($mailbox<Mailbox::count())
+                {
+                    return redirect()->route('billing_license', ['section' => $section])
+                        ->withErrors(['mailbox'=>'Please first delete mailboxes before editing the number of mailboxes'])
+                        ->withInput();
+                }
+
+                LicenseLimit::updateOrCreate(['id' => 1], ['email' => $email, 'mailbox' => $mailbox, 'max_admin' => $maxAdmins, 'max_user' => $maxUsers, 'workflow' => $workflow]);
+
+                $updateText = 'License updated';
+
+                break;
+            case 'license_quota':
+                $smsOutQuota  = (int)$request->sms_out_quota > 0 ? (int)$request->sms_out_quota  : null;
+                $whatsappOutQuota  = (int)$request->whatsapp_out_quota > 0 ? (int)$request->whatsapp_out_quota  : null;
+                $dbSizeQuota  = (int)$request->db_size_quota > 0 ? (int)$request->db_size_quota  : null;
+                $blockOverQuotaWhatsapp  = (int)$request->block_over_quota_whatsapp ? 1 : 0;
+                $blockOverQuotaSMS  = (int)$request->block_over_quota_sms ? 1 : 0;
+//$this->appDebug($blockOverQuotaWhatsapp, true, true);
+
+                $validator = Validator::make($request->all(), [
+                    'sms_out_quota'             => 'nullable|integer|min:0|max:255',
+                    'whatsapp_out_quota'        => 'nullable|integer|min:0|max:255',
+                    'db_size_quota'             => 'nullable|integer|min:0|max:255',
+                    'block_over_quota_whatsapp' => 'nullable|boolean',
+                    'block_over_quota_sms'      => 'nullable|boolean',
+                ]);
+
+                if ($validator->fails()) {
+                    return redirect()->route('billing_license', ['section' => $section])
+                        ->withErrors($validator)
+                        ->withInput();
+                }
+				LicenseLimit::updateOrCreate(['id' => 1],
+                    [
+                        'sms_out_quota' => $smsOutQuota,
+                        'whatsapp_out_quota' => $whatsappOutQuota,
+                        'db_size_quota' => $dbSizeQuota,
+                        'block_over_quota_whatsapp' => $blockOverQuotaWhatsapp,
+                        'block_over_quota_sms' => $blockOverQuotaSMS
+                    ]
+                );
+                $updateText = 'License quota updated';
+                break;
         }
 
-		$countWorkflows = DB::table('workflows')
-			->join('mailboxes', 'workflows.mailbox_id', '=', 'mailboxes.id')
-			->where('workflows.active',1)
-			->whereNotNull('mailboxes.id')->count();
-		error_log($workflow.' < '.$countWorkflows);
-		if ($workflow<$countWorkflows)
-		{
-			return redirect()->route('billing_license', ['section' => 'license'])
-				->withErrors(['workflow'=>'Please first disable workflows before editing the number of allowed workflows'])
-				->withInput();
-		}
+        $request->session()->flash('flash_success_floating', __($updateText));
 
-		$countUsers = User::nonDeleted()->where('status',1)->where(['role' => User::ROLE_USER])->get();
-		$countUsers = User::sortUsers($countUsers)->count();
-		error_log($maxUsers.' < '.$countUsers);
-		if ($maxUsers<$countUsers)
-		{
-			return redirect()->route('billing_license', ['section' => 'license'])
-				->withErrors(['max_user'=>'Please first disable users before editing the number of allowed users'])
-				->withInput();
-		}
-		
-		$countAdmins = User::nonDeleted()->where('status',1)->where(['role' => User::ROLE_ADMIN])->get();
-		$countAdmins = User::sortUsers($countAdmins)->count();
-		error_log($maxAdmins.' < '.$maxAdmins);
-		if ($maxAdmins<$countAdmins)
-		{
-			return redirect()->route('billing_license', ['section' => 'license'])
-				->withErrors(['max_admin'=>'Please first disable admins before editing the number of allowed admins'])
-				->withInput();
-		}
-
-		error_log($mailbox.' < '.Mailbox::count());
-		if ($mailbox<Mailbox::count())
-		{
-			return redirect()->route('billing_license', ['section' => 'license'])
-				->withErrors(['mailbox'=>'Please first delete mailboxes before editing the number of mailboxes'])
-				->withInput();
-		}
-
-        LicenseLimit::updateOrCreate(['id' => 1], ['email' => $email, 'mailbox' => $mailbox, 'max_admin' => $maxAdmins, 'max_user' => $maxUsers, 'workflow' => $workflow]);
-
-        $request->session()->flash('flash_success_floating', __('License updated'));
-
-        return redirect()->route('billing_license', ['section' => 'license']);
+        return redirect()->route('billing_license', ['section' => $section]);
 
     }
 
