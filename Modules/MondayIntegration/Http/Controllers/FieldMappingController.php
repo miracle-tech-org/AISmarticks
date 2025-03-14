@@ -22,6 +22,7 @@ class FieldMappingController extends Controller
     {
         // Get current mappings
         $mappings = MondayFieldMapping::orderBy('order')->get();
+        $mailbox = Mailbox::findOrFail($mailbox_id);
 
         // Get FreeScout fields
         $freescoutFields = $this->getFreescoutFields();
@@ -35,8 +36,8 @@ class FieldMappingController extends Controller
 
         // Get available transform rules
         $transformRules = $this->getTransformRules();
-        $mailbox = Mailbox::findOrFail($mailbox_id);
-
+        // var_dump($mappings);
+        // exit();
         return view('mondayintegration::mappings.field_mapping', compact(
             'mappings',
             'freescoutFields',
