@@ -17,6 +17,7 @@ class MondayApiService
     public $apiToken = '';
     protected $cacheEnabled = true;
     protected $cacheTtl = 300; // 5 minutes cache by default
+    protected $cacheService;
 
     public function __construct()
     {
@@ -65,8 +66,8 @@ class MondayApiService
                     'query' => $query,
                 ]
             ]);
-
             $data = json_decode($response->getBody(), true);
+
             if (isset($data['errors'])) {
                 return "error";
                 // throw new MondayApiException(
@@ -127,9 +128,11 @@ class MondayApiService
         return $this->getBoards($apiToken) !== null;
     }
 
-    public function getBoardColumns()
+    public function getBoardColumns($boardId = "")
     {
-        $boardId = MondaySettings::where('key', 'board_id')->value('value') ?? '';
+        if($boardId == "")
+            $boardId = MondaySettings::where('key', 'board_id')->value('value') ?? '';
+
         $query = 'query { boards(ids: ' . $boardId . ') { columns { id title type settings_str } } }';
         $response = $this->executeQuery($query);
         $columns = $response['boards'][0]['columns'] ?? [];
@@ -153,9 +156,6 @@ class MondayApiService
         $query = 'query { items_by_column_values(board_id: ' . $boardId . ', column_id: "' . $columnId . '", column_value: "' . $searchValue . '") { id name board { id name } column_values { id title text value type } } }';
 
         $response = $this->executeQuery($query);
-        var_dump($query);
-        exit();
-
         $items = $response['data']['items_by_column_values'] ?? [];
 
         // Add URL to each item
@@ -169,5 +169,46 @@ class MondayApiService
         }
 
         return $items;
+    }
+
+    public function getApiVersion()
+    {
+        try {
+            $query = 'query { version { kind value } }';
+            return $this->executeQuery($query);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get Monday.com API version: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function getBoard($boardId)
+    {
+        $query = <<<GRAPHQL
+        query {
+            boards(ids: {$boardId}) {
+                id
+                name
+                description
+                board_kind
+                state
+                board_folder_id
+                columns {
+                    id
+                    title
+                    type
+                    settings_str
+                }
+            }
+        }
+        GRAPHQL;
+
+        $response = $this->executeQuery($query);
+        
+        if (isset($response['boards'][0])) {
+            return $response['boards'][0];
+        }
+        
+        throw new \Exception('Board not found or access denied');
     }
 }

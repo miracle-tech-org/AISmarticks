@@ -35,7 +35,11 @@ class BillingLicenseController extends Controller
 //            ['meta' => json_decode($new)] // Данные для обновления или создания новой записи
 //        );exit;
 
-		$agents = DB::select("SELECT * FROM ai_agents");
+
+		$agents = [];
+        if (\Module::isActive('aiassistant')) {
+            $agents = DB::select("SELECT * FROM ai_agents");
+        }
 
         $section_name = 'License and subscription';
         if ($section == 'license')

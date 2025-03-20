@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', __('Monday.com Settings').' - '.$mailbox->name)
+@section('title', __('Monday.com Settings'))
+
 @section('sidebar')
     @include('partials/sidebar_menu_toggle')
     @include('mailboxes/sidebar_menu')
@@ -11,9 +12,13 @@
     {{ __('Monday.com Integration Settings') }}
 </div>
 
+@include('mondayintegration::settings.partials.navigation')
+
 <div class="row-container">
     <div class="col-md-12">
-        <form action="{{ route('monday.settings.save') }}" method="POST" class="form-horizontal">
+        <form action="{{ route('monday.settings.save', ['mailbox_id' => $mailbox->id]) }}" method="POST" class="form-horizontal">
+            <input type="hidden" name="form_origin" value="general">
+
             <!-- API Configuration -->
             <div class="form-section">
                 <h3>{{ __('API Configuration') }}</h3>
@@ -21,7 +26,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('API Token') }}</label>
                     <div class="col-sm-9">
-                        <input type="password" name="api_token" id="api_token" class="form-control" 
+                        <input type="password" name="api_token" class="form-control" 
                                value="{{ old('api_token', $settings['api_token'] ?? '') }}" required>
                         <p class="help-block">
                             {{ __('Your Monday.com API token. Get it from your Monday.com account settings.') }}
@@ -30,28 +35,35 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{{ __('Board ID') }}</label>
-                    <div class="col-sm-9">
-                        <select name="board_id" class="form-control" required>
-                            <option value="">{{ __('Select Board') }}</option>
-                            @isset($boards['boards'])
-                                @foreach($boards['boards'] as $board)
-                                    <option value="{{ $board['id'] }}" {{ (old('board_id', $settings['board_id'] ?? '') == $board['id']) ? 'selected' : '' }}>
-                                        {{ $board['name'] }}
-                                    </option>
-                                @endforeach
-                            @endisset
-                        </select>
-                        <p class="help-block">
-                            {{ __('Select the Monday.com board to sync with.') }}
-                        </p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="button" class="btn btn-default test-connection">
+                            {{ __('Test API Connection') }}
+                        </button>
+                        <span class="connection-status"></span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Dual-Board Architecture Info -->
+            <div class="form-section">
+                <h3>{{ __('Dual-Board Architecture') }}</h3>
+                <div class="alert alert-info">
+                    <p>
+                        {{ __('This integration uses a dual-board architecture:') }}
+                    </p>
+                    <ul>
+                        <li><strong>{{ __('Pullboard:') }}</strong> {{ __('The board from which data is pulled into FreeScout') }}</li>
+                        <li><strong>{{ __('Pushboard:') }}</strong> {{ __('The board to which data is pushed from FreeScout') }}</li>
+                    </ul>
+                    <p>
+                        {{ __('Configure each board separately using the tabs above.') }}
+                    </p>
                 </div>
             </div>
 
             <!-- Sync Settings -->
             <div class="form-section">
-                <h3>{{ __('Sync Settings') }}</h3>
+                <h3>{{ __('General Sync Settings') }}</h3>
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Sync Frequency') }}</label>
@@ -70,35 +82,6 @@
                                 {{ __('Every hour') }}
                             </option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{{ __('Sync Direction') }}</label>
-                    <div class="col-sm-9">
-                        <select name="sync_direction" class="form-control">
-                            <option value="both" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'both' ? 'selected' : '' }}>
-                                {{ __('Bidirectional') }}
-                            </option>
-                            <option value="to_monday" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'to_monday' ? 'selected' : '' }}>
-                                {{ __('Smarticks to Monday.com only') }}
-                            </option>
-                            <option value="from_monday" {{ old('sync_direction', $settings['sync_direction'] ?? '') == 'from_monday' ? 'selected' : '' }}>
-                                {{ __('Monday.com to Smarticks only') }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="col-sm-offset-3 col-sm-9">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="sync_attachments" value="1" 
-                                    {{ old('sync_attachments', $settings['sync_attachments'] ?? '') ? 'checked' : '' }}>
-                                {{ __('Sync attachments') }}
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -200,52 +183,62 @@
 
     .help-block {
         font-size: 12px;
-        color: #666;
-        margin-top: 5px;
+        color: #777;
+    }
+
+    .connection-status {
+        margin-left: 10px;
+        font-weight: bold;
+    }
+
+    .connection-success {
+        color: #5cb85c;
+    }
+
+    .connection-error {
+        color: #d9534f;
     }
 </style>
 @endpush
 @endsection
 
-
 <script>
     window.onload = function() {
-        document.getElementById("api_token").addEventListener("change", function() {
-            var token = $('input[name="api_token"]').val();
-            var select = $('select[name="board_id"]');
-            var currentValue = select.val();
-
-            select.prop('disabled', true);
+        // Test API connection
+        $('.test-connection').on('click', function() {
+            var $button = $(this);
+            var $status = $('.connection-status');
+            var apiToken = $('input[name="api_token"]').val();
+            
+            if (!apiToken) {
+                $status.removeClass('connection-success').addClass('connection-error').text('{{ __('API token is required') }}');
+                return;
+            }
+            
+            $button.prop('disabled', true);
+            $status.removeClass('connection-success connection-error').text('{{ __('Testing connection...') }}');
             
             $.ajax({
-                url: '{{ route("monday.boards.list") }}',
-                method: 'POST',
-                data: { api_token: token },
+                url: '{{ route("monday.test-connection") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    api_token: apiToken
+                },
                 success: function(response) {
-                    select.empty().append($('<option>', {
-                        value: '',
-                        text: '{{ __("Select Board") }}'
-                    }));
-
-                    if(response == "error") {
-                        showFloatingAlert('danger', 'Failed to fetch boards');
-                    }
-
-                    response.boards.forEach(function(board) {
-                        select.append($('<option>', {
-                            value: board.id,
-                            text: board.name,
-                            selected: board.id == currentValue
-                        }));
-                    });
+                    $status.removeClass('connection-error').addClass('connection-success').text(response.message);
                 },
                 error: function(xhr) {
-                    showFloatingAlert('danger', xhr.responseJSON.message || 'Failed to fetch boards');
+                    var errorMessage = '{{ __('Connection failed') }}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    $status.removeClass('connection-success').addClass('connection-error').text(errorMessage);
                 },
                 complete: function() {
-                    select.prop('disabled', false);
+                    $button.prop('disabled', false);
                 }
             });
         });
-    }
+    };
 </script>

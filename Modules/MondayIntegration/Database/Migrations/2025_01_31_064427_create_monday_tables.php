@@ -23,7 +23,8 @@ class CreateMondayTables extends Migration
 
         Schema::create('monday_field_mappings', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('smarticks_field');
+            $table->string('board_type')->default('pull');
+            $table->string('freescout_field');
             $table->string('monday_column');
             $table->string('transform_rule')->nullable();
             $table->boolean('is_required')->default(false);
@@ -32,18 +33,18 @@ class CreateMondayTables extends Migration
             $table->timestamps();
         });
 
-        Schema::create('monday_sync_logs', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('action_type', 50);
-            $table->string('source_type', 50);
-            $table->string('source_id');
-            $table->string('monday_item_id')->nullable();
-            $table->string('status', 20);
-            $table->text('error_message')->nullable();
-            $table->json('request_data')->nullable();
-            $table->json('response_data')->nullable();
-            $table->timestamps();
-        });
+        // Schema::create('monday_sync_logs', function (Blueprint $table) {
+        //     $table->increments('id');
+        //     $table->string('action_type', 50);
+        //     $table->string('source_type', 50);
+        //     $table->string('source_id');
+        //     $table->string('monday_item_id')->nullable();
+        //     $table->string('status', 20);
+        //     $table->text('error_message')->nullable();
+        //     $table->json('request_data')->nullable();
+        //     $table->json('response_data')->nullable();
+        //     $table->timestamps();
+        // });
     }
 
     /**

@@ -1,46 +1,31 @@
 <?php
 
-Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'namespace' => 'Modules\MondayIntegration\Http\Controllers'], function()
-{
-    // Route::get('/', 'MondayIntegrationController@index');
+Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'namespace' => 'Modules\MondayIntegration\Http\Controllers'], function() {
+    Route::prefix('monday')->name('monday.')->group(function() {
+        Route::get('/mailbox/{mailbox_id}/monday-dashboard', 'DashboardController@index')->name('dashboard');
+        Route::post('/test-connection', 'SettingsController@testConnection')->name('test-connection');
+        Route::post('/test-board-connection', 'MondaySettingsController@testBoardConnection')->name('test-board-connection');
+        Route::post('/sync-now', 'DashboardController@syncNow')->name('sync-now');
 
-    Route::get('/mailbox/{mailbox_id}/monday-dashboard', 'DashboardController@index')->name('monday.dashboard');
+        // Settings
+        Route::get('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@index')->name('settings');
+        Route::post('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@save')->name('settings.save');
 
-    // Sync Operations
-    Route::post('/sync/now', 'DashboardController@syncNow')->name('monday.sync-now');
-    Route::get('/sync/status', 'DashboardController@status')->name('monday.sync.status');
-    Route::post('/sync/retry/{log}', 'DashboardController@retry')->name('monday-sync.retry');
+        // Pullboard Settings
+        Route::get('/mailbox/{mailbox_id}/pullboard', 'MondaySettingsController@pullboardSettings')->name('settings.pullboard');
+        
+        // Pushboard Settings
+        Route::get('/mailbox/{mailbox_id}/pushboard', 'MondaySettingsController@pushboardSettings')->name('settings.pushboard');
 
-    // Settings
-    Route::get('/mailbox/{mailbox_id}/monday-settings', 'SettingsController@index')->name('monday.settings');
-    Route::post('/monday-settings', 'SettingsController@save')->name('monday.settings.save');
-    Route::post('/monday/test-connection', 'SettingsController@testConnection')->name('monday.test-connection');
-
-    // Field Mappings
-    Route::get('/mailbox/{mailbox_id}/mappings', 'FieldMappingController@index')->name('monday.mappings');
-    Route::post('/mappings', 'FieldMappingController@save')->name('monday.mappings.save');
-    Route::get('/mappings/fields', 'FieldMappingController@getFields')->name('monday.mappings.fields');
-
-    // Sidebar Widget
-    Route::get('/mailbox/{mailbox_id}/monday-sidebar/{conversation}', 'SidebarController@sidebarWidget')->name('sidebar-widget');
-    Route::post('/quick-action', 'SidebarController@executeQuickAction')->name('quick-action');
-
-    // Webhooks
-    Route::get('/webhooks', 'WebhookController@index')->name('webhooks');
-    Route::post('/webhooks', 'WebhookController@store')->name('webhooks.store');
-    Route::post('/webhooks/{webhook}/test', 'WebhookController@test')->name('webhooks.test');
-    Route::post('/webhooks/{webhook}/toggle', 'WebhookController@toggle')->name('webhooks.toggle');
-    Route::delete('/webhooks/{webhook}', 'WebhookController@destroy')->name('webhooks.destroy');
-
-    // Documentation
-    Route::get('/docs', 'DocumentationController@index')->name('docs');
-    Route::get('/docs/{page}', 'DocumentationController@show')->name('docs.show');
-
-    // API Operations
-    Route::post('/api/boards', 'SettingsController@getBoards')->name('monday.boards.list');
-    Route::post('/api/columns', 'ApiController@getColumns')->name('columns.list');
+        // Field Mapping
+        Route::get('/mailbox/{mailbox_id}/field-mapping', 'FieldMappingController@index')->name('mappings');
+        Route::post('/field-mapping/save', 'FieldMappingController@save')->name('mappings.save');
+        Route::post('/field-mapping/validate', 'FieldMappingController@validate')->name('mappings.validate');
+        Route::post('/field-mapping/import', 'FieldMappingController@import')->name('mappings.import');
+        Route::get('/field-mapping/export', 'FieldMappingController@export')->name('mappings.export');
+        Route::get('/field-mapping/fields', 'FieldMappingController@getFields')->name('mappings.fields');
+        Route::get('/field-mapping/columns/{boardId}', 'FieldMappingController@getBoardColumns')->name('mappings.board.columns');
+        Route::post('/settings/field-mapping/suggest', 'FieldMappingController@suggestMappings')->name('mappings.suggest');
+        Route::post('/settings/field-mapping/validate-compatibility', 'FieldMappingController@validateCompatibility')->name('mappings.validate-compatibility');
+    });
 });
-
-
-// Webhook Endpoints (no auth)
-Route::post('/monday/webhook/{webhook}', 'WebhookController@handle')->name('monday.webhook.handle');

@@ -44,4 +44,15 @@ class SecurityService
     {
         return preg_match('/^[a-zA-Z0-9]{32,}$/', $token);
     }
+
+    public function setOption($name, $value)
+    {
+        \Option::set('monday_integration_' . $name, $value);
+    }
+
+    public function getOption($name, $default = null)
+    {
+        $option = \Option::get('monday_integration_' . $name);
+        return $option ? $option : $default;
+    }
 }
