@@ -18,16 +18,18 @@
             @endforeach
         </ul>
     </li>
-	<li>
-		AI Assistance
-		<ul>
-			@foreach ($agents as $agent)
-				<li>
-					{{ $agent->name }} - Monthly Limit: {{ $agent->monthly_limit }} - Daily Limit: {{ $agent->daily_limit }} - Cost per token: {{/*$agent->monthly_usage_limit * */0.002}}
-				</li>
-			@endforeach
-		</ul>
-	</li>
+	@if (\Module::isActive('aiassistant'))
+		<li>
+			AI Assistance
+			<ul>
+				@foreach ($agents as $agent)
+					<li>
+						{{ $agent->name }} - Monthly Limit: {{ $agent->monthly_limit }} - Daily Limit: {{ $agent->daily_limit }} - Cost per token: {{/*$agent->monthly_usage_limit * */0.002}}
+					</li>
+				@endforeach
+			</ul>
+		</li>
+	@endif
 </ul>
 <h3 class="subheader">{{ __('Monthly report of') }}</h3>
 
@@ -42,26 +44,28 @@
     <li>Number of outgoing WhatsApp messages initiated by us (Utility category): <b>{{ $data['whatsapp_outgoing_utility'] }}</b></li>
     <li>Number of outgoing WhatsApp messages initiated by us (Marketing category): <b>{{ $data['whatsapp_outgoing_marketing'] }}</b></li>
     <li>Number of set workflows: <b>{{ $data['number_of_set_workflows'] }}</b></li>
-	<li>
-		Total Monthly AI Usage: {{(int)$agent->monthly_usage}}
-		<ul>
-			@foreach ($agents as $agent)
-				<li>
-					{{ $agent->name }} - Current Usage: {{$agent->monthly_usage}}
-				</li>
-			@endforeach
-		</ul>
-	</li>
-	<li>
-		Total Monthly AI Cost: {{(int)$agent->monthly_usage * 0.002}}
-		<ul>
-			@foreach ($agents as $agent)
-				<li>
-					{{ $agent->name }} - Current Cost: {{$agent->monthly_usage * 0.002}}
-				</li>
-			@endforeach
-		</ul>
-	</li>
+	@if (\Module::isActive('aiassistant'))
+		<li>
+			Total Monthly AI Usage: {{(int)$agent->monthly_usage}}
+			<ul>
+				@foreach ($agents as $agent)
+					<li>
+						{{ $agent->name }} - Current Usage: {{$agent->monthly_usage}}
+					</li>
+				@endforeach
+			</ul>
+		</li>
+		<li>
+			Total Monthly AI Cost: {{(int)$agent->monthly_usage * 0.002}}
+			<ul>
+				@foreach ($agents as $agent)
+					<li>
+						{{ $agent->name }} - Current Cost: {{$agent->monthly_usage * 0.002}}
+					</li>
+				@endforeach
+			</ul>
+		</li>
+	@endif
 </ul>
 
 <h3 class="subheader">{{ __('Monthly report (prev)') }}</h3>
