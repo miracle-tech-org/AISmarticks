@@ -27,5 +27,31 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::get('/field-mapping/columns/{boardId}', 'FieldMappingController@getBoardColumns')->name('mappings.board.columns');
         Route::post('/settings/field-mapping/suggest', 'FieldMappingController@suggestMappings')->name('mappings.suggest');
         Route::post('/settings/field-mapping/validate-compatibility', 'FieldMappingController@validateCompatibility')->name('mappings.validate-compatibility');
+        
+        // Queue Settings
+        Route::get('/mailbox/{mailbox_id}/queue', 'QueueSettingsController@index')->name('queue_settings');
+        Route::post('/queue/save', 'QueueSettingsController@save')->name('queue_settings.save');
+
+        // Board Creation
+        Route::get('/board-creation', 'BoardCreationController@index')->name('board-creation.index');
+        Route::post('board-creation/create', 'BoardCreationController@createBoard')->name('board-creation.create');
+        Route::get('board-creation/templates', 'BoardCreationController@getTemplates')->name('board-creation.templates');
+        Route::get('board-creation/users', 'BoardCreationController@getUsers')->name('board-creation.users');
+
+        // Sidebar routes
+        Route::get('/mailbox/{mailbox_id}/sidebar', 'SidebarWidgetController@index')->name('sidebar_settings');
+        Route::get('/sidebarWidget/{conversationId}', 'SidebarController@sidebarWidget')->name('sidebar_widget');
+        
+        Route::get('/sidebar/search', 'SidebarController@search')->name('sidebar.search');
+        Route::post('/sidebar/create-mapping', 'SidebarController@createMapping')->name('sidebar.create-mapping');
+        Route::get('/sidebar/get-item/{itemId}', 'SidebarController@getItem')->name('sidebar.get-item');
+        Route::post('/sidebar/add-update', 'SidebarController@addUpdate')->name('sidebar.add-update');
+        Route::post('/sidebar/change-status', 'SidebarController@changeStatus')->name('sidebar.change-status');
+        Route::get('/sidebar/conversation/{conversation_id}', 'SidebarController@getConversationData')->name('sidebar.conversation');
+        Route::post('/sidebar/search', 'SidebarController@searchCustomer')->name('sidebar.search');
+        Route::post('/sidebar/create-item', 'SidebarController@createItem')->name('sidebar.create_item');
+        Route::post('/sidebar/execute-action', 'SidebarController@executeAction')->name('sidebar.execute_action');
+        Route::post('/sidebar/search-for-linking', 'SidebarController@searchForLinking')->name('sidebar.search_for_linking');
+        Route::post('/sidebar/create-manual-link', 'SidebarController@createManualLink')->name('sidebar.create_manual_link');
     });
 });

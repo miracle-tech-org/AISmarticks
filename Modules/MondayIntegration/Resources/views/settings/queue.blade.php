@@ -2,20 +2,27 @@
 
 @section('title', __('Queue Settings'))
 
+@section('sidebar')
+    @include('partials/sidebar_menu_toggle')
+    @include('mailboxes/sidebar_menu')
+@endsection
+
 @section('content')
 <div class="section-heading">
     {{ __('Monday.com Integration - Queue Settings') }}
 </div>
 
+@include('mondayintegration::settings.partials.navigation')
+
 <div class="row-container">
     <div class="row">
         <div class="col-md-8">
-            <div class="card">
+            <div class="">
                 <div class="card-header">
                     <h3>{{ __('Queue Configuration') }}</h3>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('mondayintegration.queue_settings.save') }}">
+                    <form method="POST" action="{{ route('monday.queue_settings.save') }}">
                         {{ csrf_field() }}
                         
                         <div class="form-group">
@@ -55,7 +62,7 @@
         </div>
         
         <div class="col-md-4">
-            <div class="card">
+            <div class="">
                 <div class="card-header">
                     <h3>{{ __('Current Queue Status') }}</h3>
                 </div>
@@ -95,7 +102,7 @@
                     </div>
                     
                     <div class="queue-actions mt-4">
-                        <a href="{{ route('mondayintegration.dashboard') }}" class="btn btn-default btn-block">
+                        <a href="{{ route('monday.dashboard', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-default btn-block">
                             <i class="glyphicon glyphicon-dashboard"></i> {{ __('Back to Dashboard') }}
                         </a>
                     </div>

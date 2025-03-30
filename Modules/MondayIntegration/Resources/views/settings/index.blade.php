@@ -52,8 +52,8 @@
                         {{ __('This integration uses a dual-board architecture:') }}
                     </p>
                     <ul>
-                        <li><strong>{{ __('Pullboard:') }}</strong> {{ __('The board from which data is pulled into FreeScout') }}</li>
-                        <li><strong>{{ __('Pushboard:') }}</strong> {{ __('The board to which data is pushed from FreeScout') }}</li>
+                        <li><strong>{{ __('Pullboard:') }}</strong> {{ __('The board from which data is pulled into Smarticks') }}</li>
+                        <li><strong>{{ __('Pushboard:') }}</strong> {{ __('The board to which data is pushed from Smarticks') }}</li>
                     </ul>
                     <p>
                         {{ __('Configure each board separately using the tabs above.') }}

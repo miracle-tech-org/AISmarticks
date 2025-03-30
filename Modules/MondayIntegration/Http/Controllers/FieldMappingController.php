@@ -79,9 +79,10 @@ class FieldMappingController extends Controller
 
     public function save(Request $request)
     {
+
         try {
             // Start transaction
-            \DB::beginTransaction();
+            // \DB::beginTransaction();
 
             // Delete existing mappings
             MondayFieldMapping::truncate();
@@ -89,7 +90,7 @@ class FieldMappingController extends Controller
             // Create new mappings
             foreach ($request->mappings as $index => $mapping) {
                 MondayFieldMapping::create([
-                    'smarticks_field' => $mapping['smarticks_field'],
+                    'freescout_field' => $mapping['freescout_field'],
                     'monday_column' => $mapping['monday_column'],
                     'transform_rule' => $mapping['transform_rule'],
                     'default_value' => $mapping['default_value'],
@@ -98,11 +99,9 @@ class FieldMappingController extends Controller
                 ]);
             }
 
-            \DB::commit();
+            // \DB::commit();
 
-            return response()->json([
-                'message' => __('Field mappings saved successfully')
-            ]);
+            return redirect()->back();
         } catch (\Exception $e) {
             \DB::rollBack();
             return response()->json([

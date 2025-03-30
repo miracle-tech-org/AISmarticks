@@ -4,6 +4,7 @@ namespace Modules\MondayIntegration\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Modules\MondayIntegration\Http\Controllers\SidebarController;
 
 class MondayIntegrationServiceProvider extends ServiceProvider
 {
@@ -33,6 +34,25 @@ class MondayIntegrationServiceProvider extends ServiceProvider
      */
     public function hooks()
     {
+        \Eventy::addAction('conversation.created_by_customer', function($conversation, $thread) {
+            $sidebarController = app(SidebarController::class);
+            $mondayItems = $sidebarController->sidebarWidget($conversation->id);
+        }, 20, 2);
+
+        \Eventy::addAction('conversation.created_by_user', function($conversation, $thread) {
+            $sidebarController = app(SidebarController::class);
+            $mondayItems = $sidebarController->sidebarWidget($conversation->id);
+        }, 20, 2);
+        
+        // Register assets
+        \Eventy::addFilter('javascripts', function($javascripts) {
+            // $javascripts[] = public_path('modules/mondayintegration/js/sidebar-widget.js');
+            // $javascripts[] = public_path('modules/mondayintegration/js/templates-index.js');
+            // $javascripts[] = public_path('modules/mondayintegration/js/templates-editor.js');
+            // $javascripts[] = public_path('modules/mondayintegration/js/field-mapping.js');
+            return $javascripts;
+        });
+
         \Eventy::addAction('menu.manage.after_mailboxes', function($mailbox) {
         }, 15);
 
@@ -57,6 +77,8 @@ class MondayIntegrationServiceProvider extends ServiceProvider
             ];
             return $menu;
         });
+
+        $this->registerSidebarItem();
     }
 
     /**
@@ -158,15 +180,26 @@ class MondayIntegrationServiceProvider extends ServiceProvider
 
     protected function registerSidebarItem()
     {
-        \App\Sidebar\Sidebar::register(function($sidebar) {
-            $sidebar->addItem(
-                'monday',
-                'Monday.com',
-                route('monday.dashboard'),
-                'glyphicon glyphicon-calendar',
-                10
-            );
-        });
+        // \App\Sidebar\Sidebar::register(function($sidebar) {
+        //     $sidebar->addItem(
+        //         'monday',
+        //         'Monday.com',
+        //         route('monday.dashboard'),
+        //         'glyphicon glyphicon-calendar',
+        //         10
+        //     );
+        // });
+    }
+
+    protected function registerConversationSidebarWidget()
+    {
+        // Add widget to conversation sidebar
+        \Eventy::addAction('conversation.after_sidebar_tabs_content', function($conversation) {
+            if ($conversation && $conversation->id) {
+                echo \App::make('Modules\MondayIntegration\Http\Controllers\SidebarController')
+                    ->sidebarWidget($conversation->id);
+            }
+        }, 20);
     }
 
     private function getPublishableViewPaths(): array

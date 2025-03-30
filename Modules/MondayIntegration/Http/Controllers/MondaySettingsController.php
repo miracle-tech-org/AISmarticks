@@ -47,6 +47,7 @@ class MondaySettingsController extends Controller
     public function save(Request $request, $mailbox_id)
     {
         $settings = $request->all();
+
         // Save sidebar widget settings
         if (isset($settings['enable_sidebar_widget'])) {
             $settings['enable_sidebar_widget'] = $settings['enable_sidebar_widget'] ? '1' : '0';
@@ -103,7 +104,7 @@ class MondaySettingsController extends Controller
                     $redirectRoute = 'monday.settings.pushboard';
                     break;
                 case 'sidebar_widget':
-                    $redirectRoute = 'monday.settings.sidebar-widget';
+                    $redirectRoute = 'monday.sidebar_settings';
                     break;
             }
         }

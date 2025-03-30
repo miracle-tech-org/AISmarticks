@@ -20,10 +20,10 @@
 <div class="row-container">
     <div class="col-md-12">
         <div class="alert alert-info">
-            <p>{{ __('Field mappings define how data is synchronized between FreeScout and Monday.com.') }}</p>
+            <p>{{ __('Field mappings define how data is synchronized between Smarticks and Monday.com.') }}</p>
             <ul>
-                <li><strong>{{ __('Pull Mappings:') }}</strong> {{ __('Define how data from Monday.com is mapped to FreeScout fields.') }} <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('These mappings control how Monday.com data appears in FreeScout.') }}"></i></li>
-                <li><strong>{{ __('Push Mappings:') }}</strong> {{ __('Define how FreeScout data is mapped to Monday.com columns.') }} <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('These mappings control how FreeScout data is sent to Monday.com.') }}"></i></li>
+                <li><strong>{{ __('Pull Mappings:') }}</strong> {{ __('Define how data from Monday.com is mapped to Smarticks fields.') }} <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('These mappings control how Monday.com data appears in Smarticks.') }}"></i></li>
+                <li><strong>{{ __('Push Mappings:') }}</strong> {{ __('Define how Smarticks data is mapped to Monday.com columns.') }} <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('These mappings control how Smarticks data is sent to Monday.com.') }}"></i></li>
             </ul>
         </div>
 
@@ -158,7 +158,7 @@
         <div class="form-section">
             <h3>
                 {{ __('Field Mapping Assistant') }}
-                <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Field Mapping Assistant helps you create and validate mappings between FreeScout fields and Monday.com columns.') }}"></i>
+                <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Field Mapping Assistant helps you create and validate mappings between Smarticks fields and Monday.com columns.') }}"></i>
             </h3>
             <div class="row">
                 <div class="col-md-6">
@@ -235,8 +235,8 @@
                                 <div class="mapping-header">
                                     <div class="row">
                                         <div class="col-md-4">
-                                            {{ __('FreeScout Field') }}
-                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The FreeScout field that will receive data from Monday.com') }}"></i>
+                                            {{ __('Smarticks Field') }}
+                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Smarticks field that will receive data from Monday.com') }}"></i>
                                         </div>
                                         <div class="col-md-4">
                                             {{ __('Monday.com Column') }}
@@ -244,7 +244,7 @@
                                         </div>
                                         <div class="col-md-2">
                                             {{ __('Transform') }}
-                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('Optional transformation to apply to the data before storing it in FreeScout') }}"></i>
+                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('Optional transformation to apply to the data before storing it in Smarticks') }}"></i>
                                         </div>
                                         <div class="col-md-1">
                                             {{ __('Required') }}
@@ -421,8 +421,8 @@
                                 <div class="mapping-header">
                                     <div class="row">
                                         <div class="col-md-4">
-                                            {{ __('FreeScout Field') }}
-                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The FreeScout field that contains the data to be sent to Monday.com') }}"></i>
+                                            {{ __('Smarticks Field') }}
+                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Smarticks field that contains the data to be sent to Monday.com') }}"></i>
                                         </div>
                                         <div class="col-md-4">
                                             {{ __('Monday.com Column') }}
@@ -934,7 +934,7 @@
             validation_failed: '{{ __('Validation failed') }}',
             validation_errors: '{{ __('Please fix the validation errors') }}',
             no_mappings: '{{ __('No mappings defined') }}',
-            duplicate_field: '{{ __('Duplicate FreeScout field') }}',
+            duplicate_field: '{{ __('Duplicate Smarticks field') }}',
             duplicate_column: '{{ __('Duplicate Monday.com column') }}',
             field_required: '{{ __('Field is required') }}',
             column_required: '{{ __('Column is required') }}',
@@ -948,7 +948,7 @@
             suggested_mappings: '{{ __('Suggested Field Mappings') }}',
             suggestions_help: '{{ __('Select the mappings you want to apply. These suggestions are based on field name and type similarity.') }}',
             monday_column: '{{ __('Monday.com Column') }}',
-            freescout_field: '{{ __('FreeScout Field') }}',
+            freescout_field: '{{ __('Smarticks Field') }}',
             transform_rule: '{{ __('Transform Rule') }}',
             confidence: '{{ __('Confidence') }}',
             very_high: '{{ __('Very High') }}',

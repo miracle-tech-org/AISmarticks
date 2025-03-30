@@ -2,24 +2,28 @@
 
 @section('title', __('Monday.com Sidebar Widget Settings'))
 
+@section('sidebar')
+    @include('partials/sidebar_menu_toggle')
+    @include('mailboxes/sidebar_menu')
+@endsection
+
 @section('content')
 <div class="section-heading">
     {{ __('Monday.com Sidebar Widget Settings') }}
 </div>
 
-@include('mondayintegration::partials.settings_nav')
+@include('mondayintegration::settings.partials.navigation')
 
 <div class="row-container">
     <div class="col-md-12">
-        <form action="{{ route('mondayintegration.settings.save') }}" method="POST" class="form-horizontal">
-            @csrf
-
+        <form action="{{ route('monday.settings.save', ['mailbox_id' => $mailbox->id]) }}" method="POST" class="form-horizontal">
             <!-- Sidebar Widget Settings -->
             <div class="form-section">
                 <h3>{{ __('Sidebar Widget Configuration') }}</h3>
                 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Enable Sidebar Widget') }}</label>
+                    <input type="hidden" name="form_origin" value="sidebar_widget">
                     <div class="col-sm-9">
                         <div class="controls">
                             <div class="onoffswitch-wrap">

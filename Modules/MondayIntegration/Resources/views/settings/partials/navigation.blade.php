@@ -6,9 +6,9 @@
         <a href="{{ route('monday.mappings', ['mailbox_id' => $mailbox->id]) }}">{{ __('Field Mapping') }}</a>
     </li>
     <li {!! Route::currentRouteName() == 'monday.sidebar_settings' ? 'class="active"' : '' !!}>
-        <a href="">{{ __('Sidebar Widget') }}</a>
+        <a href="{{ route('monday.sidebar_settings', ['mailbox_id' => $mailbox->id]) }}">{{ __('Sidebar Widget') }}</a>
     </li>
     <li {!! Route::currentRouteName() == 'monday.queue_settings' ? 'class="active"' : '' !!}>
-        <a href="">{{ __('Queue Settings') }}</a>
+        <a href="{{ route('monday.queue_settings', ['mailbox_id' => $mailbox->id]) }}">{{ __('Queue Settings') }}</a>
     </li>
 </ul>

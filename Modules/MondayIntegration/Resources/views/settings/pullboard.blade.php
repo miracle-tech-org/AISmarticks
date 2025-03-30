@@ -23,7 +23,7 @@
             <div class="form-section">
                 <h3>{{ __('Pullboard Configuration') }}</h3>
                 <p class="help-block">
-                    {{ __('Configure the board from which data will be pulled into FreeScout.') }}
+                    {{ __('Configure the board from which data will be pulled into Smarticks.') }}
                 </p>
                 
                 <div class="form-group">
