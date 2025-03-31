@@ -34,16 +34,11 @@ class MondayIntegrationServiceProvider extends ServiceProvider
      */
     public function hooks()
     {
-        \Eventy::addAction('conversation.created_by_customer', function($conversation, $thread) {
+        \Eventy::addAction('conversation.send_reply_save', function($conversation, $thread) {
             $sidebarController = app(SidebarController::class);
             $mondayItems = $sidebarController->sidebarWidget($conversation->id);
-        }, 20, 2);
+        }, 20, 3);
 
-        \Eventy::addAction('conversation.created_by_user', function($conversation, $thread) {
-            $sidebarController = app(SidebarController::class);
-            $mondayItems = $sidebarController->sidebarWidget($conversation->id);
-        }, 20, 2);
-        
         // Register assets
         \Eventy::addFilter('javascripts', function($javascripts) {
             // $javascripts[] = public_path('modules/mondayintegration/js/sidebar-widget.js');

@@ -81,7 +81,7 @@ class SidebarController extends Controller
 
         // Get settings
         $settings = $this->getSettings();
-        if (empty($settings['api_token']) || empty($settings['board_id'])) {
+        if (empty($settings['api_token']) || empty($settings['pullboard_id'])) {
             return '';
         }
 
@@ -89,6 +89,8 @@ class SidebarController extends Controller
         $skipCache = request()->has('skip_cache');
         $boardType = request()->get('board_type', 'primary');
         $mondayItems = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
+       
+        exit();
 
         // Get match information if available
         $matchInfo = $this->getMatchInfo($customer, $conversation);
@@ -291,11 +293,11 @@ class SidebarController extends Controller
      */
     public function getMondayItemsForCustomer(Customer $customer, Conversation $conversation, $settings, $skipCache = false, $boardType = 'primary'): array
     {
-        $boardId = $settings['board_id'];
+        $boardId = $settings['pullboard_id'];
         
         // For dual-board architecture, use secondary board if requested
-        if ($boardType === 'secondary' && !empty($settings['secondary_board_id'])) {
-            $boardId = $settings['secondary_board_id'];
+        if ($boardType === 'secondary' && !empty($settings['pushboard_id'])) {
+            $boardId = $settings['pushboard_id'];
         }
         
         // Cache key for this customer's Monday items
@@ -314,14 +316,14 @@ class SidebarController extends Controller
         // Step 1: Try to find a match using the CallerIdService
         // This will check local mappings first using the cascading search strategy
         $result = $this->callerIdService->findMondayItemByConversation($conversation, $boardId);
-        
+
         if (!$result) {
             // If no match found via conversation, try customer directly
             $result = $this->callerIdService->findMondayItemByCustomer($customer, $boardId);
         }
         
         $items = [];
-        
+    
         if ($result) {
             // We found a match in our local mappings or via the CallerIdService
             Logger::info('MondayIntegration: Found customer match using CallerIdService', [
@@ -330,7 +332,6 @@ class SidebarController extends Controller
                 'match_type' => $result['match_type'],
                 'confidence_score' => $result['confidence_score']
             ]);
-            
             // Get item details from Monday.com
             $items = $this->getItemDetailsFromMonday($result['monday_item_id'], $boardId);
         } else {
@@ -437,7 +438,7 @@ class SidebarController extends Controller
         try {
             // First get the item using the ID
             $item = $this->mondayApi->getItem($itemId);
-            
+
             // If board ID is provided, ensure it matches
             if (!empty($item) && !empty($boardId) && isset($item['board']['id']) && $item['board']['id'] !== $boardId) {
                 Logger::warning('MondayIntegration: Item board ID mismatch', [
@@ -537,8 +538,11 @@ class SidebarController extends Controller
      */
     protected function getSettings(): array
     {
-        $settings = \Option::get('mondayintegration', []);
-        return is_array($settings) ? $settings : [];
+        // $settings = \Option::get('mondayintegration', []);
+        // return is_array($settings) ? $settings : [];
+
+        $settings = MondaySettings::pluck('value', 'key')->toArray();
+        return $settings;
     }
 
     /**

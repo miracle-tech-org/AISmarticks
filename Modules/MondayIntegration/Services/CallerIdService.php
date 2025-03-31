@@ -510,14 +510,13 @@ class CallerIdService
         // Try to get from cache first
         return $this->cacheService->remember($cacheKey, CacheService::TIER_SEARCH, function() use ($conversation, $boardId) {
             // Check if we already have a mapping for this conversation
-            $mapping = \Modules\MondayIntegration\Models\MondayConversationMapping::where('conversation_id', $conversation->id);
+            $mapping = \Modules\MondayIntegration\Models\MondayConversationMapping::where('conversation_id', $conversation->id)->get();
             
             if ($boardId) {
                 $mapping = $mapping->where('board_id', $boardId);
             }
-            
+
             $mapping = $mapping->first();
-            
             if ($mapping) {
                 return [
                     'monday_item_id' => $mapping->monday_item_id,

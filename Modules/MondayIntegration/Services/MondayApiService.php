@@ -84,6 +84,29 @@ class MondayApiService
         }
     }
 
+    public function getItem($itemId)
+    {
+        $query = <<<GRAPHQL
+        query {
+            items(ids: [$itemId]) {
+                id
+                name
+                column_values {
+                    id
+                    text
+                }
+            }
+        }
+        GRAPHQL;
+
+        $response = $this->executeQuery($query);
+        if (isset($response['items'][0])) {
+            return $response['items'][0];
+        }
+        
+        return null;
+    }
+
     public function createItem($boardId, $itemName, $columnValues)
     {
         $query = '
