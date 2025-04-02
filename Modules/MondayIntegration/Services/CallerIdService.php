@@ -457,42 +457,35 @@ class CallerIdService
      */
     public function findMondayItemByCustomer(Customer $customer, $boardId = null)
     {
-        // Generate a cache key based on inputs
-        $cacheKey = "customer_caller_id_{$customer->id}" . ($boardId ? "_{$boardId}" : '');
+        $mapping = MondayCallerIdMapping::findByCustomer($customer->id, $boardId);
         
-        // Try to get from cache first
-        return $this->cacheService->remember($cacheKey, CacheService::TIER_SEARCH, function() use ($customer, $boardId) {
-            // Check if we have a mapping for this customer
-            $mapping = MondayCallerIdMapping::findByCustomer($customer->id, $boardId);
-            
-            if ($mapping) {
-                return [
-                    'monday_item_id' => $mapping->monday_item_id,
-                    'confidence_score' => 1.0,
-                    'match_type' => 'customer_mapping',
-                    'mapping_id' => $mapping->id,
-                    'source_id' => $mapping->source_id
-                ];
+        if ($mapping) {
+            return [
+                'monday_item_id' => $mapping->monday_item_id,
+                'confidence_score' => 1.0,
+                'match_type' => 'customer_mapping',
+                'mapping_id' => $mapping->id,
+                'source_id' => $mapping->source_id
+            ];
+        }
+        
+        // Try to find by email
+        if ($customer->getMainEmail()) {
+            $emailMatch = $this->findMondayItemByCallerId($customer->getMainEmail(), 'email', $boardId);
+            if ($emailMatch) {
+                return $emailMatch;
             }
-            
-            // Try to find by email
-            if ($customer->getMainEmail()) {
-                $emailMatch = $this->findMondayItemByCallerId($customer->getMainEmail(), 'email', $boardId);
-                if ($emailMatch) {
-                    return $emailMatch;
-                }
+        }
+        
+        // Try to find by phone
+        if ($customer->getMainPhoneWithPlus()) {
+            $phoneMatch = $this->findMondayItemByCallerId($customer->getMainPhoneWithPlus(), 'phone', $boardId);
+            if ($phoneMatch) {
+                return $phoneMatch;
             }
-            
-            // Try to find by phone
-            if ($customer->getMainPhoneWithPlus()) {
-                $phoneMatch = $this->findMondayItemByCallerId($customer->getMainPhoneWithPlus(), 'phone', $boardId);
-                if ($phoneMatch) {
-                    return $phoneMatch;
-                }
-            }
-            
-            return null;
-        });
+        }
+        
+        return null;
     }
     
     /**
@@ -504,35 +497,29 @@ class CallerIdService
      */
     public function findMondayItemByConversation(Conversation $conversation, $boardId = null)
     {
-        // Generate a cache key based on inputs
-        $cacheKey = "conversation_caller_id_{$conversation->id}" . ($boardId ? "_{$boardId}" : '');
+        $mapping = \Modules\MondayIntegration\Models\MondayConversationMapping::where('conversation_id', $conversation->id);
         
-        // Try to get from cache first
-        return $this->cacheService->remember($cacheKey, CacheService::TIER_SEARCH, function() use ($conversation, $boardId) {
-            // Check if we already have a mapping for this conversation
-            $mapping = \Modules\MondayIntegration\Models\MondayConversationMapping::where('conversation_id', $conversation->id)->get();
-            
-            if ($boardId) {
-                $mapping = $mapping->where('board_id', $boardId);
-            }
+        if ($boardId) {
+            $mapping = $mapping->where('board_id', $boardId);
+        }
 
-            $mapping = $mapping->first();
-            if ($mapping) {
-                return [
-                    'monday_item_id' => $mapping->monday_item_id,
-                    'confidence_score' => 1.0,
-                    'match_type' => 'conversation_mapping',
-                    'mapping_id' => $mapping->id
-                ];
-            }
-            
-            // If no mapping, try to find by customer
-            if ($conversation->customer_id) {
-                return $this->findMondayItemByCustomer($conversation->customer, $boardId);
-            }
-            
-            return null;
-        });
+        $mapping = $mapping->first();
+
+        if ($mapping) {
+            return [
+                'monday_item_id' => $mapping->monday_item_id,
+                'confidence_score' => 1.0,
+                'match_type' => 'conversation_mapping',
+                'mapping_id' => $mapping->id
+            ];
+        }
+
+        // If no mapping, try to find by customer
+        if ($conversation->customer_id) {
+            return $this->findMondayItemByCustomer($conversation->customer, $boardId);
+        }
+        
+        return null;
     }
     
     /**

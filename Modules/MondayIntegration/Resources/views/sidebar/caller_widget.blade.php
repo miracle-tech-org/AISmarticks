@@ -1,6 +1,6 @@
 <div class="sidebar-block">
     <div class="sidebar-block-header">
-        <h3><i class="fa fa-monday"></i> {{ __('Monday.com Data') }}</h3>
+        <img src="https://www.vectorlogo.zone/logos/monday/monday-ar21.svg" alt="">
     </div>
     <div class="sidebar-block-body">
         @if (!empty($mondayItems))
@@ -12,7 +12,7 @@
                             @foreach ($item['column_values'] as $column)
                                 @if (!empty($column['text']))
                                     <div class="monday-column">
-                                        <strong>{{ $column['title'] }}:</strong> {{ $column['text'] }}
+                                        <strong>{{ $column['text'] }}</strong> 
                                     </div>
                                 @endif
                             @endforeach

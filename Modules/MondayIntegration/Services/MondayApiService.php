@@ -95,6 +95,7 @@ class MondayApiService
                     id
                     text
                 }
+                url
             }
         }
         GRAPHQL;

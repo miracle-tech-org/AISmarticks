@@ -88,38 +88,15 @@ class SidebarController extends Controller
         // Get Monday.com items for this customer
         $skipCache = request()->has('skip_cache');
         $boardType = request()->get('board_type', 'primary');
-        
 
-        // $mondayItems = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
+        $mondayItems = [];
+        array_push($mondayItems, $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType));
         
         // Get match information if available
         $matchInfo = $this->getMatchInfo($customer, $conversation);
 
         // Get quick actions
         $quickActions = $this->getConfiguredQuickActions($settings);
-        $mondayItems = [
-            [
-                'name' => 'Task 1',
-                'column_values' => [
-                    ['title' => 'Owner', 'text' => 'John Doe'],
-                    ['title' => 'Status', 'text' => 'In Progress'],
-                    ['title' => 'Date', 'text' => '2025-03-31'],
-                ],
-                'url' => 'https://monday.com/tasks/1',
-                'id' => 1,
-            ],
-            [
-                'name' => 'Task 2',
-                'column_values' => [
-                    ['title' => 'Owner', 'text' => 'Jane Smith'],
-                    ['title' => 'Status', 'text' => 'Completed'],
-                    ['title' => 'Date', 'text' => '2025-03-30'],
-                ],
-                'url' => 'https://monday.com/tasks/2',
-                'id' => 2,
-            ],
-        ];
-        
         
         // If no items found, render empty widget
         // if (empty($mondayItems) || empty($mondayItems['data']['items'])) {
@@ -322,23 +299,12 @@ class SidebarController extends Controller
         if ($boardType === 'secondary' && !empty($settings['pushboard_id'])) {
             $boardId = $settings['pushboard_id'];
         }
-        
-        // Cache key for this customer's Monday items
-        $cacheKey = 'monday_customer_items_' . md5($customer->id . '_' . $boardId . '_' . $boardType);
-        
-        // Check cache first if not skipping
-        if (!$skipCache && Cache::has($cacheKey)) {
-            $cachedItems = Cache::get($cacheKey);
-            if ($cachedItems === null) {
-                return [];
-            }
-            // Ensure we're returning an array
-            return is_array($cachedItems) ? $cachedItems : [];
-        }
-        
+
         // Step 1: Try to find a match using the CallerIdService
         // This will check local mappings first using the cascading search strategy
         $result = $this->callerIdService->findMondayItemByConversation($conversation, $boardId);
+
+        var)
 
         if (!$result) {
             // If no match found via conversation, try customer directly
@@ -404,9 +370,6 @@ class SidebarController extends Controller
                 }
             }
         }
-        
-        // Cache the results for 5 minutes
-        Cache::put($cacheKey, $items, now()->addMinutes(5));
         
         return $items;
     }
