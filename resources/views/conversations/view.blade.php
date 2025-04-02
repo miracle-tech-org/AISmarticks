@@ -4,12 +4,13 @@
     $is_in_chat_mode = $conversation->isInChatMode();
 @endphp
 
-@section('title_full', '#'.$conversation->number.' '.$conversation->getSubject().($customer ? ' - '.$customer->getFullName(true) : ''))
+@section('title_full', '#' . $conversation->number . ' ' . $conversation->getSubject() . ($customer ? ' - ' .
+    $customer->getFullName(true) : ''))
 
-@if (app('request')->input('print'))
-    @section('body_class', 'body-conv print')
-@else
-    @section('body_class', 'body-conv'.($is_in_chat_mode ? ' chat-mode' : ''))
+    @if (app('request')->input('print'))
+        @section('body_class', 'body-conv print')
+    @else
+    @section('body_class', 'body-conv' . ($is_in_chat_mode ? ' chat-mode' : ''))
 @endif
 
 @section('body_attrs')@parent data-conversation_id="{{ $conversation->id }}"@endsection
@@ -22,48 +23,81 @@
 @section('content')
     @include('partials/flash_messages')
 
-    <div id="conv-layout" class="conv-type-{{ strtolower($conversation->getTypeName()) }} @if ($is_following) conv-following @endif">
+    <div id="conv-layout"
+        class="conv-type-{{ strtolower($conversation->getTypeName()) }} @if ($is_following) conv-following @endif">
         <div id="conv-layout-header">
             <div id="conv-toolbar">
 
                 <div class="conv-actions">
                     {{-- There should be no spaces between buttons --}}
-                    @if ((!$conversation->isPhone() || ($customer && $customer->getMainEmail())) && Eventy::filter('conversation.reply_button.enabled', true, $conversation) )
-                        <span class="conv-reply conv-action glyphicon glyphicon-share-alt" data-toggle="tooltip" data-placement="bottom" title="{{ __("Reply") }}" aria-label="{{ __("Reply") }}" role="button"></span>
+                    @if (
+                        (!$conversation->isPhone() || ($customer && $customer->getMainEmail())) &&
+                            Eventy::filter('conversation.reply_button.enabled', true, $conversation))
+                        <span class="conv-reply conv-action glyphicon glyphicon-share-alt" data-toggle="tooltip"
+                            data-placement="bottom" title="{{ __('Reply') }}" aria-label="{{ __('Reply') }}"
+                            role="button"></span>
                     @endif
                     @if (Eventy::filter('conversation.note_button.enabled', true, $conversation))
-                        <span class="conv-add-note conv-action glyphicon glyphicon-edit" data-toggle="tooltip" data-placement="bottom" title="{{ __("Note") }}" aria-label="{{ __("Note") }}" role="button"></span>
+                        <span class="conv-add-note conv-action glyphicon glyphicon-edit" data-toggle="tooltip"
+                            data-placement="bottom" title="{{ __('Note') }}" aria-label="{{ __('Note') }}"
+                            role="button"></span>
                     @endif
                     @if (Auth::user()->can('delete', $conversation))
                         @if ($conversation->state != App\Conversation::STATE_DELETED)
-                            <span class="hidden-xs conv-action glyphicon glyphicon-trash conv-delete" data-toggle="tooltip" data-placement="bottom" title="{{ __("Delete") }}" aria-label="{{ __("Delete") }}" role="button"></span>
+                            <span class="hidden-xs conv-action glyphicon glyphicon-trash conv-delete" data-toggle="tooltip"
+                                data-placement="bottom" title="{{ __('Delete') }}" aria-label="{{ __('Delete') }}"
+                                role="button"></span>
                         @else
-                            <span class="hidden-xs conv-action glyphicon glyphicon-trash conv-delete-forever" data-toggle="tooltip" data-placement="bottom" title="{{ __("Delete Forever") }}" aria-label="{{ __("Delete Forever") }}" role="button"></span>
+                            <span class="hidden-xs conv-action glyphicon glyphicon-trash conv-delete-forever"
+                                data-toggle="tooltip" data-placement="bottom" title="{{ __('Delete Forever') }}"
+                                aria-label="{{ __('Delete Forever') }}" role="button"></span>
                         @endif
                     @endif
                     @action('conversation.action_buttons', $conversation, $mailbox)
 
-                    <div class="dropdown conv-action" data-toggle="tooltip" title="{{ __("More Actions") }}">
-                        <span class="conv-action glyphicon glyphicon-option-horizontal dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" aria-label="{{ __("More Actions") }}"></span>
+                    <div class="dropdown conv-action" data-toggle="tooltip" title="{{ __('More Actions') }}">
+                        <span class="conv-action glyphicon glyphicon-option-horizontal dropdown-toggle"
+                            data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"
+                            aria-label="{{ __('More Actions') }}"></span>
                         <ul class="dropdown-menu dropdown-with-icons">
                             @action('conversation.prepend_action_buttons', $conversation, $mailbox)
                             <li>
-                                <a href="#" class="conv-follow @if ($is_following) hidden @endif" data-follow-action="follow" role="button"><i class="glyphicon glyphicon-bell"></i> {{ __("Follow") }}</a>
-                                <a href="#" class="conv-follow @if (!$is_following) hidden @endif" data-follow-action="unfollow" role="button"><i class="glyphicon glyphicon-bell"></i> {{ __("Unfollow") }}</a>
+                                <a href="#" class="conv-follow @if ($is_following) hidden @endif"
+                                    data-follow-action="follow" role="button"><i class="glyphicon glyphicon-bell"></i>
+                                    {{ __('Follow') }}</a>
+                                <a href="#" class="conv-follow @if (!$is_following) hidden @endif"
+                                    data-follow-action="unfollow" role="button"><i class="glyphicon glyphicon-bell"></i>
+                                    {{ __('Unfollow') }}</a>
                             </li>
-                            <li><a href="#" class="conv-forward" role="button"><i class="glyphicon glyphicon-arrow-right"></i> {{ __("Forward") }}</a></li>
-                            <li><a href="{{ route('conversations.ajax_html', array_merge(['action' =>
-                        'merge_conv'], \Request::all(), ['conversation_id' => $conversation->id]) ) }}" data-trigger="modal" data-modal-title="{{ __("Merge Conversations") }}" data-modal-no-footer="true" data-modal-on-show="initMergeConv" role="button"><i class="glyphicon glyphicon-indent-left"></i> {{ __("Merge") }}</a></li>
+                            <li><a href="#" class="conv-forward" role="button"><i
+                                        class="glyphicon glyphicon-arrow-right"></i> {{ __('Forward') }}</a></li>
+                            <li><a href="{{ route(
+                                'conversations.ajax_html',
+                                array_merge(['action' => 'merge_conv'], \Request::all(), ['conversation_id' => $conversation->id]),
+                            ) }}"
+                                    data-trigger="modal" data-modal-title="{{ __('Merge Conversations') }}"
+                                    data-modal-no-footer="true" data-modal-on-show="initMergeConv" role="button"><i
+                                        class="glyphicon glyphicon-indent-left"></i> {{ __('Merge') }}</a></li>
                             @if (Auth::user()->can('move', App\Conversation::class))
-                                <li><a href="{{ route('conversations.ajax_html', array_merge(['action' =>
-                        'move_conv'], \Request::all(), ['conversation_id' => $conversation->id]) ) }}" data-trigger="modal" data-modal-title="{{ __("Move Conversation") }}" data-modal-no-footer="true" data-modal-on-show="initMoveConv" role="button"><i class="glyphicon glyphicon-log-out"></i> {{ __("Move") }}</a></li>
+                                <li><a href="{{ route(
+                                    'conversations.ajax_html',
+                                    array_merge(['action' => 'move_conv'], \Request::all(), ['conversation_id' => $conversation->id]),
+                                ) }}"
+                                        data-trigger="modal" data-modal-title="{{ __('Move Conversation') }}"
+                                        data-modal-no-footer="true" data-modal-on-show="initMoveConv" role="button"><i
+                                            class="glyphicon glyphicon-log-out"></i> {{ __('Move') }}</a></li>
                             @endif
                             @if ($conversation->state != App\Conversation::STATE_DELETED)
-                                <li class="hidden-lg hidden-md hidden-sm"><a href="#" class="conv-delete" role="button"><i class="glyphicon glyphicon-trash"></i> {{ __("Delete") }}</a></li>
+                                <li class="hidden-lg hidden-md hidden-sm"><a href="#" class="conv-delete"
+                                        role="button"><i class="glyphicon glyphicon-trash"></i> {{ __('Delete') }}</a>
+                                </li>
                             @else
-                                <li class="hidden-lg hidden-md hidden-sm"><a href="#" class="conv-delete-forever" role="button"><i class="glyphicon glyphicon-trash"></i> {{ __("Delete Forever") }}</a></li>
+                                <li class="hidden-lg hidden-md hidden-sm"><a href="#" class="conv-delete-forever"
+                                        role="button"><i class="glyphicon glyphicon-trash"></i>
+                                        {{ __('Delete Forever') }}</a></li>
                             @endif
-                            <li><a href="{{ \Request::getRequestUri() }}&amp;print=1" target="_blank" role="button"><i class="glyphicon glyphicon-print"></i> {{ __("Print") }}</a></li>
+                            <li><a href="{{ \Request::getRequestUri() }}&amp;print=1" target="_blank" role="button"><i
+                                        class="glyphicon glyphicon-print"></i> {{ __('Print') }}</a></li>
                             @action('conversation.append_action_buttons', $conversation, $mailbox)
                         </ul>
                     </div>
@@ -72,21 +106,32 @@
                 <ul class="conv-info">
                     @if ($conversation->state != App\Conversation::STATE_DELETED)
                         <li>
-                            <div class="btn-group" id="conv-assignee" data-toggle="tooltip" title="{{ __("Assignee") }}: {{ $conversation->getAssigneeName(true) }}">
-                                <button type="button" class="btn btn-default conv-info-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-title="{{ __("Assignee") }}" aria-hidden="true"><i class="glyphicon glyphicon-user"></i></button>
-                                <button type="button" class="btn btn-default dropdown-toggle conv-info-val" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-title="{{ __("Assignee") }}" aria-label="{{ __("Assignee") }}: {{ $conversation->getAssigneeName(true) }}">
+                            <div class="btn-group" id="conv-assignee" data-toggle="tooltip"
+                                title="{{ __('Assignee') }}: {{ $conversation->getAssigneeName(true) }}">
+                                <button type="button" class="btn btn-default conv-info-icon" data-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false" aria-title="{{ __('Assignee') }}"
+                                    aria-hidden="true"><i class="glyphicon glyphicon-user"></i></button>
+                                <button type="button" class="btn btn-default dropdown-toggle conv-info-val"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    aria-title="{{ __('Assignee') }}"
+                                    aria-label="{{ __('Assignee') }}: {{ $conversation->getAssigneeName(true) }}">
                                     <span>{{ $conversation->getAssigneeName(true) }}</span>
                                     <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu conv-user dm-scrollable">
-                                    <li @if (!$conversation->user_id) class="active" @endif><a href="#" data-user_id="-1">{{ __("Anyone") }}</a></li>
-                                    <li @if ($conversation->user_id == Auth::user()->id) class="active" @endif><a href="#" data-user_id="{{ Auth::user()->id }}">{{ __("Me") }}</a></li>
+                                    <li @if (!$conversation->user_id) class="active" @endif><a href="#"
+                                            data-user_id="-1">{{ __('Anyone') }}</a></li>
+                                    <li @if ($conversation->user_id == Auth::user()->id) class="active" @endif><a href="#"
+                                            data-user_id="{{ Auth::user()->id }}">{{ __('Me') }}</a></li>
                                     @foreach ($mailbox->usersAssignable() as $user)
                                         @if ($user->id != Auth::user()->id)
                                             @php
                                                 $a_class = \Eventy::filter('assignee_list.a_class', '', $user);
                                             @endphp
-                                            <li @if ($conversation->user_id == $user->id) class="active" @endif><a href="#" data-user_id="{{ $user->id }}" @if ($a_class) class="{{ $a_class }}"@endif>{{ $user->getFullName() }}@action('assignee_list.item_append', $user)</a></li>
+                                            <li @if ($conversation->user_id == $user->id) class="active" @endif><a href="#"
+                                                    data-user_id="{{ $user->id }}"
+                                                    @if ($a_class) class="{{ $a_class }}" @endif>{{ $user->getFullName() }}@action('assignee_list.item_append', $user)</a>
+                                            </li>
                                         @endif
                                     @endforeach
                                 </ul>
@@ -94,24 +139,37 @@
                         </li>
                     @endif
                     <li>
-                        <div class="btn-group" id="conv-status" data-toggle="tooltip" title="{{ __("Status") }}: {{ $conversation->getStatusName() }}">
+                        <div class="btn-group" id="conv-status" data-toggle="tooltip"
+                            title="{{ __('Status') }}: {{ $conversation->getStatusName() }}">
                             @if ($conversation->state != App\Conversation::STATE_DELETED)
-                                <button type="button" class="btn btn-{{ App\Conversation::$status_classes[$conversation->getStatus()] }} btn-light conv-info-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="{{ __("Status") }}: {{ $conversation->getStatusName() }}"><i class="glyphicon glyphicon-{{ App\Conversation::$status_icons[$conversation->getStatus()] }}"></i></button>
-                                <button type="button" class="btn btn-{{ App\Conversation::$status_classes[$conversation->getStatus()] }} btn-light dropdown-toggle conv-info-val" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="{{ __("Status") }}">
+                                <button type="button"
+                                    class="btn btn-{{ App\Conversation::$status_classes[$conversation->getStatus()] }} btn-light conv-info-icon"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    aria-label="{{ __('Status') }}: {{ $conversation->getStatusName() }}"><i
+                                        class="glyphicon glyphicon-{{ App\Conversation::$status_icons[$conversation->getStatus()] }}"></i></button>
+                                <button type="button"
+                                    class="btn btn-{{ App\Conversation::$status_classes[$conversation->getStatus()] }} btn-light dropdown-toggle conv-info-val"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    aria-label="{{ __('Status') }}">
                                     <span>{{ $conversation->getStatusName() }}</span> <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu conv-status">
                                     @if ($conversation->status != App\Conversation::STATUS_SPAM)
                                         @foreach (App\Conversation::$statuses as $status => $dummy)
-                                            <li @if ($conversation->status == $status) class="active" @endif><a href="#" data-status="{{ $status }}">{{ App\Conversation::statusCodeToName($status) }}</a></li>
+                                            <li @if ($conversation->status == $status) class="active" @endif><a href="#"
+                                                    data-status="{{ $status }}">{{ App\Conversation::statusCodeToName($status) }}</a>
+                                            </li>
                                         @endforeach
                                     @else
                                         <li><a href="#" data-status="not_spam">{{ __('Not Spam') }}</a></li>
                                     @endif
                                 </ul>
                             @else
-                                <button type="button" class="btn btn-grey btn-light conv-info-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="glyphicon glyphicon-trash"></i></button>
-                                <button type="button" class="btn btn-grey btn-light dropdown-toggle conv-info-val" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="btn btn-grey btn-light conv-info-icon"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                                        class="glyphicon glyphicon-trash"></i></button>
+                                <button type="button" class="btn btn-grey btn-light dropdown-toggle conv-info-val"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span>{{ __('Deleted') }}</span> <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu conv-status">
@@ -119,9 +177,13 @@
                                 </ul>
                             @endif
                         </div>
-                    </li><li class="conv-next-prev">
-                        <a href="{{ $conversation->urlPrev(App\Conversation::getFolderParam()) }}" class="glyphicon glyphicon-menu-left" data-toggle="tooltip" title="{{ __("Newer") }}"></a>
-                        <a href="{{ $conversation->urlNext(App\Conversation::getFolderParam()) }}" class="glyphicon glyphicon-menu-right" data-toggle="tooltip" title="{{ __("Older") }}"></a>
+                    </li>
+                    <li class="conv-next-prev">
+                        <a href="{{ $conversation->urlPrev(App\Conversation::getFolderParam()) }}"
+                            class="glyphicon glyphicon-menu-left" data-toggle="tooltip" title="{{ __('Newer') }}"></a>
+                        <a href="{{ $conversation->urlNext(App\Conversation::getFolderParam()) }}"
+                            class="glyphicon glyphicon-menu-right" data-toggle="tooltip"
+                            title="{{ __('Older') }}"></a>
                     </li>
                 </ul>
 
@@ -134,24 +196,42 @@
                         <div class="conv-subjtext">
                             <span>{{ $conversation->getSubject() }}</span>
                             <div class="input-group input-group-lg conv-subj-editor">
-                                <input type="text" id="conv-subj-value" class="form-control" value="{{ $conversation->getSubject() }}" />
+                                <input type="text" id="conv-subj-value" class="form-control"
+                                    value="{{ $conversation->getSubject() }}" />
                                 <span class="input-group-btn">
-                                    <button class="btn btn-primary" type="button" data-loading-text="…"><i class="glyphicon glyphicon-ok"></i></button>
+                                    <button class="btn btn-primary" type="button" data-loading-text="…"><i
+                                            class="glyphicon glyphicon-ok"></i></button>
                                 </span>
                             </div>
                         </div>
                         @if ($conversation->isChat() && $conversation->getChannelName())
                             <span class="conv-tags">
-                                @if (\Helper::isChatMode())<a class="btn btn-default fs-tag-btn" href="{{ request()->fullUrlWithQuery(['chat_mode' => '0']) }}" title="{{ __('Exit') }}" data-toggle="tooltip"><small class="glyphicon glyphicon-stop"></small> {{ __('Chat Mode') }}</a>@else<a class="btn btn-primary fs-tag-btn" href="{{ request()->fullUrlWithQuery(['chat_mode' => '1']) }}"><small class="glyphicon glyphicon-play"></small> {{ __('Chat Mode') }}</a>@endif<span class="fs-tag fs-tag-md"><a class="fs-tag-name" href="#"><small class="glyphicon glyphicon-phone"></small> {{ $conversation->getChannelName() }}</a></span>
+                                @if (\Helper::isChatMode())
+                                    <a class="btn btn-default fs-tag-btn"
+                                        href="{{ request()->fullUrlWithQuery(['chat_mode' => '0']) }}"
+                                        title="{{ __('Exit') }}" data-toggle="tooltip"><small
+                                        class="glyphicon glyphicon-stop"></small> {{ __('Chat Mode') }}</a>@else<a
+                                        class="btn btn-primary fs-tag-btn"
+                                        href="{{ request()->fullUrlWithQuery(['chat_mode' => '1']) }}"><small
+                                            class="glyphicon glyphicon-play"></small> {{ __('Chat Mode') }}</a>
+                                @endif
+                                <span class="fs-tag fs-tag-md"><a class="fs-tag-name" href="#"><small
+                                            class="glyphicon glyphicon-phone"></small>
+                                        {{ $conversation->getChannelName() }}</a></span>
                             </span>
                         @endif
                         @action('conversation.after_subject', $conversation, $mailbox)
                         <div class="conv-numnav">
-                            <i class="glyphicon conv-star @if ($conversation->isStarredByUser()) glyphicon-star @else glyphicon-star-empty @endif" title="@if ($conversation->isStarredByUser()){{ __("Unstar Conversation") }}@else{{ __("Star Conversation") }}@endif"></i>&nbsp; # <strong>{{ $conversation->number }}</strong>
+                            <i class="glyphicon conv-star @if ($conversation->isStarredByUser()) glyphicon-star @else glyphicon-star-empty @endif"
+                                title="@if ($conversation->isStarredByUser()) {{ __('Unstar Conversation') }}@else{{ __('Star Conversation') }} @endif"></i>&nbsp;
+                            # <strong>{{ $conversation->number }}</strong>
                         </div>
                         <div id="conv-viewers">
                             @foreach ($viewers as $viewer)
-                                <span class="photo-xs viewer-{{ $viewer['user']->id }} @if ($viewer['replying']) viewer-replying @endif" data-toggle="tooltip" title="@if ($viewer['replying']){{ __(':user is replying', ['user' => $viewer['user']->getFullName()]) }}@else{{ __(':user is viewing', ['user' => $viewer['user']->getFullName()]) }}@endif">
+                                <span
+                                    class="photo-xs viewer-{{ $viewer['user']->id }} @if ($viewer['replying']) viewer-replying @endif"
+                                    data-toggle="tooltip"
+                                    title="@if ($viewer['replying']) {{ __(':user is replying', ['user' => $viewer['user']->getFullName()]) }}@else{{ __(':user is viewing', ['user' => $viewer['user']->getFullName()]) }} @endif">
                                     @include('partials/person_photo', ['person' => $viewer['user']])
                                 </span>
                             @endforeach
@@ -161,139 +241,174 @@
                 @if ($is_in_chat_mode)
                     <div class="conv-top-block conv-top-chat clearfix">
                         @if ($conversation->user_id != Auth::user()->id)
-                            <button class="btn btn-success btn-xs pull-right chat-accept" data-loading-text="{{ __('Accept Chat') }}…">{{ __('Accept Chat') }}</button>
+                            <button class="btn btn-success btn-xs pull-right chat-accept"
+                                data-loading-text="{{ __('Accept Chat') }}…">{{ __('Accept Chat') }}</button>
                         @elseif (!$conversation->isClosed())
-                            <button class="btn btn-default btn-xs pull-right chat-end" data-loading-text="{{ __('End Chat') }}…">{{ __('End Chat') }}</button>
+                            <button class="btn btn-default btn-xs pull-right chat-end"
+                                data-loading-text="{{ __('End Chat') }}…">{{ __('End Chat') }}</button>
                         @endif
-                        <a href="#conv-top-blocks" data-toggle="collapse">{{ __('Show Details') }} <b class="caret"></b></a>
+                        <a href="#conv-top-blocks" data-toggle="collapse">{{ __('Show Details') }} <b
+                                class="caret"></b></a>
                     </div>
                     <div class="collapse" id="conv-top-blocks">
                 @endif
-                    @action('conversation.after_subject_block', $conversation, $mailbox)
+                @action('conversation.after_subject_block', $conversation, $mailbox)
                 @if ($conversation->isInChatMode())
-                    </div>
-                @endif
-                <div class="conv-action-wrapper">
-                    <div class="conv-block conv-reply-block conv-action-block hidden">
-                        <div class="col-xs-12">
-                            <form class="form-horizontal form-reply" method="POST" action="">
-                                {{ csrf_field() }}
-                                <input type="hidden" name="conversation_id" value="{{ $conversation->id }}"/>
-                                <input type="hidden" name="mailbox_id" value="{{ $mailbox->id }}"/>
-                                <input type="hidden" name="saved_reply_id" value=""/>
-                                {{-- For drafts --}}
-                                <input type="hidden" name="thread_id" value=""/>
-                                <input type="hidden" name="is_note" value=""/>
-                                <input type="hidden" name="subtype" value=""/>
-                                <input type="hidden" name="conv_history" value=""/>
+            </div>
+            @endif
+            <div class="conv-action-wrapper">
+                <div class="conv-block conv-reply-block conv-action-block hidden">
+                    <div class="col-xs-12">
+                        <form class="form-horizontal form-reply" method="POST" action="">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="conversation_id" value="{{ $conversation->id }}" />
+                            <input type="hidden" name="mailbox_id" value="{{ $mailbox->id }}" />
+                            <input type="hidden" name="saved_reply_id" value="" />
+                            {{-- For drafts --}}
+                            <input type="hidden" name="thread_id" value="" />
+                            <input type="hidden" name="is_note" value="" />
+                            <input type="hidden" name="subtype" value="" />
+                            <input type="hidden" name="conv_history" value="" />
 
-                                @if (count($from_aliases))
-                                    <div class="form-group conv-from-alias">
-                                        <label class="control-label">{{ __('From') }}</label>
-
-                                        <div class="conv-reply-field">
-                                            <select name="from_alias" class="form-control">
-                                                @foreach ($from_aliases as $from_alias_email => $from_alias_name)
-                                                    <option value="@if ($from_alias_email != $mailbox->email){{ $from_alias_email }}@endif" @if (!empty($from_alias) && $from_alias == $from_alias_email)selected="selected"@endif>@if ($from_alias_name){{ $from_alias_email }} ({{ $from_alias_name }})@else{{ $from_alias_email }}@endif</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div class="form-group{{ $errors->has('to') ? ' has-error' : '' }} conv-recipient conv-recipient-to @if (empty($to_customers)) hidden @endif">
-                                    <label for="to" class="control-label">{{ __('To') }}</label>
+                            @if (count($from_aliases))
+                                <div class="form-group conv-from-alias">
+                                    <label class="control-label">{{ __('From') }}</label>
 
                                     <div class="conv-reply-field">
-                                        @if (!empty($to_customers))
-                                            <select name="to" id="to" class="form-control">
-                                                @foreach ($to_customers as $to_customer)
-                                                    <option value="{{ $to_customer['email'] }}" @if ($to_customer['email'] == $conversation->customer_email)selected="selected"@endif>{{ $to_customer['customer']->getFullName(true) }} &lt;{{ $to_customer['email'] }}&gt;</option>
-                                                @endforeach
-                                            </select>
+                                        <select name="from_alias" class="form-control">
+                                            @foreach ($from_aliases as $from_alias_email => $from_alias_name)
+                                                <option
+                                                    value="@if ($from_alias_email != $mailbox->email) {{ $from_alias_email }} @endif"
+                                                    @if (!empty($from_alias) && $from_alias == $from_alias_email) selected="selected" @endif>
+                                                    @if ($from_alias_name)
+                                                        {{ $from_alias_email }}
+                                                        ({{ $from_alias_name }})@else{{ $from_alias_email }}
+                                                    @endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div
+                                class="form-group{{ $errors->has('to') ? ' has-error' : '' }} conv-recipient conv-recipient-to @if (empty($to_customers)) hidden @endif">
+                                <label for="to" class="control-label">{{ __('To') }}</label>
+
+                                <div class="conv-reply-field">
+                                    @if (!empty($to_customers))
+                                        <select name="to" id="to" class="form-control">
+                                            @foreach ($to_customers as $to_customer)
+                                                <option value="{{ $to_customer['email'] }}"
+                                                    @if ($to_customer['email'] == $conversation->customer_email) selected="selected" @endif>
+                                                    {{ $to_customer['customer']->getFullName(true) }}
+                                                    &lt;{{ $to_customer['email'] }}&gt;</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                    <select class="form-control hidden parsley-exclude draft-changer" name="to_email[]"
+                                        id="to_email" multiple required autofocus>
+                                    </select>
+                                    @include('partials/field_error', ['field' => 'to'])
+                                </div>
+                            </div>
+
+                            <div
+                                class="form-group{{ $errors->has('cc') ? ' has-error' : '' }} @if (!$cc) hidden @endif field-cc conv-recipient">
+                                <label for="cc" class="control-label">{{ __('Cc') }}</label>
+
+                                <div class="conv-reply-field">
+
+                                    <select class="form-control recipient-select" name="cc[]" id="cc" multiple>
+                                        @if ($cc)
+                                            @foreach ($cc as $cc_email)
+                                                <option value="{{ $cc_email }}" selected="selected">
+                                                    {{ $cc_email }}</option>
+                                            @endforeach
                                         @endif
-                                        <select class="form-control hidden parsley-exclude draft-changer" name="to_email[]" id="to_email" multiple required autofocus>
-                                        </select>
-                                        @include('partials/field_error', ['field'=>'to'])
-                                    </div>
+                                    </select>
+
+                                    @include('partials/field_error', ['field' => 'cc'])
                                 </div>
+                            </div>
 
-                                <div class="form-group{{ $errors->has('cc') ? ' has-error' : '' }} @if (!$cc) hidden @endif field-cc conv-recipient">
-                                    <label for="cc" class="control-label">{{ __('Cc') }}</label>
+                            <div
+                                class="form-group{{ $errors->has('bcc') ? ' has-error' : '' }} @if (!$bcc) hidden @endif field-cc conv-recipient">
+                                <label for="bcc" class="control-label">{{ __('Bcc') }}</label>
 
-                                    <div class="conv-reply-field">
+                                <div class="conv-reply-field">
+                                    <select class="form-control recipient-select" name="bcc[]" id="bcc" multiple>
+                                        @if ($bcc)
+                                            @foreach ($bcc as $bcc_email)
+                                                <option value="{{ $bcc_email }}" selected="selected">
+                                                    {{ $bcc_email }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
 
-                                        <select class="form-control recipient-select" name="cc[]" id="cc" multiple>
-                                            @if ($cc)
-                                                @foreach ($cc as $cc_email)
-                                                    <option value="{{ $cc_email }}" selected="selected">{{ $cc_email }}</option>
-                                                @endforeach
-                                            @endif
-                                        </select>
-
-                                        @include('partials/field_error', ['field'=>'cc'])
-                                    </div>
+                                    @include('partials/field_error', ['field' => 'bcc'])
                                 </div>
+                            </div>
 
-                                <div class="form-group{{ $errors->has('bcc') ? ' has-error' : '' }} @if (!$bcc) hidden @endif field-cc conv-recipient">
-                                    <label for="bcc" class="control-label">{{ __('Bcc') }}</label>
-
-                                    <div class="conv-reply-field">
-                                         <select class="form-control recipient-select" name="bcc[]" id="bcc" multiple>
-                                            @if ($bcc)
-                                                @foreach ($bcc as $bcc_email)
-                                                    <option value="{{ $bcc_email }}" selected="selected">{{ $bcc_email }}</option>
-                                                @endforeach
-                                            @endif
-                                        </select>
-
-                                        @include('partials/field_error', ['field'=>'bcc'])
-                                    </div>
+                            <div
+                                class="form-group cc-toggler @if (empty($to_customers) && !$cc && !$bcc) cc-shifted @endif @if ($cc && $bcc) hidden @endif">
+                                <label class="control-label"></label>
+                                <div class="conv-reply-field">
+                                    <a href="#" class="help-link" id="toggle-cc">Cc/Bcc</a>
                                 </div>
+                            </div>
 
-                                <div class="form-group cc-toggler @if (empty($to_customers) && !$cc && !$bcc) cc-shifted @endif @if ($cc && $bcc) hidden @endif">
-                                    <label class="control-label"></label>
-                                    <div class="conv-reply-field">
-                                        <a href="#" class="help-link" id="toggle-cc">Cc/Bcc</a>
-                                    </div>
+                            @if (
+                                !empty($threads[0]) &&
+                                    $threads[0]->type == App\Thread::TYPE_NOTE &&
+                                    $threads[0]->created_by_user_id != Auth::user()->id &&
+                                    $threads[0]->created_by_user)
+                                <div class="alert alert-warning alert-switch-to-note">
+                                    <i class="glyphicon glyphicon-exclamation-sign"></i>
+                                    {!! __(
+                                        'This reply will go to the customer. :%switch_start%Switch to a note:switch_end if you are replying to :user_name.',
+                                        [
+                                            '%switch_start%' => '<a href="#" class="switch-to-note">',
+                                            'switch_end' => '</a>',
+                                            'user_name' => htmlspecialchars($threads[0]->created_by_user->getFullName()),
+                                        ],
+                                    ) !!}
                                 </div>
+                            @endif
 
-                                @if (!empty($threads[0]) && $threads[0]->type == App\Thread::TYPE_NOTE && $threads[0]->created_by_user_id != Auth::user()->id && $threads[0]->created_by_user)
-                                    <div class="alert alert-warning alert-switch-to-note">
-                                        <i class="glyphicon glyphicon-exclamation-sign"></i>
-                                        {!! __('This reply will go to the customer. :%switch_start%Switch to a note:switch_end if you are replying to :user_name.', ['%switch_start%' => '<a href="#" class="switch-to-note">', 'switch_end' => '</a>', 'user_name' => htmlspecialchars($threads[0]->created_by_user->getFullName()) ]) !!}
-                                    </div>
-                                @endif
+                            <div class="thread-attachments attachments-upload form-group">
+                                <ul></ul>
+                            </div>
 
-                                <div class="thread-attachments attachments-upload form-group">
-                                    <ul></ul>
+                            <div class="form-group{{ $errors->has('body') ? ' has-error' : '' }} conv-reply-body">
+                                <textarea id="body" class="form-control" name="body" rows="13" data-parsley-required="true"
+                                    data-parsley-required-message="{{ __('Please enter a message') }}"
+                                    @if ($conversation->isInChatMode()) placeholder="{{ __('Use ENTER to send the message and SHIFT+ENTER for a new line') }}" @endif>{{ old('body', $conversation->body) }}</textarea>
+                                <div class="help-block has-error">
+                                    @include('partials/field_error', ['field' => 'body'])
                                 </div>
+                            </div>
 
-                                <div class="form-group{{ $errors->has('body') ? ' has-error' : '' }} conv-reply-body">
-                                    <textarea id="body" class="form-control" name="body" rows="13" data-parsley-required="true" data-parsley-required-message="{{ __('Please enter a message') }}" @if ($conversation->isInChatMode()) placeholder="{{ __('Use ENTER to send the message and SHIFT+ENTER for a new line') }}" @endif>{{ old('body', $conversation->body) }}</textarea>
-                                    <div class="help-block has-error">
-                                        @include('partials/field_error', ['field'=>'body'])
-                                    </div>
-                                </div>
-
-                            </form>
-                        </div>
-                        <div class="clearfix"></div>
-                        @include('conversations/editor_bottom_toolbar')
-                        @action('reply_form.after', $conversation)
+                        </form>
                     </div>
+                    <div class="clearfix"></div>
+                    @include('conversations/editor_bottom_toolbar')
+                    @action('reply_form.after', $conversation)
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="conv-layout-customer">
-            @include('conversations/partials/customer_sidebar')
-            @action('conversation.after_customer_sidebar', $conversation)
+    <div id="conv-layout-customer">
+        @include('conversations/partials/customer_sidebar')
+        @action('conversation.after_customer_sidebar', $conversation)
+        <div id="conv-layout-monday" style="padding: 5%">
         </div>
-        <div id="conv-layout-main">
-            @include('conversations/partials/threads')
-            @action('conversation.after_threads', $conversation)
-        </div>
+    </div>
+    <div id="conv-layout-main">
+        @include('conversations/partials/threads')
+        @action('conversation.after_threads', $conversation)
+    </div>
     </div>
 @endsection
 
@@ -309,3 +424,24 @@
     initReplyForm();
     initConversation();
 @endsection
+
+@if (\Module::isActive('aiassistant'))
+<script>
+    window.onload = async function() {
+        var conversationId = "{{ $conversation->id }}";
+        var url = "{{ route('monday.sidebar_widget', ['conversationId' => $conversation->id]) }}";
+        fetch(url, {
+            method: 'GET', // or 'POST' if required
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'text/html' // Indicating you expect HTML
+            }
+        })
+        .then(response => response.text()) // Convert response to text
+        .then(html => {
+            document.getElementById("conv-layout-monday").innerHTML = html;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+@endif

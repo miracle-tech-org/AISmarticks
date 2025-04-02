@@ -88,20 +88,43 @@ class SidebarController extends Controller
         // Get Monday.com items for this customer
         $skipCache = request()->has('skip_cache');
         $boardType = request()->get('board_type', 'primary');
-        $mondayItems = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
-       
-        exit();
+        
 
+        // $mondayItems = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
+        
         // Get match information if available
         $matchInfo = $this->getMatchInfo($customer, $conversation);
 
         // Get quick actions
         $quickActions = $this->getConfiguredQuickActions($settings);
-
+        $mondayItems = [
+            [
+                'name' => 'Task 1',
+                'column_values' => [
+                    ['title' => 'Owner', 'text' => 'John Doe'],
+                    ['title' => 'Status', 'text' => 'In Progress'],
+                    ['title' => 'Date', 'text' => '2025-03-31'],
+                ],
+                'url' => 'https://monday.com/tasks/1',
+                'id' => 1,
+            ],
+            [
+                'name' => 'Task 2',
+                'column_values' => [
+                    ['title' => 'Owner', 'text' => 'Jane Smith'],
+                    ['title' => 'Status', 'text' => 'Completed'],
+                    ['title' => 'Date', 'text' => '2025-03-30'],
+                ],
+                'url' => 'https://monday.com/tasks/2',
+                'id' => 2,
+            ],
+        ];
+        
+        
         // If no items found, render empty widget
-        if (empty($mondayItems) || empty($mondayItems['data']['items'])) {
-            return $this->renderEmptyWidget($conversation, $customer);
-        }
+        // if (empty($mondayItems) || empty($mondayItems['data']['items'])) {
+        //     return $this->renderEmptyWidget($conversation, $customer);
+        // }
 
         return view('mondayintegration::sidebar.caller_widget', [
             'mondayItems' => $mondayItems,
