@@ -97,62 +97,56 @@ class CallerIdService
             return null;
         }
         
-        // Generate a cache key based on inputs
-        $cacheKey = "caller_id_{$callerId}_{$channel}" . ($boardId ? "_{$boardId}" : '');
+        // Step 1: Check for exact match in our mapping database
+        $exactMatch = $this->findExactMatch($callerId, $channel, $boardId);
+        if ($exactMatch) {
+            return $exactMatch;
+        }
         
-        // Try to get from cache first
-        return $this->cacheService->remember($cacheKey, CacheService::TIER_SEARCH, function() use ($callerId, $channel, $boardId) {
-            // Step 1: Check for exact match in our mapping database
-            $exactMatch = $this->findExactMatch($callerId, $channel, $boardId);
-            if ($exactMatch) {
-                return $exactMatch;
+        // Step 2: For phone numbers, try normalized matching
+        if ($channel === 'phone' || $channel === 'whatsapp') {
+            $normalizedMatch = $this->findFuzzyMatch($callerId, $boardId);
+            if ($normalizedMatch) {
+                return $normalizedMatch;
             }
             
-            // Step 2: For phone numbers, try normalized matching
-            if ($channel === 'phone' || $channel === 'whatsapp') {
-                $normalizedMatch = $this->findFuzzyMatch($callerId, $boardId);
-                if ($normalizedMatch) {
-                    return $normalizedMatch;
-                }
-                
-                // Step 3: Try partial phone number matching
-                $partialMatch = $this->findByPartialPhoneNumber($callerId, $boardId);
-                if ($partialMatch) {
-                    return [
-                        'monday_item_id' => $partialMatch->monday_item_id,
-                        'confidence_score' => $this->confidenceAdjustments['partial_match'] * $partialMatch->confidence_score,
-                        'match_type' => 'partial_match',
-                        'mapping_id' => $partialMatch->id,
-                        'source_id' => $partialMatch->source_id
-                    ];
-                }
+            // Step 3: Try partial phone number matching
+            $partialMatch = $this->findByPartialPhoneNumber($callerId, $boardId);
+            if ($partialMatch) {
+                return [
+                    'monday_item_id' => $partialMatch->monday_item_id,
+                    'confidence_score' => $this->confidenceAdjustments['partial_match'] * $partialMatch->confidence_score,
+                    'match_type' => 'partial_match',
+                    'mapping_id' => $partialMatch->id,
+                    'source_id' => $partialMatch->source_id
+                ];
             }
-            
-            // Step 4: Try cross-channel matching
-            $crossChannelMatch = $this->findCrossChannelMatch($callerId, $channel, $boardId);
-            if ($crossChannelMatch) {
-                return $crossChannelMatch;
+        }
+        
+        // Step 4: Try cross-channel matching
+        $crossChannelMatch = $this->findCrossChannelMatch($callerId, $channel, $boardId);
+        if ($crossChannelMatch) {
+            return $crossChannelMatch;
+        }
+        
+        // Step 5: Search Monday.com API
+        try {
+            $apiMatch = $this->searchMondayForCallerId($callerId, $channel, $boardId);
+            if ($apiMatch) {
+                return $apiMatch;
             }
-            
-            // Step 5: Search Monday.com API
-            try {
-                $apiMatch = $this->searchMondayForCallerId($callerId, $channel, $boardId);
-                if ($apiMatch) {
-                    return $apiMatch;
-                }
-            } catch (\Exception $e) {
-                Log::error('MondayIntegration: Error searching Monday.com API', [
-                    'error' => $e->getMessage(),
-                    'caller_id' => $callerId,
-                    'channel' => $channel,
-                    'board_id' => $boardId
-                ]);
-                
-                return null;
-            }
+        } catch (\Exception $e) {
+            Log::error('MondayIntegration: Error searching Monday.com API', [
+                'error' => $e->getMessage(),
+                'caller_id' => $callerId,
+                'channel' => $channel,
+                'board_id' => $boardId
+            ]);
             
             return null;
-        });
+        }
+        
+        return null;
     }
     
     /**
@@ -515,9 +509,9 @@ class CallerIdService
         }
 
         // If no mapping, try to find by customer
-        if ($conversation->customer_id) {
-            return $this->findMondayItemByCustomer($conversation->customer, $boardId);
-        }
+        // if ($conversation->customer_id) {
+        //     return $this->findMondayItemByCustomer($conversation->customer, $boardId);
+        // }
         
         return null;
     }

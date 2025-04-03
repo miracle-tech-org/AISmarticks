@@ -90,10 +90,26 @@ class SidebarController extends Controller
         $boardType = request()->get('board_type', 'primary');
 
         $mondayItems = [];
-        array_push($mondayItems, $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType));
+        
+        $tmp = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
+        
+        if(is_null($tmp)) {
+            return "";
+        }
+        
+        if(count($tmp) == 0) {
+            return "";
+        }
+        
+        array_push($mondayItems, $tmp);
         
         // Get match information if available
-        $matchInfo = $this->getMatchInfo($customer, $conversation);
+        // $matchInfo = $this->getMatchInfo($customer, $conversation);
+        $matchInfo = [
+            'monday_item_id' => '1851241687',
+            'match_type' => 'match_type',
+            'confidence_score' => '1.0',
+        ];
 
         // Get quick actions
         $quickActions = $this->getConfiguredQuickActions($settings);
@@ -304,13 +320,11 @@ class SidebarController extends Controller
         // This will check local mappings first using the cascading search strategy
         $result = $this->callerIdService->findMondayItemByConversation($conversation, $boardId);
 
-        var)
-
-        if (!$result) {
+        if (is_null($result)) {
             // If no match found via conversation, try customer directly
-            $result = $this->callerIdService->findMondayItemByCustomer($customer, $boardId);
+            $result = $this->mondayApi->searchItems($boardId, 'contact_phone', $customer->first_name);
+            return $result[0];
         }
-        
         $items = [];
     
         if ($result) {

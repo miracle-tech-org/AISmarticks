@@ -70,17 +70,11 @@ class MondayApiService
 
             if (isset($data['errors'])) {
                 return "error";
-                // throw new MondayApiException(
-                //     'Monday.com API Error: ' . $data['errors'][0]['message']
-                // );
             }
             return $data['data'];
 
         } catch (RequestException $e) {
             return "error";
-            // throw new MondayApiException(
-            //     'Failed to communicate with Monday.com: ' . $e->getMessage()
-            // );
         }
     }
 
@@ -166,33 +160,16 @@ class MondayApiService
 
     public function searchItems($boardId, $columnId, $searchValue)
     {
-        // $cacheKey = 'monday_search_' . md5($boardId . '_' . $columnId . '_' . $searchValue);
-        // if ($this->cacheEnabled && Cache::has($cacheKey)) {
-        //     Logger::info('MondayIntegration: Retrieved search results from cache', [
-        //         'board_id' => $boardId,
-        //         'column_id' => $columnId,
-        //         'search_value' => $searchValue
-        //     ]);
-        //     return Cache::get($cacheKey);
-        // }
+        $query = 'query { items_page_by_column_values(limit: 50, board_id: ' . $boardId . ', columns: [{column_id: "' . $columnId . '", column_values: ["' . $searchValue . '"]}]) { cursor items { id name url column_values { id text value type } } } }';
 
+        $response = $this->client->post('', [
+            'json' => [
+                'query' => $query,
+            ]
+        ]);
 
-        $query = 'query { items_by_column_values(board_id: ' . $boardId . ', column_id: "' . $columnId . '", column_value: "' . $searchValue . '") { id name board { id name } column_values { id title text value type } } }';
-
-        $response = $this->executeQuery($query);
-        $items = $response['data']['items_by_column_values'] ?? [];
-
-        // Add URL to each item
-        foreach ($items as &$item) {
-            $item['url'] = 'https://monday.com/boards/' . $item['board']['id'] . '/pulses/' . $item['id'];
-        }
-
-        // Cache the results
-        if ($this->cacheEnabled) {
-            Cache::put($cacheKey, $items, $this->cacheTtl);
-        }
-
-        return $items;
+        $data = json_decode($response->getBody(), true);
+        return $data['data']['items_page_by_column_values']['items'];
     }
 
     public function getApiVersion()
