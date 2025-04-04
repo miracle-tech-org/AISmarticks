@@ -323,7 +323,9 @@ class SidebarController extends Controller
         if (is_null($result)) {
             // If no match found via conversation, try customer directly
             $result = $this->mondayApi->searchItems($boardId, 'contact_phone', $customer->first_name);
-            return $result[0];
+            if(count($result))
+                return $result[0];
+            else return [];
         }
         $items = [];
     
