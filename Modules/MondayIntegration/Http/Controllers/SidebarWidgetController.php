@@ -10,10 +10,6 @@ use Modules\MondayIntegration\Models\MondaySettings;
 
 class SidebarWidgetController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     * @return Response
-     */
     public function index($mailbox_id)
     {
         $mailbox = Mailbox::findOrFail($mailbox_id);

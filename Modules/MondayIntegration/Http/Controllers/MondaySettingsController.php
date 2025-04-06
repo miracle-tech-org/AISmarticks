@@ -16,10 +16,8 @@ class MondaySettingsController extends Controller
     protected $mondayApi;
     protected $security;
 
-    public function __construct(
-        MondayApiService $mondayApi,
-        SecurityService $security
-    ) {
+    public function __construct(MondayApiService $mondayApi, SecurityService $security)
+    {
         $this->mondayApi = $mondayApi;
         $this->security = $security;
     }
@@ -222,5 +220,12 @@ class MondaySettingsController extends Controller
             'boards' => $boards,
             'mailbox' => $mailbox
         ]);
+    }
+
+    public function clearMapping()
+    {
+        MondaySettings::where('key', 'pullboard_id')->delete();
+        MondaySettings::where('key', 'pushboard_id')->delete();
+        return redirect()->back();
     }
 }

@@ -212,4 +212,32 @@ class MondayApiService
         
         throw new \Exception('Board not found or access denied');
     }
+
+    public function getBoardItems($boardId) {
+        $query = <<<GRAPHQL
+        {
+            boards(ids: $boardId) {
+                items_page(limit: 10) {
+                    items {
+                        id
+                        name
+                        url
+                        column_values {
+                            id
+                            text
+                            value
+                            type
+                        }
+                    }
+                }
+            }
+        }
+        GRAPHQL;
+
+        $response = $this->executeQuery($query);
+        if (isset($response['boards'][0])) {
+            return $response['boards'][0];
+        }
+        return [];
+    }
 }

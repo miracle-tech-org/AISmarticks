@@ -21,6 +21,7 @@ use Modules\MondayIntegration\Services\CallerIdService;
 use Modules\MondayIntegration\Services\MondayApiService;
 use Modules\MondayIntegration\Services\PullboardService;
 use Modules\MondayIntegration\Services\SecurityService;
+use Modules\MondayIntegration\Services\PhoneNormalizer;
 
 class SidebarController extends Controller
 {
@@ -67,6 +68,11 @@ class SidebarController extends Controller
      */
     public function sidebarWidget($conversationId)
     {
+        $settings = $this->getSettings();
+        if (!isset($settings['enable_sidebar_widget']) || $settings['enable_sidebar_widget'] == 0) {
+            return "";
+        }
+
         // Get the conversation
         $conversation = Conversation::find($conversationId);
         if (!$conversation) {
@@ -80,7 +86,6 @@ class SidebarController extends Controller
         }
 
         // Get settings
-        $settings = $this->getSettings();
         if (empty($settings['api_token']) || empty($settings['pullboard_id'])) {
             return '';
         }
@@ -90,19 +95,18 @@ class SidebarController extends Controller
         $boardType = request()->get('board_type', 'primary');
 
         $mondayItems = [];
-        
+
         $tmp = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
-        
         if(is_null($tmp)) {
             return "";
         }
-        
+
         if(count($tmp) == 0) {
             return "";
         }
-        
+
         array_push($mondayItems, $tmp);
-        
+
         // Get match information if available
         // $matchInfo = $this->getMatchInfo($customer, $conversation);
         $matchInfo = [
@@ -113,7 +117,7 @@ class SidebarController extends Controller
 
         // Get quick actions
         $quickActions = $this->getConfiguredQuickActions($settings);
-        
+
         // If no items found, render empty widget
         // if (empty($mondayItems) || empty($mondayItems['data']['items'])) {
         //     return $this->renderEmptyWidget($conversation, $customer);
@@ -310,25 +314,52 @@ class SidebarController extends Controller
     public function getMondayItemsForCustomer(Customer $customer, Conversation $conversation, $settings, $skipCache = false, $boardType = 'primary'): array
     {
         $boardId = $settings['pullboard_id'];
-        
         // For dual-board architecture, use secondary board if requested
         if ($boardType === 'secondary' && !empty($settings['pushboard_id'])) {
             $boardId = $settings['pushboard_id'];
         }
 
-        // Step 1: Try to find a match using the CallerIdService
         // This will check local mappings first using the cascading search strategy
         $result = $this->callerIdService->findMondayItemByConversation($conversation, $boardId);
 
         if (is_null($result)) {
             // If no match found via conversation, try customer directly
-            $result = $this->mondayApi->searchItems($boardId, 'contact_phone', $customer->first_name);
-            if(count($result))
-                return $result[0];
-            else return [];
+            // $result = $this->mondayApi->searchItems($boardId, $settings['customer_search_field'], $customer->first_name);
+            $result = $this->mondayApi->getBoardItems($boardId);
+            $phoneNormalizer = new PhoneNormalizer;
+
+            if(count($result) == 0) {
+                return [];
+            }
+            $data = $result['items_page']['items'];
+            foreach ($data as $i => $entry) {
+                if ($settings['customer_search_field'] === 'name') {
+                    if ($entry['name'] === $customer->first_name) {
+                        return $entry;
+                    }
+                }
+
+                else if ($settings['customer_search_field'] === 'contact_email') {
+                    foreach ($entry['column_values'] as $column) {
+                        if ($column['id'] === 'contact_email' && $column['text'] === $customer->email) {
+                            return $entry;
+                        }
+                    }
+                }
+
+                else if ($settings['customer_search_field'] === 'contact_phone') {
+                    foreach ($entry['column_values'] as $column) {
+                        if ($column['id'] === 'contact_phone' && $phoneNormalizer->compare($column['text'], $customer->first_name)[0] == true) {
+                            return $entry;
+                        }
+                    }
+                }
+            }
+            return [];
         }
         $items = [];
-    
+
+
         if ($result) {
             // We found a match in our local mappings or via the CallerIdService
             Logger::info('MondayIntegration: Found customer match using CallerIdService', [

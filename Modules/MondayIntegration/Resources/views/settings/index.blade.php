@@ -117,6 +117,14 @@
                         </p>
                     </div>
                 </div>
+
+                <div class="form-group margin-top">
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <a href="{{route('monday.settings.clear')}}" class="btn btn-primary">
+                            {{ __('Clear Mappings') }}
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Advanced Settings -->

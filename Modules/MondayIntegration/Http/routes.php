@@ -10,6 +10,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         // Settings
         Route::get('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@index')->name('settings');
         Route::post('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@save')->name('settings.save');
+        Route::get('/clear-mapping', 'MondaySettingsController@clearMapping')->name('settings.clear');
 
         // Pullboard Settings
         Route::get('/mailbox/{mailbox_id}/pullboard', 'MondaySettingsController@pullboardSettings')->name('settings.pullboard');
@@ -17,6 +18,10 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         // Pushboard Settings
         Route::get('/mailbox/{mailbox_id}/pushboard', 'MondaySettingsController@pushboardSettings')->name('settings.pushboard');
 
+        // Queue Settings
+        Route::get('/mailbox/{mailbox_id}/queue', 'QueueSettingsController@index')->name('queue_settings');
+        Route::post('/queue/save', 'QueueSettingsController@save')->name('queue_settings.save');
+        
         // Field Mapping
         Route::get('/mailbox/{mailbox_id}/field-mapping', 'FieldMappingController@index')->name('mappings');
         Route::post('/field-mapping/save', 'FieldMappingController@save')->name('mappings.save');
@@ -28,16 +33,6 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::post('/settings/field-mapping/suggest', 'FieldMappingController@suggestMappings')->name('mappings.suggest');
         Route::post('/settings/field-mapping/validate-compatibility', 'FieldMappingController@validateCompatibility')->name('mappings.validate-compatibility');
         
-        // Queue Settings
-        Route::get('/mailbox/{mailbox_id}/queue', 'QueueSettingsController@index')->name('queue_settings');
-        Route::post('/queue/save', 'QueueSettingsController@save')->name('queue_settings.save');
-
-        // Board Creation
-        Route::get('/board-creation', 'BoardCreationController@index')->name('board-creation.index');
-        Route::post('board-creation/create', 'BoardCreationController@createBoard')->name('board-creation.create');
-        Route::get('board-creation/templates', 'BoardCreationController@getTemplates')->name('board-creation.templates');
-        Route::get('board-creation/users', 'BoardCreationController@getUsers')->name('board-creation.users');
-
         // Sidebar routes
         Route::get('/mailbox/{mailbox_id}/sidebar', 'SidebarWidgetController@index')->name('sidebar_settings');
         Route::get('/sidebarWidget/{conversationId}', 'SidebarController@sidebarWidget')->name('sidebar_widget');
@@ -53,5 +48,11 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::post('/sidebar/execute-action', 'SidebarController@executeAction')->name('sidebar.execute_action');
         Route::post('/sidebar/search-for-linking', 'SidebarController@searchForLinking')->name('sidebar.search_for_linking');
         Route::post('/sidebar/create-manual-link', 'SidebarController@createManualLink')->name('sidebar.create_manual_link');
+
+        // Board Creation
+        Route::get('/board-creation', 'BoardCreationController@index')->name('board-creation.index');
+        Route::post('board-creation/create', 'BoardCreationController@createBoard')->name('board-creation.create');
+        Route::get('board-creation/templates', 'BoardCreationController@getTemplates')->name('board-creation.templates');
+        Route::get('board-creation/users', 'BoardCreationController@getUsers')->name('board-creation.users');
     });
 });

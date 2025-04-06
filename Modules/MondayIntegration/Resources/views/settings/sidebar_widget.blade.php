@@ -44,10 +44,10 @@
                     <label class="col-sm-3 control-label">{{ __('Customer Search Field') }}</label>
                     <div class="col-sm-9">
                         <select name="customer_search_field" class="form-control">
-                            <option value="email" {{ (old('customer_search_field', $settings['customer_search_field'] ?? 'email') == 'email') ? 'selected' : '' }}>
+                            <option value="contact_email" {{ (old('customer_search_field', $settings['customer_search_field'] ?? 'email') == 'email') ? 'selected' : '' }}>
                                 {{ __('Email') }}
                             </option>
-                            <option value="phone" {{ (old('customer_search_field', $settings['customer_search_field'] ?? '') == 'phone') ? 'selected' : '' }}>
+                            <option value="contact_phone" {{ (old('customer_search_field', $settings['customer_search_field'] ?? '') == 'phone') ? 'selected' : '' }}>
                                 {{ __('Phone') }}
                             </option>
                             <option value="name" {{ (old('customer_search_field', $settings['customer_search_field'] ?? '') == 'name') ? 'selected' : '' }}>
