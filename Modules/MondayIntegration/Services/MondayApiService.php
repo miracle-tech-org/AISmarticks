@@ -213,7 +213,8 @@ class MondayApiService
         throw new \Exception('Board not found or access denied');
     }
 
-    public function getBoardItems($boardId) {
+    public function getBoardItems($boardId)
+    {
         $query = <<<GRAPHQL
         {
             boards(ids: $boardId) {
@@ -239,5 +240,51 @@ class MondayApiService
             return $response['boards'][0];
         }
         return [];
+    }
+
+    public function getBoardTemplates()
+    {
+        $query = <<<GRAPHQL
+        query {
+          boards (state: templates) {
+            id
+            name
+            description
+            board_kind
+            board_folder_id
+          }
+        }
+        GRAPHQL;
+        
+        try {
+            $response = $this->executeQuery($query);
+            
+            if (isset($response['data']['boards'])) {
+                return $response['data']['boards'];
+            }
+            
+            return [];
+        } catch (\Exception $e) {
+            Log::error('MondayIntegration: Error getting board templates: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function createBoard($board_name, $board_kind)
+    {
+        $query = <<<GRAPHQL
+        mutation {
+            create_board (board_name: "$board_name", board_kind: $board_kind) {
+                id
+            }
+        }
+        GRAPHQL;
+
+        try {
+            $response = $this->executeQuery($query);
+            return $response;
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
 }

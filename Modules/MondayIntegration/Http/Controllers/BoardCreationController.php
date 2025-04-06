@@ -9,6 +9,7 @@ use Modules\MondayIntegration\Helpers\Logger;
 use Modules\MondayIntegration\Services\BoardCreationService;
 use Modules\MondayIntegration\Services\MondayApiService;
 use Modules\MondayIntegration\Services\SecurityService;
+use App\Mailbox;
 
 /**
  * Controller for board creation functionality
@@ -42,15 +43,14 @@ class BoardCreationController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index($mailbox_id)
     {
         // Get available templates
+        $mailbox = Mailbox::findOrFail($mailbox_id);
         $templates = $this->boardCreationService->getAvailableTemplates();
-        var_dump($templates);
-        exit();
-
         return view('mondayintegration::board_creation.index', [
-            'templates' => $templates
+            'templates' => $templates,
+            'mailbox' => $mailbox
         ]);
     }
 

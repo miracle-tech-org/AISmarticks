@@ -127,6 +127,64 @@
                 </div>
             </div>
         </form>
+
+        <div class="form-horizontal">
+            <div class="form-section">
+                <h3>{{ __('Create Pushboard') }}</h3>
+                <p class="help-block">
+                    {{ __('Create Monday.com Board') }}
+                </p>
+                
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Board Name') }}</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="board_name" class="form-control" />
+                        <p class="help-block">
+                            {{ __('Enter a name for your new board') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="board_kind">{{ __('Board Visibility') }}</label>
+                    <div class="col-sm-9">
+                        <select class="form-control" id="board_kind">
+                            <option value="public">{{ __('Public') }}</option>
+                            <option value="private">{{ __('Private') }}</option>
+                            <option value="share">{{ __('Shareable') }}</option>
+                        </select>
+                        <p class="help-block">
+                            {{ __('Select the visibility level for your board') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="fields">{{ __('Fields') }}</label>
+                    <div class="col-sm-9">
+                        <select id="fields" name="fields" class="form-control">
+                            <option value="" selected>{{ __('Select All') }}</option>
+                            @foreach ($fields as $category => $items)
+                                <optgroup label="{{ $category }}">
+                                    @foreach ($items as $key => $value)
+                                        <option value="{{ $key }}">{{ $value }} ({{ $key }})</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+
+                        <p class="help-block">
+                            {{ __('Select the visibility level for your board') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group margin-top">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <button id="btn-create-board" class="btn btn-primary">Create a Pushboard</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -174,6 +232,23 @@
 
 <script>
     window.onload = function() {
+        $("#btn-create-board").on('click', function() {
+            var board_name = $("#board_name").val();
+            if(board_name == '') {
+                showFloatingAlert('error', 'Please input board name');
+                return;
+            }
+            var board_kind = $("#board_kind").val();
+            var url = "{{route('monday.board.save')}}";
+            $.post(url, {
+                board_name: board_name,
+                board_kind: board_kind,
+            }, (res) => {
+                showFloatingAlert('success', 'Saved successfully.');
+                location.reload();
+            })
+        });
+
         // Test board connection
         $('.test-board-connection').on('click', function() {
             var $button = $(this);

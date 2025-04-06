@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Modules\MondayIntegration\Services\MondayApiService;
 use Modules\MondayIntegration\Services\SecurityService;
 use Modules\MondayIntegration\Models\MondaySettings;
+use Modules\MondayIntegration\Services\FieldMappingAssistantService;
 use App\Mailbox;
 
 class MondaySettingsController extends Controller
@@ -214,11 +215,14 @@ class MondaySettingsController extends Controller
             session()->flash('error', $e->getMessage());
         }
         $mailbox = Mailbox::findOrFail($mailbox_id);
+        $fieldService = new FieldMappingAssistantService;
+        $fields = $fieldService->getAllAvailableFields();
 
         return view('mondayintegration::settings.pushboard', [
             'settings' => $settings,
             'boards' => $boards,
-            'mailbox' => $mailbox
+            'mailbox' => $mailbox,
+            'fields' => $fields
         ]);
     }
 
@@ -227,5 +231,13 @@ class MondaySettingsController extends Controller
         MondaySettings::where('key', 'pullboard_id')->delete();
         MondaySettings::where('key', 'pushboard_id')->delete();
         return redirect()->back();
+    }
+
+    public function createBoard(Request $request)
+    {
+        $board_name = $request->board_name;
+        $board_kind = $request->board_kind;
+
+        return $this->mondayApi->createBoard($board_name, $board_kind);
     }
 }

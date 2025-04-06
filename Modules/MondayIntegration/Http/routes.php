@@ -17,6 +17,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         
         // Pushboard Settings
         Route::get('/mailbox/{mailbox_id}/pushboard', 'MondaySettingsController@pushboardSettings')->name('settings.pushboard');
+        Route::post('/pullboard/create',              'MondaySettingsController@createBoard')->name('board.save');
 
         // Queue Settings
         Route::get('/mailbox/{mailbox_id}/queue', 'QueueSettingsController@index')->name('queue_settings');
@@ -48,11 +49,5 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::post('/sidebar/execute-action', 'SidebarController@executeAction')->name('sidebar.execute_action');
         Route::post('/sidebar/search-for-linking', 'SidebarController@searchForLinking')->name('sidebar.search_for_linking');
         Route::post('/sidebar/create-manual-link', 'SidebarController@createManualLink')->name('sidebar.create_manual_link');
-
-        // Board Creation
-        Route::get('/board-creation', 'BoardCreationController@index')->name('board-creation.index');
-        Route::post('board-creation/create', 'BoardCreationController@createBoard')->name('board-creation.create');
-        Route::get('board-creation/templates', 'BoardCreationController@getTemplates')->name('board-creation.templates');
-        Route::get('board-creation/users', 'BoardCreationController@getUsers')->name('board-creation.users');
     });
 });
