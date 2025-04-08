@@ -40,7 +40,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Pushboard ID') }}</label>
                     <div class="col-sm-9">
-                        <select name="pushboard_id" class="form-control" required>
+                        <select name="pushboard_id" id="pushboard_id" class="form-control" required>
                             <option value="">{{ __('Select Board') }}</option>
                             @foreach($boards['boards'] as $board)
                                 <option value="{{ $board['id'] }}" 
@@ -60,7 +60,28 @@
                         <button type="button" class="btn btn-default test-board-connection">
                             {{ __('Test Board Connection') }}
                         </button>
+
+                        <button type="button" class="btn btn-primary" id="btn-add">
+                            {{ __('Add New Item') }}
+                        </button>
                         <span class="connection-status"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Items') }}</label>
+                    <div class="col-sm-9">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Settings</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblItems">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -229,9 +250,79 @@
 </style>
 @endpush
 @endsection
+<style>
+    .modal-backdrop {
+        z-index: 999 !important;
+    }
+</style>
+
+<!-- Modal Structure -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Create New Item</h5>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ __('Item Name') }}</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="item_name" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-close">Close</button>
+                <button type="button" class="btn btn-primary" id="btn-item-save">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+
     window.onload = function() {
+        const loadItems = () => {
+            var board_id = $("#pushboard_id").val();
+            if(board_id == "") {
+                $("#tblItems").html("");
+                return;
+            }
+
+            var url = "{{route('monday.get.board-items')}}";
+            var data = { board_id: board_id }
+            $.post(url, data, (res) => {
+                var html = '';
+                for(var i = 0; i < res.items_page.items.length; i++) {
+                    var item = res.items_page.items[i];
+                    html += `
+                        <tr id="tr${item.id}">
+                            <td>${item.id}</td>
+                            <td>${item.name}</td>
+                            <td><button type="button" data-item-id="${item.id}" class="btnSettings btn btn-danger">Delete</button></td>
+                        </tr>
+                    `
+                }
+                $("#tblItems").html(html);
+            })
+        }
+
+        $(document).on("click", ".btnSettings", function() {
+            var itemId = $(this).data("item-id");
+            if(!confirm(`Are you sure to delete this item(${itemId})?`))
+                return;
+
+            var data = {itemId: itemId};
+            var url = "{{route('monday.delete.board-item')}}"
+            $.post(url, data, (res) => {
+                $(`#tr${itemId}`).remove();
+            })
+        });
+
+        $("#pushboard_id").on('change', loadItems)
         $("#btn-create-board").on('click', function() {
             var board_name = $("#board_name").val();
             if(board_name == '') {
@@ -292,5 +383,31 @@
                 }
             });
         });
+
+        $("#btn-add").on('click', function() {
+            $("#exampleModal").modal();
+        })
+
+        $("#btn-close").on('click', function() {
+            $("#exampleModal").modal('hide');
+        })
+
+        $("#btn-item-save").on('click', function() {
+            var item_name = $("#item_name").val();
+            if(item_name == "")
+                return;
+
+            var data = {
+                board_id: $("#pushboard_id").val(),
+                item_name: item_name
+            }
+            var url = "{{route('monday.create.board-item')}}"
+            $.post(url, data, (res) => {
+                loadItems();
+                $("#exampleModal").modal('hide');
+            })
+        })
+
+        loadItems();
     };
 </script>

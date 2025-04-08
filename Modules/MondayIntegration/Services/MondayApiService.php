@@ -74,7 +74,7 @@ class MondayApiService
             return $data['data'];
 
         } catch (RequestException $e) {
-            return "error";
+            return $e->getMessage();
         }
     }
 
@@ -102,23 +102,22 @@ class MondayApiService
         return null;
     }
 
-    public function createItem($boardId, $itemName, $columnValues)
+    public function createItem($boardId, $itemName, $columnValues = [])
     {
-        $query = '
-            mutation (
-                $boardId: Int!
-                $itemName: String!
-                $columnValues: JSON!
-            ) {
-                create_item (
+        $query = <<<GRAPHQL
+            mutation {
+                create_item(
                     board_id: $boardId,
-                    item_name: $itemName,
-                    column_values: $columnValues
+                    item_name: "$itemName",
+                    column_values: "{\"date\": \"2023-10-15\", \"location\": \"New York\", \"status\": \"Done\"}"
                 ) {
                     id
+                    name
+                    created_at
                 }
             }
-        ';
+        GRAPHQL;
+        ;
 
         return $this->executeQuery($query, [
             'boardId' => (int)$boardId,
@@ -240,6 +239,20 @@ class MondayApiService
             return $response['boards'][0];
         }
         return [];
+    }
+
+    public function removeBoardItem($itemId)
+    {
+        $query = <<<GRAPHQL
+        mutation {
+            delete_item(item_id: $itemId) {
+                id
+            }
+        }
+        GRAPHQL;
+
+        $response = $this->executeQuery($query);
+        return $response;
     }
 
     public function getBoardTemplates()

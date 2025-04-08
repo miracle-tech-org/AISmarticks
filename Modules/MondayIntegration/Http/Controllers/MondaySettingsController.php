@@ -240,4 +240,23 @@ class MondaySettingsController extends Controller
 
         return $this->mondayApi->createBoard($board_name, $board_kind);
     }
+
+    public function getBoardItems(Request $request)
+    {
+        $board_id = $request->board_id;
+        return $this->mondayApi->getBoardItems($board_id);
+    }
+
+    public function deleteBoardItem(Request $request)
+    {
+        $itemId = $request->itemId;
+        return $this->mondayApi->removeBoardItem($itemId);
+    }
+
+    public function createBoardItem(Request $request)
+    {
+        $board_id = $request->board_id;
+        $item_name = $request->item_name;
+        return $this->mondayApi->createItem($board_id, $item_name);
+    }
 }

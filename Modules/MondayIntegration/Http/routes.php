@@ -10,6 +10,9 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         // Settings
         Route::get('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@index')->name('settings');
         Route::post('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@save')->name('settings.save');
+        Route::post('/get-monday-items', 'MondaySettingsController@getBoardItems')->name('get.board-items');
+        Route::post('/delete-board-item', 'MondaySettingsController@deleteBoardItem')->name('delete.board-item');
+        Route::post('/create-board-item', 'MondaySettingsController@createBoardItem')->name('create.board-item');
         Route::get('/clear-mapping', 'MondaySettingsController@clearMapping')->name('settings.clear');
 
         // Pullboard Settings
