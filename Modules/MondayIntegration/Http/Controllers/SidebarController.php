@@ -78,7 +78,6 @@ class SidebarController extends Controller
         if (!$conversation) {
             return '';
         }
-
         // Get the customer
         $customer = $conversation->customer;
         if (!$customer) {
@@ -321,7 +320,6 @@ class SidebarController extends Controller
 
         // This will check local mappings first using the cascading search strategy
         $result = $this->callerIdService->findMondayItemByConversation($conversation, $boardId);
-
         if (is_null($result)) {
             // If no match found via conversation, try customer directly
             // $result = $this->mondayApi->searchItems($boardId, $settings['customer_search_field'], $customer->first_name);
@@ -341,7 +339,7 @@ class SidebarController extends Controller
 
                 else if ($settings['customer_search_field'] === 'contact_email') {
                     foreach ($entry['column_values'] as $column) {
-                        if ($column['id'] === 'contact_email' && $column['text'] === $customer->email) {
+                        if ($column['type'] === 'email' && $column['text'] === $conversation->customer_mail) {
                             return $entry;
                         }
                     }
@@ -349,7 +347,8 @@ class SidebarController extends Controller
 
                 else if ($settings['customer_search_field'] === 'contact_phone') {
                     foreach ($entry['column_values'] as $column) {
-                        if ($column['id'] === 'contact_phone' && $phoneNormalizer->compare($column['text'], $customer->first_name)[0] == true) {
+                        if($customer->phones == "") break;
+                        if ($column['type'] === 'phone' && $phoneNormalizer->compare($column['text'], json_decode($customer->phones)[0]->value)[0] == true) {
                             return $entry;
                         }
                     }
