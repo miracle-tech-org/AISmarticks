@@ -184,7 +184,7 @@
                     <label class="col-sm-3 control-label" for="fields">{{ __('Fields') }}</label>
                     <div class="col-sm-9">
                         <select id="fields" name="fields" class="form-control">
-                            <option value="" selected>{{ __('Select All') }}</option>
+                            <option value="all" selected>{{ __('Select All') }}</option>
                             @foreach ($fields as $category => $items)
                                 <optgroup label="{{ $category }}">
                                     @foreach ($items as $key => $value)
@@ -330,10 +330,12 @@
                 return;
             }
             var board_kind = $("#board_kind").val();
+            var fields = $("#fields").val();
             var url = "{{route('monday.board.save')}}";
             $.post(url, {
                 board_name: board_name,
                 board_kind: board_kind,
+                fields: fields,
             }, (res) => {
                 showFloatingAlert('success', 'Saved successfully.');
                 location.reload();
