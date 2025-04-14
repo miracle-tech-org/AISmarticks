@@ -126,29 +126,352 @@ class MondayApiService
         ]);
     }
 
-    public function createItemsWithAll($boardId)
+    public function createColumn($boardId)
     {
         $query = <<<GRAPHQL
             mutation {
-                item1: create_item(board_id: $boardId, item_name: "User Data", column_values: "{\"user.id\":\"User ID\",\"user.first_name\":\"First Name\",\"user.last_name\":\"Last Name\",\"user.email\":\"Email Address\",\"user.phone\":\"Phone Number\",\"user.job_title\":\"Job Title\",\"user.timezone\":\"Timezone\",\"user.photo_url\":\"Profile Picture URL\",\"user.role\":\"User Role\",\"user.status\":\"User Status\",\"user.created_at\":\"Created Date\",\"user.updated_at\":\"Last Updated Date\"}") {
+                user_id: create_column(board_id: $boardId, title: "User ID", column_type: text) {
                     id
-                    name
+                    title
+                    type
                 }
-                item2: create_item(board_id: $boardId, item_name: "Customer Data", column_values: "{\"customer.id\":\"Customer ID\",\"customer.first_name\":\"First Name\",\"customer.last_name\":\"Last Name\",\"customer.email\":\"Email Address\",\"customer.emails\":\"All Email Addresses\",\"customer.phone\":\"Phone Number\",\"customer.company\":\"Company\",\"customer.job_title\":\"Job Title\",\"customer.address\":\"Address\",\"customer.city\":\"City\",\"customer.state\":\"State\",\"customer.zip\":\"Zip/Postal Code\",\"customer.country\":\"Country\",\"customer.website\":\"Website\",\"customer.social_profiles\":\"Social Profiles\",\"customer.photo_url\":\"Profile Picture URL\",\"customer.created_at\":\"Created Date\",\"customer.updated_at\":\"Last Updated Date\"}") {
+            }
+        GRAPHQL;
+    }
+
+    public function createColumnsWithAllFields($boardId)
+    {
+        $query = <<<GRAPHQL
+            mutation {
+                user_id: create_column(board_id: $boardId, title: "User ID", column_type: text) {
                     id
-                    name
+                    title
+                    type
                 }
-                item3: create_item(board_id: $boardId, item_name: "Conversation Data", column_values: "{\"conversation.id\":\"Conversation ID\",\"conversation.number\":\"Conversation Number\",\"conversation.subject\":\"Subject\",\"conversation.customer_id\":\"Customer ID\",\"conversation.mailbox_id\":\"Mailbox ID\",\"conversation.folder_id\":\"Folder ID\",\"conversation.status\":\"Status\",\"conversation.state\":\"State\",\"conversation.preview\":\"Preview\",\"conversation.source_via\":\"Source Via\",\"conversation.source_type\":\"Source Type\",\"conversation.created_at\":\"Created Date\",\"conversation.updated_at\":\"Last Updated Date\",\"conversation.user_updated_at\":\"Last Updated by User Date\",\"conversation.closed_at\":\"Closed Date\",\"conversation.assigned_to\":\"Assigned User ID\",\"conversation.last_reply_at\":\"Last Reply Date\",\"conversation.last_reply_from\":\"Last Reply From\",\"conversation.has_attachments\":\"Has Attachments\"}") {
+                user_first_name: create_column(board_id: $boardId, title: "First Name", column_type: text) {
                     id
-                    name
+                    title
+                    type
                 }
-                item4: create_item(board_id: $boardId, item_name: "Thread Data", column_values: "{\"thread.id\":\"Thread ID\",\"thread.conversation_id\":\"Conversation ID\",\"thread.user_id\":\"User ID\",\"thread.customer_id\":\"Customer ID\",\"thread.type\":\"Type\",\"thread.state\":\"State\",\"thread.status\":\"Status\",\"thread.body\":\"Body\",\"thread.headers\":\"Headers\",\"thread.has_attachments\":\"Has Attachments\",\"thread.created_at\":\"Created Date\",\"thread.updated_at\":\"Last Updated Date\",\"thread.source_via\":\"Source Via\",\"thread.source_type\":\"Source Type\"}") {
+                user_last_name: create_column(board_id: $boardId, title: "Last Name", column_type: text) {
                     id
-                    name
+                    title
+                    type
                 }
-                item5: create_item(board_id: $boardId, item_name: "Custom Fields", column_values: "{\"custom_fields.1\":\"Custom field1\",\"custom_fields.2\":\"Custom field2\",\"custom_fields.15\":\"custom field test\"}") {
+                user_email: create_column(board_id: $boardId, title: "Email Address", column_type: email) {
                     id
-                    name
+                    title
+                    type
+                }
+                user_phone: create_column(board_id: $boardId, title: "Phone Number", column_type: phone) {
+                    id
+                    title
+                    type
+                }
+                user_job_title: create_column(board_id: $boardId, title: "Job Title", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                user_timezone: create_column(board_id: $boardId, title: "Timezone", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                user_photo_url: create_column(board_id: $boardId, title: "Profile Picture URL", column_type: link) {
+                    id
+                    title
+                    type
+                }
+                user_role: create_column(board_id: $boardId, title: "User Role", column_type: dropdown) {
+                    id
+                    title
+                    type
+                }
+                user_status: create_column(board_id: $boardId, title: "User Status", column_type: status) {
+                    id
+                    title
+                    type
+                }
+                user_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                user_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                customer_id: create_column(board_id: $boardId, title: "Customer ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_first_name: create_column(board_id: $boardId, title: "First Name", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_last_name: create_column(board_id: $boardId, title: "Last Name", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_email: create_column(board_id: $boardId, title: "Email Address", column_type: email) {
+                    id
+                    title
+                    type
+                }
+                customer_emails: create_column(board_id: $boardId, title: "All Email Addresses", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_phone: create_column(board_id: $boardId, title: "Phone Number", column_type: phone) {
+                    id
+                    title
+                    type
+                }
+                customer_company: create_column(board_id: $boardId, title: "Company", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_job_title: create_column(board_id: $boardId, title: "Job Title", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_address: create_column(board_id: $boardId, title: "Address", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_city: create_column(board_id: $boardId, title: "City", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_state: create_column(board_id: $boardId, title: "State", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_zip: create_column(board_id: $boardId, title: "Zip/Postal Code", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                customer_country: create_column(board_id: $boardId, title: "Country", column_type: country) {
+                    id
+                    title
+                    type
+                }
+                customer_website: create_column(board_id: $boardId, title: "Website", column_type: link) {
+                    id
+                    title
+                    type
+                }
+                customer_social_profiles: create_column(board_id: $boardId, title: "Social Profiles", column_type: link) {
+                    id
+                    title
+                    type
+                }
+                customer_photo_url: create_column(board_id: $boardId, title: "Profile Picture URL", column_type: link) {
+                    id
+                    title
+                    type
+                }
+                customer_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                customer_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                conversation_id: create_column(board_id: $boardId, title: "Conversation ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_number: create_column(board_id: $boardId, title: "Conversation Number", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_subject: create_column(board_id: $boardId, title: "Subject", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_customer_id: create_column(board_id: $boardId, title: "Customer ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_mailbox_id: create_column(board_id: $boardId, title: "Mailbox ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_folder_id: create_column(board_id: $boardId, title: "Folder ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_status: create_column(board_id: $boardId, title: "Status", column_type: status) {
+                    id
+                    title
+                    type
+                }
+                conversation_state: create_column(board_id: $boardId, title: "State", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_preview: create_column(board_id: $boardId, title: "Preview", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_source_via: create_column(board_id: $boardId, title: "Source Via", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_source_type: create_column(board_id: $boardId, title: "Source Type", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                conversation_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                conversation_user_updated_at: create_column(board_id: $boardId, title: "Last Updated by User Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                conversation_closed_at: create_column(board_id: $boardId, title: "Closed Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                conversation_assigned_to: create_column(board_id: $boardId, title: "Assigned User ID", column_type: people) {
+                    id
+                    title
+                    type
+                }
+                conversation_last_reply_at: create_column(board_id: $boardId, title: "Last Reply Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                conversation_last_reply_from: create_column(board_id: $boardId, title: "Last Reply From", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                conversation_has_attachments: create_column(board_id: $boardId, title: "Has Attachments", column_type: checkbox) {
+                    id
+                    title
+                    type
+                }
+                thread_id: create_column(board_id: $boardId, title: "Thread ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_conversation_id: create_column(board_id: $boardId, title: "Conversation ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_user_id: create_column(board_id: $boardId, title: "User ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_customer_id: create_column(board_id: $boardId, title: "Customer ID", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_type: create_column(board_id: $boardId, title: "Type", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_state: create_column(board_id: $boardId, title: "State", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_status: create_column(board_id: $boardId, title: "Status", column_type: status) {
+                    id
+                    title
+                    type
+                }
+                thread_body: create_column(board_id: $boardId, title: "Body", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_headers: create_column(board_id: $boardId, title: "Headers", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_has_attachments: create_column(board_id: $boardId, title: "Has Attachments", column_type: checkbox) {
+                    id
+                    title
+                    type
+                }
+                thread_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                thread_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                    id
+                    title
+                    type
+                }
+                thread_source_via: create_column(board_id: $boardId, title: "Source Via", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                thread_source_type: create_column(board_id: $boardId, title: "Source Type", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                custom_fields_1: create_column(board_id: $boardId, title: "Custom field1", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                custom_fields_2: create_column(board_id: $boardId, title: "Custom field2", column_type: text) {
+                    id
+                    title
+                    type
+                }
+                custom_fields_15: create_column(board_id: $boardId, title: "custom field test", column_type: text) {
+                    id
+                    title
+                    type
                 }
             }
         GRAPHQL;

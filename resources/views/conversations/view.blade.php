@@ -425,7 +425,7 @@
     initConversation();
 @endsection
 
-@if (\Module::isActive('aiassistant'))
+@if (\Module::isActive('mondayintegration'))
 <script>
     window.onload = async function() {
         var conversationId = "{{ $conversation->id }}";
