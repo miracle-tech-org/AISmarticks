@@ -9,6 +9,8 @@ use Illuminate\Routing\Controller;
 
 use Modules\AIAssistant\Jobs\ProcessAIResponse;
 use Modules\AIAssistant\Models\Ticket;
+use GuzzleHttp\Client;
+use App\Thread;
 
 class TelegramIntegrationController extends Controller
 {
@@ -47,6 +49,22 @@ class TelegramIntegrationController extends Controller
                 $ticket->message = $tgMessage->message->text;
                 $job = new ProcessAIResponse($ticket);
                 $job->execute();
+            }
+
+            if(\Module::isActive('mondayintegration')) {
+                try {
+                    $thread = Thread::latest('id')->first();
+                    $requestData = [
+                        'conversation_id' => $thread->conversation_id,
+                        'thread_id' => $thread->id
+                    ];
+                    $client = new Client();
+                    $client->request('POST', route('monday.send.pushboard.item'), [
+                        'http_errors' => false,
+                        'json' => $requestData
+                    ]);
+                } catch (\Exception $e) {
+                }
             }
         });
 

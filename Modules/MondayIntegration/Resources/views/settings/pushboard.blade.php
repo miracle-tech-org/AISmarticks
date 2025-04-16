@@ -102,23 +102,23 @@
                         </div>
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" name="push_on_conversation_assigned" value="1" 
-                                    {{ old('push_on_conversation_assigned', $settings['push_on_conversation_assigned'] ?? '') ? 'checked' : '' }}>
-                                {{ __('When a conversation is assigned') }}
+                                <input type="checkbox" name="push_on_conversation_updated" value="1" 
+                                    {{ old('push_on_conversation_updated', $settings['push_on_conversation_updated'] ?? '') ? 'checked' : '' }}>
+                                {{ __('When a conversation is updated') }}
                             </label>
                         </div>
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" name="push_on_conversation_status_changed" value="1" 
-                                    {{ old('push_on_conversation_status_changed', $settings['push_on_conversation_status_changed'] ?? '') ? 'checked' : '' }}>
-                                {{ __('When conversation status changes') }}
+                                <input type="checkbox" name="push_on_conversation_closed" value="1" 
+                                    {{ old('push_on_conversation_closed', $settings['push_on_conversation_closed'] ?? '') ? 'checked' : '' }}>
+                                {{ __('When conversation closed') }}
                             </label>
                         </div>
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" name="push_on_customer_created" value="1" 
-                                    {{ old('push_on_customer_created', $settings['push_on_customer_created'] ?? '') ? 'checked' : '' }}>
-                                {{ __('When a new customer is created') }}
+                                <input type="checkbox" name="push_on_conversation_fully_closed" value="1" 
+                                    {{ old('push_on_conversation_fully_closed', $settings['push_on_conversation_fully_closed'] ?? '') ? 'checked' : '' }}>
+                                {{ __('When conversation fully closed') }}
                             </label>
                         </div>
                     </div>

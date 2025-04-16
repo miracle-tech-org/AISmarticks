@@ -25,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Validator;
 use DB;
+use GuzzleHttp\Client;
 
 class ConversationsController extends Controller
 {
@@ -2141,6 +2142,20 @@ class ConversationsController extends Controller
                         );
                     }
                 }
+                // if(\Module::isActive('mondayintegration')) {
+                //     try {
+                //         $requestData = [
+                //             'conversation_id' => $conversation->id,
+                //             'thread_id' => $thread->id
+                //         ];
+                //         $client = new Client();
+                //         $client->request('POST', route('monday.send.pushboard.item'), [
+                //             'http_errors' => false,
+                //             'json' => $requestData
+                //         ]);
+                //     } catch (\Exception $e) {
+                //     }
+                // }
                 break;
 
             // Send reply, new conversation, add note or forward

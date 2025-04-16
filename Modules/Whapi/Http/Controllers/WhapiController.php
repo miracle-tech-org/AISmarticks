@@ -16,6 +16,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Storage;
 use App\Subscription;
+use GuzzleHttp\Client;
 
 use Modules\AIAssistant\Jobs\ProcessAIResponse;
 use Modules\AIAssistant\Models\Ticket;
@@ -317,6 +318,22 @@ class WhapiController extends Controller
 					$job = new ProcessAIResponse($ticket);
 					$job->execute();
 				}
+
+				if(\Module::isActive('mondayintegration')) {
+                    try {
+        				$thread = Thread::latest('id')->first();
+                        $requestData = [
+                            'conversation_id' => $thread->conversation_id,
+                            'thread_id' => $thread->id
+                        ];
+                        $client = new Client();
+                        $client->request('POST', route('monday.send.pushboard.item'), [
+                            'http_errors' => false,
+                            'json' => $requestData
+                        ]);
+                    } catch (\Exception $e) {
+                    }
+                }
 			}
 		}
 	}

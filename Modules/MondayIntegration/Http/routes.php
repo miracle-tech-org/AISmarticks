@@ -14,6 +14,8 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::post('/delete-board-item', 'MondaySettingsController@deleteBoardItem')->name('delete.board-item');
         Route::post('/create-board-item', 'MondaySettingsController@createBoardItem')->name('create.board-item');
         Route::get('/clear-mapping', 'MondaySettingsController@clearMapping')->name('settings.clear');
+        Route::post('/get-board-by-id', 'MondaySettingsController@getBoardById')->name('getboardbyid');
+        Route::post('/send-push-board-item', 'MondaySettingsController@sendPushboardItem')->name('send.pushboard.item');
 
         // Pullboard Settings
         Route::get('/mailbox/{mailbox_id}/pullboard', 'MondaySettingsController@pullboardSettings')->name('settings.pullboard');

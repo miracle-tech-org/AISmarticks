@@ -348,8 +348,10 @@ class SidebarController extends Controller
                 else if ($settings['customer_search_field'] === 'contact_phone') {
                     foreach ($entry['column_values'] as $column) {
                         if($customer->phones == "") break;
-                        if ($column['type'] === 'phone' && $phoneNormalizer->compare($column['text'], json_decode($customer->phones)[0]->value)[0] == true) {
-                            return $entry;
+                        if (isset($column['type']) && isset($column['text']) &&  $column['type'] === 'phone') {
+                            $lst = json_decode($customer->phones);
+                            if(count($lst) && $phoneNormalizer->compare($column['text'], json_decode($customer->phones)[0]->value)[0]) 
+                                return $entry;
                         }
                     }
                 }

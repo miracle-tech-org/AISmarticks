@@ -11,6 +11,11 @@ use Modules\MondayIntegration\Services\SecurityService;
 use Modules\MondayIntegration\Models\MondaySettings;
 use Modules\MondayIntegration\Services\FieldMappingAssistantService;
 use App\Mailbox;
+use App\Conversation;
+use App\Thread;
+use App\User;
+use DB;
+use GuzzleHttp\Client;
 
 class MondaySettingsController extends Controller
 {
@@ -81,6 +86,9 @@ class MondaySettingsController extends Controller
                     ->withInput()
                     ->with('error', __('Invalid quick actions format: :error', ['error' => $e->getMessage()]));
             }
+        }
+        if($request->has('form_origin') && $request->input('form_origin') == 'pushboard') {
+            MondaySettings::whereIn('key', ['push_on_conversation_created', 'push_on_conversation_closed', 'push_on_conversation_updated', 'push_on_conversation_fully_closed'])->delete();
         }
         // Save all settings
         foreach ($settings as $key => $value) {
@@ -266,5 +274,169 @@ class MondaySettingsController extends Controller
         $board_id = $request->board_id;
         $item_name = $request->item_name;
         return $this->mondayApi->createItem($board_id, $item_name);
+    }
+
+    public function getBoardById(Request $request)
+    {
+        $board_id = $request->board_id;
+        return $this->mondayApi->getBoardById($board_id);
+    }
+
+    public function sendPushboardItem(Request $request)
+    {
+        $pushboard_id = DB::table('monday_settings')
+            ->where('key', 'pushboard_id')
+            ->value('value');
+
+        $responseBody = $this->mondayApi->getBoardById($pushboard_id);
+
+        $conversation_id = $request->conversation_id;
+        $thread_id = $request->thread_id;
+        $conversation = Conversation::find($conversation_id);
+        $thread = Thread::find($thread_id);
+        $column_values = [];
+
+        if ($conversation->user) {
+            $user_data = [
+                'id' => (string)$conversation->user->id,
+                'first_name' => (string)$conversation->user->first_name ?? '',
+                'last_name' => (string)$conversation->user->last_name ?? '',
+                'email' => (string)$conversation->user->email ?? '',
+                'phone' => (string)'',
+                'job_title' => (string)$conversation->user->job_title ?? '',
+                'timezone' => (string)$conversation->user->timezone ?? '',
+                'photo_url' => (string)$conversation->user->photo_url ?? '',
+                'role' => (string)$conversation->user->role ?? '',
+                'status' => (string)$conversation->user->status ?? '',
+                'created_at' => (string)$conversation->user->created_at ?? '',
+                'updated_at' => (string)$conversation->user->updated_at ?? '',
+            ];
+    
+            // Map user data to column IDs
+            foreach ($responseBody['columns'] as $index => $column) {
+                $column_id = $column['id'];
+                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
+    
+                if (isset($user_data[$field_name])) {
+                    $column_values[$column_id] = $user_data[$field_name];
+                }
+            }
+        }
+
+        if ($conversation->customer) {
+            $phone_number = "";
+            $jsonString = (string)$conversation->customer->phones;
+            $jsonArray = json_decode($jsonString, true);
+            if(count($jsonArray)) {
+                $phone_number = $jsonArray[0]['value'];
+            }
+
+            $customer_data = [
+                'id' => (string)$conversation->customer->id,
+                'first_name' => (string)$conversation->customer->first_name ?? '',
+                'last_name' => (string)$conversation->customer->last_name ?? '',
+                'email' => (string)'',
+                'emails' => (string)'',
+                'phones' => (string)$phone_number,
+                'company' => (string)$conversation->customer->company ?? '',
+                'job_title' => (string)$conversation->customer->job_title ?? '',
+                'address' => (string)$conversation->customer->address ?? '',
+                'city' => (string)$conversation->customer->city ?? '',
+                'state' => (string)$conversation->customer->state ?? '',
+                'zip' => (string)$conversation->customer->zip ?? '',
+                'country' => (string)$conversation->customer->country ?? '',
+                'websites' => (string)$conversation->customer->websites ?? '',
+                'social_profiles' => (string)$conversation->customer->social_profiles ?? '',
+                'photo_url' => (string)$conversation->customer->photo_url ?? '',
+                'created_at' => (string)$conversation->customer->created_at ?? '',
+                'updated_at' => (string)$conversation->customer->updated_at ?? '',
+            ];
+    
+            // Map customer data to column IDs
+            foreach ($responseBody['columns'] as $index => $column) {
+                $column_id = $column['id'];
+                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
+    
+                if (isset($customer_data[$field_name])) {
+                    $column_values[$column_id] = $customer_data[$field_name];
+                }
+            }
+        }
+        
+        if($conversation) {
+            $conversation_data = [
+                'id' => (string)$conversation->id,
+                'number' => (string)$conversation->number,
+                'subject' => (string)$conversation->subject,
+                'customer_id' => (string)$conversation->customer_id,
+                'mailbox_id' => (string)$conversation->mailbox_id,
+                'folder_id' => (string)$conversation->folder_id,
+                'status' => (string)$conversation->status,
+                'state' => (string)$conversation->state,
+                'preview' => (string)$conversation->preview,
+                'source_via' => (string)$conversation->source_via,
+                'source_type' => (string)$conversation->source_type,
+                'created_at' => (string)$conversation->created_at,
+                'updated_at' => (string)$conversation->updated_at,
+                'user_updated_at' => (string)$conversation->user_updated_at,
+                'closed_at' => (string)$conversation->closed_at,
+                'assigned_to' => (string)"",
+                'last_reply_at' => (string)$conversation->last_reply_at,
+                'last_reply_from' => (string)$conversation->last_reply_from,
+                'has_attachments' => (string)$conversation->has_attachments,
+            ];
+            // Map customer data to column IDs
+            foreach ($responseBody['columns'] as $index => $column) {
+                $column_id = $column['id'];
+                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
+    
+                if (isset($conversation_data[$field_name])) {
+                    $column_values[$column_id] = $conversation_data[$field_name];
+                }
+            }
+        }
+        if($thread) {
+            $thread_data = [
+                'id' => (string)$thread->id,
+                'conversation_id' => (string)$thread->conversation_id,
+                'user_id' => (string)$thread->user_id,
+                'customer_id' => (string)$thread->customer_id,
+                'type' => (string)$thread->type,
+                'state' => (string)$thread->state,
+                'status' => (string)$thread->status,
+                'body' => (string)$thread->body,
+                'headers' => (string)$thread->headers,
+                'has_attachments' => (string)$thread->has_attachments,
+                'created_at' => (string)$thread->created_at,
+                'updated_at' => (string)$thread->updated_at,
+                'source_via' => (string)$thread->source_via,
+                'source_type' => (string)$thread->source_type,
+            ];
+            // Map customer data to column IDs
+            foreach ($responseBody['columns'] as $index => $column) {
+                $column_id = $column['id'];
+                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
+    
+                if (isset($thread_data[$field_name])) {
+                    $column_values[$column_id] = $thread_data[$field_name];
+                }
+            }
+        }
+
+        $column_values_json = json_encode($column_values);
+        $column_values_json = addslashes($column_values_json);
+
+        $query = <<<GRAPHQL
+            mutation {
+                create_item(
+                    board_id: $pushboard_id,
+                    item_name: "Item $thread->id", 
+                    column_values: "$column_values_json"
+                ) {
+                    id
+                }
+            }
+        GRAPHQL;
+        $this->mondayApi->sendPushboardItem($query);
     }
 }

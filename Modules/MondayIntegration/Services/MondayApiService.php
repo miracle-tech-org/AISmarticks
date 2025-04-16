@@ -67,7 +67,6 @@ class MondayApiService
                 ]
             ]);
             $data = json_decode($response->getBody(), true);
-
             if (isset($data['errors'])) {
                 return "error";
             }
@@ -139,6 +138,44 @@ class MondayApiService
         GRAPHQL;
     }
 
+    public function getBoardById($boardId)
+    {
+        $query = <<<GRAPHQL
+        {
+              boards(ids: [$boardId]) {
+                id
+                name
+                columns {
+                    id
+                    title
+                    type
+                }
+            }
+        }
+        GRAPHQL;
+
+        $response = $this->executeQuery($query);
+        if (isset($response['boards'][0])) {
+            return $response['boards'][0];
+        }
+        return [];
+    }
+
+    public function sendPushboardItem($query)
+    {
+        try {
+            $response = $this->client->post('', [
+                'json' => [
+                    'query' => $query,
+                ]
+            ]);
+            $data = json_decode($response->getBody(), true);
+            return $data;
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
     public function createColumnsWithAllFields($boardId)
     {
         $query = <<<GRAPHQL
@@ -158,12 +195,12 @@ class MondayApiService
                     title
                     type
                 }
-                user_email: create_column(board_id: $boardId, title: "Email Address", column_type: email) {
+                user_email: create_column(board_id: $boardId, title: "Email Address", column_type: text) {
                     id
                     title
                     type
                 }
-                user_phone: create_column(board_id: $boardId, title: "Phone Number", column_type: phone) {
+                user_phone: create_column(board_id: $boardId, title: "Phone Number", column_type: text) {
                     id
                     title
                     type
@@ -178,27 +215,27 @@ class MondayApiService
                     title
                     type
                 }
-                user_photo_url: create_column(board_id: $boardId, title: "Profile Picture URL", column_type: link) {
+                user_photo_url: create_column(board_id: $boardId, title: "Profile Picture URL", column_type: text) {
                     id
                     title
                     type
                 }
-                user_role: create_column(board_id: $boardId, title: "User Role", column_type: dropdown) {
+                user_role: create_column(board_id: $boardId, title: "User Role", column_type: text) {
                     id
                     title
                     type
                 }
-                user_status: create_column(board_id: $boardId, title: "User Status", column_type: status) {
+                user_status: create_column(board_id: $boardId, title: "User Status", column_type: text) {
                     id
                     title
                     type
                 }
-                user_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                user_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: text) {
                     id
                     title
                     type
                 }
-                user_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                user_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: text) {
                     id
                     title
                     type
@@ -218,7 +255,7 @@ class MondayApiService
                     title
                     type
                 }
-                customer_email: create_column(board_id: $boardId, title: "Email Address", column_type: email) {
+                customer_email: create_column(board_id: $boardId, title: "Email Address", column_type: text) {
                     id
                     title
                     type
@@ -228,7 +265,7 @@ class MondayApiService
                     title
                     type
                 }
-                customer_phone: create_column(board_id: $boardId, title: "Phone Number", column_type: phone) {
+                customer_phone: create_column(board_id: $boardId, title: "Phone Number", column_type: text) {
                     id
                     title
                     type
@@ -263,32 +300,32 @@ class MondayApiService
                     title
                     type
                 }
-                customer_country: create_column(board_id: $boardId, title: "Country", column_type: country) {
+                customer_country: create_column(board_id: $boardId, title: "Country", column_type: text) {
                     id
                     title
                     type
                 }
-                customer_website: create_column(board_id: $boardId, title: "Website", column_type: link) {
+                customer_website: create_column(board_id: $boardId, title: "Website", column_type: text) {
                     id
                     title
                     type
                 }
-                customer_social_profiles: create_column(board_id: $boardId, title: "Social Profiles", column_type: link) {
+                customer_social_profiles: create_column(board_id: $boardId, title: "Social Profiles", column_type: text) {
                     id
                     title
                     type
                 }
-                customer_photo_url: create_column(board_id: $boardId, title: "Profile Picture URL", column_type: link) {
+                customer_photo_url: create_column(board_id: $boardId, title: "Profile Picture URL", column_type: text) {
                     id
                     title
                     type
                 }
-                customer_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                customer_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: text) {
                     id
                     title
                     type
                 }
-                customer_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                customer_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: text) {
                     id
                     title
                     type
@@ -323,7 +360,7 @@ class MondayApiService
                     title
                     type
                 }
-                conversation_status: create_column(board_id: $boardId, title: "Status", column_type: status) {
+                conversation_status: create_column(board_id: $boardId, title: "Status", column_type: text) {
                     id
                     title
                     type
@@ -348,32 +385,32 @@ class MondayApiService
                     title
                     type
                 }
-                conversation_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                conversation_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: text) {
                     id
                     title
                     type
                 }
-                conversation_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                conversation_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: text) {
                     id
                     title
                     type
                 }
-                conversation_user_updated_at: create_column(board_id: $boardId, title: "Last Updated by User Date", column_type: date) {
+                conversation_user_updated_at: create_column(board_id: $boardId, title: "Last Updated by User Date", column_type: text) {
                     id
                     title
                     type
                 }
-                conversation_closed_at: create_column(board_id: $boardId, title: "Closed Date", column_type: date) {
+                conversation_closed_at: create_column(board_id: $boardId, title: "Closed Date", column_type: text) {
                     id
                     title
                     type
                 }
-                conversation_assigned_to: create_column(board_id: $boardId, title: "Assigned User ID", column_type: people) {
+                conversation_assigned_to: create_column(board_id: $boardId, title: "Assigned User ID", column_type: text) {
                     id
                     title
                     type
                 }
-                conversation_last_reply_at: create_column(board_id: $boardId, title: "Last Reply Date", column_type: date) {
+                conversation_last_reply_at: create_column(board_id: $boardId, title: "Last Reply Date", column_type: text) {
                     id
                     title
                     type
@@ -383,7 +420,7 @@ class MondayApiService
                     title
                     type
                 }
-                conversation_has_attachments: create_column(board_id: $boardId, title: "Has Attachments", column_type: checkbox) {
+                conversation_has_attachments: create_column(board_id: $boardId, title: "Has Attachments", column_type: text) {
                     id
                     title
                     type
@@ -418,7 +455,7 @@ class MondayApiService
                     title
                     type
                 }
-                thread_status: create_column(board_id: $boardId, title: "Status", column_type: status) {
+                thread_status: create_column(board_id: $boardId, title: "Status", column_type: text) {
                     id
                     title
                     type
@@ -433,17 +470,17 @@ class MondayApiService
                     title
                     type
                 }
-                thread_has_attachments: create_column(board_id: $boardId, title: "Has Attachments", column_type: checkbox) {
+                thread_has_attachments: create_column(board_id: $boardId, title: "Has Attachments", column_type: text) {
                     id
                     title
                     type
                 }
-                thread_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: date) {
+                thread_created_at: create_column(board_id: $boardId, title: "Created Date", column_type: text) {
                     id
                     title
                     type
                 }
-                thread_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: date) {
+                thread_updated_at: create_column(board_id: $boardId, title: "Last Updated Date", column_type: text) {
                     id
                     title
                     type
