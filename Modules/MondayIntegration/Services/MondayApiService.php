@@ -495,6 +495,11 @@ class MondayApiService
                     title
                     type
                 }
+                thread_meta: create_column(board_id: $boardId, title: "Meta", column_type: text) {
+                    id
+                    title
+                    type
+                }
                 custom_fields_1: create_column(board_id: $boardId, title: "Custom field1", column_type: text) {
                     id
                     title

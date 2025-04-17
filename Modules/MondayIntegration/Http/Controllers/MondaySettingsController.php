@@ -289,38 +289,27 @@ class MondaySettingsController extends Controller
             ->value('value');
 
         $responseBody = $this->mondayApi->getBoardById($pushboard_id);
-
         $conversation_id = $request->conversation_id;
         $thread_id = $request->thread_id;
         $conversation = Conversation::find($conversation_id);
         $thread = Thread::find($thread_id);
-        $column_values = [];
+        $column_values = [
+            [$responseBody['columns'][0]['id'] => "Name"]
+        ];
 
         if ($conversation->user) {
-            $user_data = [
-                'id' => (string)$conversation->user->id,
-                'first_name' => (string)$conversation->user->first_name ?? '',
-                'last_name' => (string)$conversation->user->last_name ?? '',
-                'email' => (string)$conversation->user->email ?? '',
-                'phone' => (string)'',
-                'job_title' => (string)$conversation->user->job_title ?? '',
-                'timezone' => (string)$conversation->user->timezone ?? '',
-                'photo_url' => (string)$conversation->user->photo_url ?? '',
-                'role' => (string)$conversation->user->role ?? '',
-                'status' => (string)$conversation->user->status ?? '',
-                'created_at' => (string)$conversation->user->created_at ?? '',
-                'updated_at' => (string)$conversation->user->updated_at ?? '',
-            ];
-    
-            // Map user data to column IDs
-            foreach ($responseBody['columns'] as $index => $column) {
-                $column_id = $column['id'];
-                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
-    
-                if (isset($user_data[$field_name])) {
-                    $column_values[$column_id] = $user_data[$field_name];
-                }
-            }
+            array_push($column_values, [$responseBody['columns'][1]['id'] => (string)$conversation->user->id ?? '']);
+            array_push($column_values, [$responseBody['columns'][2]['id'] => (string)$conversation->user->first_name ?? '']);
+            array_push($column_values, [$responseBody['columns'][3]['id'] => (string)$conversation->user->last_name ?? '']);
+            array_push($column_values, [$responseBody['columns'][4]['id'] => (string)$conversation->user->email ?? '']);
+            array_push($column_values, [$responseBody['columns'][5]['id'] => (string)'']);
+            array_push($column_values, [$responseBody['columns'][6]['id'] => (string)$conversation->user->job_title ?? '']);
+            array_push($column_values, [$responseBody['columns'][7]['id'] => (string)$conversation->user->timezone ?? '']);
+            array_push($column_values, [$responseBody['columns'][8]['id'] => (string)$conversation->user->photo_url ?? '']);
+            array_push($column_values, [$responseBody['columns'][9]['id'] => (string)$conversation->user->role ?? '']);
+            array_push($column_values, [$responseBody['columns'][10]['id'] => (string)$conversation->user->status ?? '']);
+            array_push($column_values, [$responseBody['columns'][11]['id'] => (string)$conversation->user->created_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][12]['id'] => (string)$conversation->user->updated_at ?? '']);
         }
 
         if ($conversation->customer) {
@@ -330,100 +319,85 @@ class MondaySettingsController extends Controller
             if(count($jsonArray)) {
                 $phone_number = $jsonArray[0]['value'];
             }
-
-            $customer_data = [
-                'id' => (string)$conversation->customer->id,
-                'first_name' => (string)$conversation->customer->first_name ?? '',
-                'last_name' => (string)$conversation->customer->last_name ?? '',
-                'email' => (string)'',
-                'emails' => (string)'',
-                'phones' => (string)$phone_number,
-                'company' => (string)$conversation->customer->company ?? '',
-                'job_title' => (string)$conversation->customer->job_title ?? '',
-                'address' => (string)$conversation->customer->address ?? '',
-                'city' => (string)$conversation->customer->city ?? '',
-                'state' => (string)$conversation->customer->state ?? '',
-                'zip' => (string)$conversation->customer->zip ?? '',
-                'country' => (string)$conversation->customer->country ?? '',
-                'websites' => (string)$conversation->customer->websites ?? '',
-                'social_profiles' => (string)$conversation->customer->social_profiles ?? '',
-                'photo_url' => (string)$conversation->customer->photo_url ?? '',
-                'created_at' => (string)$conversation->customer->created_at ?? '',
-                'updated_at' => (string)$conversation->customer->updated_at ?? '',
-            ];
-    
-            // Map customer data to column IDs
-            foreach ($responseBody['columns'] as $index => $column) {
-                $column_id = $column['id'];
-                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
-    
-                if (isset($customer_data[$field_name])) {
-                    $column_values[$column_id] = $customer_data[$field_name];
-                }
-            }
+            array_push($column_values, [$responseBody['columns'][13]['id'] => (string)$conversation->customer->id ?? '']);
+            array_push($column_values, [$responseBody['columns'][14]['id'] => (string)$conversation->customer->first_name ?? '']);
+            array_push($column_values, [$responseBody['columns'][15]['id'] => (string)$conversation->customer->last_name ?? '']);
+            array_push($column_values, [$responseBody['columns'][16]['id'] => (string)'']);
+            array_push($column_values, [$responseBody['columns'][17]['id'] => (string)'']);
+            array_push($column_values, [$responseBody['columns'][18]['id'] => (string)$phone_number ?? '']);
+            array_push($column_values, [$responseBody['columns'][19]['id'] => (string)$conversation->customer->company ?? '']);
+            array_push($column_values, [$responseBody['columns'][20]['id'] => (string)$conversation->customer->job_title ?? '']);
+            array_push($column_values, [$responseBody['columns'][21]['id'] => (string)$conversation->customer->address ?? '']);
+            array_push($column_values, [$responseBody['columns'][22]['id'] => (string)$conversation->customer->city ?? '']);
+            array_push($column_values, [$responseBody['columns'][23]['id'] => (string)$conversation->customer->state ?? '']);
+            array_push($column_values, [$responseBody['columns'][24]['id'] => (string)$conversation->customer->zip ?? '']);
+            array_push($column_values, [$responseBody['columns'][25]['id'] => (string)$conversation->customer->country ?? '']);
+            array_push($column_values, [$responseBody['columns'][26]['id'] => (string)$conversation->customer->websites ?? '']);
+            array_push($column_values, [$responseBody['columns'][27]['id'] => (string)$conversation->customer->social_profiles ?? '']);
+            array_push($column_values, [$responseBody['columns'][28]['id'] => (string)$conversation->customer->photo_url ?? '']);
+            array_push($column_values, [$responseBody['columns'][29]['id'] => (string)$conversation->customer->created_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][30]['id'] => (string)$conversation->customer->updated_at ?? '']);
         }
         
         if($conversation) {
-            $conversation_data = [
-                'id' => (string)$conversation->id,
-                'number' => (string)$conversation->number,
-                'subject' => (string)$conversation->subject,
-                'customer_id' => (string)$conversation->customer_id,
-                'mailbox_id' => (string)$conversation->mailbox_id,
-                'folder_id' => (string)$conversation->folder_id,
-                'status' => (string)$conversation->status,
-                'state' => (string)$conversation->state,
-                'preview' => (string)$conversation->preview,
-                'source_via' => (string)$conversation->source_via,
-                'source_type' => (string)$conversation->source_type,
-                'created_at' => (string)$conversation->created_at,
-                'updated_at' => (string)$conversation->updated_at,
-                'user_updated_at' => (string)$conversation->user_updated_at,
-                'closed_at' => (string)$conversation->closed_at,
-                'assigned_to' => (string)"",
-                'last_reply_at' => (string)$conversation->last_reply_at,
-                'last_reply_from' => (string)$conversation->last_reply_from,
-                'has_attachments' => (string)$conversation->has_attachments,
-            ];
-            // Map customer data to column IDs
-            foreach ($responseBody['columns'] as $index => $column) {
-                $column_id = $column['id'];
-                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
-    
-                if (isset($conversation_data[$field_name])) {
-                    $column_values[$column_id] = $conversation_data[$field_name];
-                }
-            }
+            array_push($column_values, [$responseBody['columns'][31]['id'] => (string)$conversation->id ?? '']);
+            array_push($column_values, [$responseBody['columns'][32]['id'] => (string)$conversation->number ?? '']);
+            array_push($column_values, [$responseBody['columns'][33]['id'] => (string)$conversation->subject ?? '']);
+            array_push($column_values, [$responseBody['columns'][34]['id'] => (string)$conversation->customer_id ?? '']);
+            array_push($column_values, [$responseBody['columns'][35]['id'] => (string)$conversation->mailbox_id ?? '']);
+            array_push($column_values, [$responseBody['columns'][36]['id'] => (string)$conversation->folder_id ?? '']);
+            array_push($column_values, [$responseBody['columns'][37]['id'] => (string)$conversation->status ?? '']);
+            array_push($column_values, [$responseBody['columns'][38]['id'] => (string)$conversation->state ?? '']);
+            array_push($column_values, [$responseBody['columns'][39]['id'] => (string)$conversation->preview ?? '']);
+            array_push($column_values, [$responseBody['columns'][40]['id'] => (string)$conversation->source_via ?? '']);
+            array_push($column_values, [$responseBody['columns'][41]['id'] => (string)$conversation->source_type ?? '']);
+            array_push($column_values, [$responseBody['columns'][42]['id'] => (string)$conversation->created_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][43]['id'] => (string)$conversation->updated_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][44]['id'] => (string)$conversation->user_updated_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][45]['id'] => (string)$conversation->closed_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][46]['id'] => (string)'']);
+            array_push($column_values, [$responseBody['columns'][47]['id'] => (string)$conversation->last_reply_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][48]['id'] => (string)$conversation->last_reply_from ?? '']);
+            array_push($column_values, [$responseBody['columns'][49]['id'] => (string)$conversation->has_attachments ?? '']);
         }
         if($thread) {
-            $thread_data = [
-                'id' => (string)$thread->id,
-                'conversation_id' => (string)$thread->conversation_id,
-                'user_id' => (string)$thread->user_id,
-                'customer_id' => (string)$thread->customer_id,
-                'type' => (string)$thread->type,
-                'state' => (string)$thread->state,
-                'status' => (string)$thread->status,
-                'body' => (string)$thread->body,
-                'headers' => (string)$thread->headers,
-                'has_attachments' => (string)$thread->has_attachments,
-                'created_at' => (string)$thread->created_at,
-                'updated_at' => (string)$thread->updated_at,
-                'source_via' => (string)$thread->source_via,
-                'source_type' => (string)$thread->source_type,
-            ];
-            // Map customer data to column IDs
-            foreach ($responseBody['columns'] as $index => $column) {
-                $column_id = $column['id'];
-                $field_name = strtolower(str_replace(' ', '_', $column['title'])); // Convert title to field name
-    
-                if (isset($thread_data[$field_name])) {
-                    $column_values[$column_id] = $thread_data[$field_name];
-                }
+            $meta = "";
+            $jsonArray = $thread->meta;
+            if(count($jsonArray)) {
+                $meta = $jsonArray['channel'];
+            }
+            array_push($column_values, [$responseBody['columns'][50]['id'] => (string)$thread->id ?? '']);
+            array_push($column_values, [$responseBody['columns'][51]['id'] => (string)$thread->conversation_id ?? '']);
+            array_push($column_values, [$responseBody['columns'][52]['id'] => (string)$thread->user_id ?? '']);
+            array_push($column_values, [$responseBody['columns'][53]['id'] => (string)$thread->customer_id ?? '']);
+            array_push($column_values, [$responseBody['columns'][54]['id'] => (string)$thread->type ?? '']);
+            array_push($column_values, [$responseBody['columns'][55]['id'] => (string)$thread->state ?? '']);
+            array_push($column_values, [$responseBody['columns'][56]['id'] => (string)$thread->status ?? '']);
+            array_push($column_values, [$responseBody['columns'][57]['id'] => (string)$thread->body ?? '']);
+            array_push($column_values, [$responseBody['columns'][58]['id'] => (string)$thread->headers ?? '']);
+            array_push($column_values, [$responseBody['columns'][59]['id'] => (string)$thread->has_attachments ?? '']);
+            array_push($column_values, [$responseBody['columns'][60]['id'] => (string)$thread->created_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][61]['id'] => (string)$thread->updated_at ?? '']);
+            array_push($column_values, [$responseBody['columns'][62]['id'] => (string)$thread->source_via ?? '']);
+            array_push($column_values, [$responseBody['columns'][63]['id'] => (string)$thread->source_type ?? '']);
+            array_push($column_values, [$responseBody['columns'][64]['id'] => (string)$meta ?? '']);
+        }
+        array_push($column_values, [$responseBody['columns'][65]['id'] => (string)'']);
+        array_push($column_values, [$responseBody['columns'][66]['id'] => (string)'']);
+        array_push($column_values, [$responseBody['columns'][67]['id'] => (string)'']);
+
+        $filteredArray = array_filter($column_values, function ($subArray) {
+            // Check if the sub-array contains non-empty values
+            return !empty(array_filter($subArray));
+        });
+        $flattenedArray = [];
+        foreach ($filteredArray as $subArray) {
+            foreach ($subArray as $key => $value) {
+                $flattenedArray[$key] = $value;
             }
         }
 
-        $column_values_json = json_encode($column_values);
+        $column_values_json = json_encode($flattenedArray);
         $column_values_json = addslashes($column_values_json);
 
         $query = <<<GRAPHQL
@@ -437,6 +411,6 @@ class MondaySettingsController extends Controller
                 }
             }
         GRAPHQL;
-        $this->mondayApi->sendPushboardItem($query);
+        var_dump($this->mondayApi->sendPushboardItem($query));
     }
 }
