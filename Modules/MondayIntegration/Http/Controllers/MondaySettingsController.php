@@ -16,6 +16,7 @@ use App\Thread;
 use App\User;
 use DB;
 use GuzzleHttp\Client;
+use App\ActivityLog;
 
 class MondaySettingsController extends Controller
 {
@@ -284,133 +285,148 @@ class MondaySettingsController extends Controller
 
     public function sendPushboardItem(Request $request)
     {
-        $pushboard_id = DB::table('monday_settings')
-            ->where('key', 'pushboard_id')
-            ->value('value');
+        try {
+            $pushboard_id = DB::table('monday_settings')
+                ->where('key', 'pushboard_id')
+                ->value('value');
 
-        $responseBody = $this->mondayApi->getBoardById($pushboard_id);
-        $conversation_id = $request->conversation_id;
-        $thread_id = $request->thread_id;
-        $conversation = Conversation::find($conversation_id);
-        $thread = Thread::find($thread_id);
-        $column_values = [
-            [$responseBody['columns'][0]['id'] => "Name"]
-        ];
+            $responseBody = $this->mondayApi->getBoardById($pushboard_id);
+            $conversation_id = $request->conversation_id;
+            $thread_id = $request->thread_id;
+            $conversation = Conversation::find($conversation_id);
+            $thread = Thread::find($thread_id);
+            $column_values = [
+                [$responseBody['columns'][0]['id'] => "Name"]
+            ];
 
-        if ($conversation->user) {
-            array_push($column_values, [$responseBody['columns'][1]['id'] => (string)$conversation->user->id ?? '']);
-            array_push($column_values, [$responseBody['columns'][2]['id'] => (string)$conversation->user->first_name ?? '']);
-            array_push($column_values, [$responseBody['columns'][3]['id'] => (string)$conversation->user->last_name ?? '']);
-            array_push($column_values, [$responseBody['columns'][4]['id'] => (string)$conversation->user->email ?? '']);
-            array_push($column_values, [$responseBody['columns'][5]['id'] => (string)'']);
-            array_push($column_values, [$responseBody['columns'][6]['id'] => (string)$conversation->user->job_title ?? '']);
-            array_push($column_values, [$responseBody['columns'][7]['id'] => (string)$conversation->user->timezone ?? '']);
-            array_push($column_values, [$responseBody['columns'][8]['id'] => (string)$conversation->user->photo_url ?? '']);
-            array_push($column_values, [$responseBody['columns'][9]['id'] => (string)$conversation->user->role ?? '']);
-            array_push($column_values, [$responseBody['columns'][10]['id'] => (string)$conversation->user->status ?? '']);
-            array_push($column_values, [$responseBody['columns'][11]['id'] => (string)$conversation->user->created_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][12]['id'] => (string)$conversation->user->updated_at ?? '']);
-        }
-
-        if ($conversation->customer) {
-            $phone_number = "";
-            $jsonString = (string)$conversation->customer->phones;
-            $jsonArray = json_decode($jsonString, true);
-            if(count($jsonArray)) {
-                $phone_number = $jsonArray[0]['value'];
+            if ($conversation->user) {
+                $role = "";
+                if($conversation->user->role == 1) {
+                    $role = "User";
+                }
+                if($conversation->user->role == 2) {
+                    $role = "Admin";
+                }
+                array_push($column_values, [$responseBody['columns'][1]['id'] => (string)$conversation->user->id ?? '']);
+                array_push($column_values, [$responseBody['columns'][2]['id'] => (string)$conversation->user->first_name ?? '']);
+                array_push($column_values, [$responseBody['columns'][3]['id'] => (string)$conversation->user->last_name ?? '']);
+                array_push($column_values, [$responseBody['columns'][4]['id'] => (string)$conversation->user->email ?? '']);
+                array_push($column_values, [$responseBody['columns'][5]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][6]['id'] => (string)$conversation->user->job_title ?? '']);
+                array_push($column_values, [$responseBody['columns'][7]['id'] => (string)$conversation->user->timezone ?? '']);
+                array_push($column_values, [$responseBody['columns'][8]['id'] => (string)$conversation->user->photo_url ?? '']);
+                array_push($column_values, [$responseBody['columns'][9]['id'] => $role]);
+                array_push($column_values, [$responseBody['columns'][10]['id'] => (string)$conversation->user->status ?? '']);
+                array_push($column_values, [$responseBody['columns'][11]['id'] => (string)$conversation->user->created_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][12]['id'] => (string)$conversation->user->updated_at ?? '']);
             }
-            array_push($column_values, [$responseBody['columns'][13]['id'] => (string)$conversation->customer->id ?? '']);
-            array_push($column_values, [$responseBody['columns'][14]['id'] => (string)$conversation->customer->first_name ?? '']);
-            array_push($column_values, [$responseBody['columns'][15]['id'] => (string)$conversation->customer->last_name ?? '']);
-            array_push($column_values, [$responseBody['columns'][16]['id'] => (string)'']);
-            array_push($column_values, [$responseBody['columns'][17]['id'] => (string)'']);
-            array_push($column_values, [$responseBody['columns'][18]['id'] => (string)$phone_number ?? '']);
-            array_push($column_values, [$responseBody['columns'][19]['id'] => (string)$conversation->customer->company ?? '']);
-            array_push($column_values, [$responseBody['columns'][20]['id'] => (string)$conversation->customer->job_title ?? '']);
-            array_push($column_values, [$responseBody['columns'][21]['id'] => (string)$conversation->customer->address ?? '']);
-            array_push($column_values, [$responseBody['columns'][22]['id'] => (string)$conversation->customer->city ?? '']);
-            array_push($column_values, [$responseBody['columns'][23]['id'] => (string)$conversation->customer->state ?? '']);
-            array_push($column_values, [$responseBody['columns'][24]['id'] => (string)$conversation->customer->zip ?? '']);
-            array_push($column_values, [$responseBody['columns'][25]['id'] => (string)$conversation->customer->country ?? '']);
-            array_push($column_values, [$responseBody['columns'][26]['id'] => (string)$conversation->customer->websites ?? '']);
-            array_push($column_values, [$responseBody['columns'][27]['id'] => (string)$conversation->customer->social_profiles ?? '']);
-            array_push($column_values, [$responseBody['columns'][28]['id'] => (string)$conversation->customer->photo_url ?? '']);
-            array_push($column_values, [$responseBody['columns'][29]['id'] => (string)$conversation->customer->created_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][30]['id'] => (string)$conversation->customer->updated_at ?? '']);
-        }
-        
-        if($conversation) {
-            array_push($column_values, [$responseBody['columns'][31]['id'] => (string)$conversation->id ?? '']);
-            array_push($column_values, [$responseBody['columns'][32]['id'] => (string)$conversation->number ?? '']);
-            array_push($column_values, [$responseBody['columns'][33]['id'] => (string)$conversation->subject ?? '']);
-            array_push($column_values, [$responseBody['columns'][34]['id'] => (string)$conversation->customer_id ?? '']);
-            array_push($column_values, [$responseBody['columns'][35]['id'] => (string)$conversation->mailbox_id ?? '']);
-            array_push($column_values, [$responseBody['columns'][36]['id'] => (string)$conversation->folder_id ?? '']);
-            array_push($column_values, [$responseBody['columns'][37]['id'] => (string)$conversation->status ?? '']);
-            array_push($column_values, [$responseBody['columns'][38]['id'] => (string)$conversation->state ?? '']);
-            array_push($column_values, [$responseBody['columns'][39]['id'] => (string)$conversation->preview ?? '']);
-            array_push($column_values, [$responseBody['columns'][40]['id'] => (string)$conversation->source_via ?? '']);
-            array_push($column_values, [$responseBody['columns'][41]['id'] => (string)$conversation->source_type ?? '']);
-            array_push($column_values, [$responseBody['columns'][42]['id'] => (string)$conversation->created_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][43]['id'] => (string)$conversation->updated_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][44]['id'] => (string)$conversation->user_updated_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][45]['id'] => (string)$conversation->closed_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][46]['id'] => (string)'']);
-            array_push($column_values, [$responseBody['columns'][47]['id'] => (string)$conversation->last_reply_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][48]['id'] => (string)$conversation->last_reply_from ?? '']);
-            array_push($column_values, [$responseBody['columns'][49]['id'] => (string)$conversation->has_attachments ?? '']);
-        }
-        if($thread) {
-            $meta = "";
-            $jsonArray = $thread->meta;
-            if(count($jsonArray)) {
-                $meta = $jsonArray['channel'];
+
+            if ($conversation->customer) {
+                $phone_number = "";
+                $jsonString = (string)$conversation->customer->phones;
+                $jsonArray = json_decode($jsonString, true);
+                if(count($jsonArray)) {
+                    $phone_number = $jsonArray[0]['value'];
+                }
+                array_push($column_values, [$responseBody['columns'][13]['id'] => (string)$conversation->customer->id ?? '']);
+                array_push($column_values, [$responseBody['columns'][14]['id'] => (string)$conversation->customer->first_name ?? '']);
+                array_push($column_values, [$responseBody['columns'][15]['id'] => (string)$conversation->customer->last_name ?? '']);
+                array_push($column_values, [$responseBody['columns'][16]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][17]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][18]['id'] => (string)$phone_number ?? '']);
+                array_push($column_values, [$responseBody['columns'][19]['id'] => (string)$conversation->customer->company ?? '']);
+                array_push($column_values, [$responseBody['columns'][20]['id'] => (string)$conversation->customer->job_title ?? '']);
+                array_push($column_values, [$responseBody['columns'][21]['id'] => (string)$conversation->customer->address ?? '']);
+                array_push($column_values, [$responseBody['columns'][22]['id'] => (string)$conversation->customer->city ?? '']);
+                array_push($column_values, [$responseBody['columns'][23]['id'] => (string)$conversation->customer->state ?? '']);
+                array_push($column_values, [$responseBody['columns'][24]['id'] => (string)$conversation->customer->zip ?? '']);
+                array_push($column_values, [$responseBody['columns'][25]['id'] => (string)$conversation->customer->country ?? '']);
+                array_push($column_values, [$responseBody['columns'][26]['id'] => (string)$conversation->customer->websites ?? '']);
+                array_push($column_values, [$responseBody['columns'][27]['id'] => (string)$conversation->customer->social_profiles ?? '']);
+                array_push($column_values, [$responseBody['columns'][28]['id'] => (string)$conversation->customer->photo_url ?? '']);
+                array_push($column_values, [$responseBody['columns'][29]['id'] => (string)$conversation->customer->created_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][30]['id'] => (string)$conversation->customer->updated_at ?? '']);
             }
-            array_push($column_values, [$responseBody['columns'][50]['id'] => (string)$thread->id ?? '']);
-            array_push($column_values, [$responseBody['columns'][51]['id'] => (string)$thread->conversation_id ?? '']);
-            array_push($column_values, [$responseBody['columns'][52]['id'] => (string)$thread->user_id ?? '']);
-            array_push($column_values, [$responseBody['columns'][53]['id'] => (string)$thread->customer_id ?? '']);
-            array_push($column_values, [$responseBody['columns'][54]['id'] => (string)$thread->type ?? '']);
-            array_push($column_values, [$responseBody['columns'][55]['id'] => (string)$thread->state ?? '']);
-            array_push($column_values, [$responseBody['columns'][56]['id'] => (string)$thread->status ?? '']);
-            array_push($column_values, [$responseBody['columns'][57]['id'] => (string)$thread->body ?? '']);
-            array_push($column_values, [$responseBody['columns'][58]['id'] => (string)$thread->headers ?? '']);
-            array_push($column_values, [$responseBody['columns'][59]['id'] => (string)$thread->has_attachments ?? '']);
-            array_push($column_values, [$responseBody['columns'][60]['id'] => (string)$thread->created_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][61]['id'] => (string)$thread->updated_at ?? '']);
-            array_push($column_values, [$responseBody['columns'][62]['id'] => (string)$thread->source_via ?? '']);
-            array_push($column_values, [$responseBody['columns'][63]['id'] => (string)$thread->source_type ?? '']);
-            array_push($column_values, [$responseBody['columns'][64]['id'] => (string)$meta ?? '']);
-        }
-        array_push($column_values, [$responseBody['columns'][65]['id'] => (string)'']);
-        array_push($column_values, [$responseBody['columns'][66]['id'] => (string)'']);
-        array_push($column_values, [$responseBody['columns'][67]['id'] => (string)'']);
-
-        $filteredArray = array_filter($column_values, function ($subArray) {
-            // Check if the sub-array contains non-empty values
-            return !empty(array_filter($subArray));
-        });
-        $flattenedArray = [];
-        foreach ($filteredArray as $subArray) {
-            foreach ($subArray as $key => $value) {
-                $flattenedArray[$key] = $value;
+            
+            if($conversation) {
+                array_push($column_values, [$responseBody['columns'][31]['id'] => (string)$conversation->id ?? '']);
+                array_push($column_values, [$responseBody['columns'][32]['id'] => (string)$conversation->number ?? '']);
+                array_push($column_values, [$responseBody['columns'][33]['id'] => (string)$conversation->subject ?? '']);
+                array_push($column_values, [$responseBody['columns'][34]['id'] => (string)$conversation->customer_id ?? '']);
+                array_push($column_values, [$responseBody['columns'][35]['id'] => (string)$conversation->mailbox_id ?? '']);
+                array_push($column_values, [$responseBody['columns'][36]['id'] => (string)$conversation->folder_id ?? '']);
+                array_push($column_values, [$responseBody['columns'][37]['id'] => (string)$conversation->status ?? '']);
+                array_push($column_values, [$responseBody['columns'][38]['id'] => (string)$conversation->state ?? '']);
+                array_push($column_values, [$responseBody['columns'][39]['id'] => (string)$conversation->preview ?? '']);
+                array_push($column_values, [$responseBody['columns'][40]['id'] => (string)$conversation->source_via ?? '']);
+                array_push($column_values, [$responseBody['columns'][41]['id'] => (string)$conversation->source_type ?? '']);
+                array_push($column_values, [$responseBody['columns'][42]['id'] => (string)$conversation->created_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][43]['id'] => (string)$conversation->updated_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][44]['id'] => (string)$conversation->user_updated_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][45]['id'] => (string)$conversation->closed_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][46]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][47]['id'] => (string)$conversation->last_reply_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][48]['id'] => (string)$conversation->last_reply_from ?? '']);
+                array_push($column_values, [$responseBody['columns'][49]['id'] => (string)$conversation->has_attachments ?? '']);
             }
-        }
+            if($thread) {
+                $meta = "";
+                $jsonArray = $thread->meta;
+                if($jsonArray != "" && count($jsonArray)) {
+                    $meta = $jsonArray['channel'];
+                }
+                array_push($column_values, [$responseBody['columns'][50]['id'] => (string)$thread->id ?? '']);
+                array_push($column_values, [$responseBody['columns'][51]['id'] => (string)$thread->conversation_id ?? '']);
+                array_push($column_values, [$responseBody['columns'][52]['id'] => (string)$thread->user_id ?? '']);
+                array_push($column_values, [$responseBody['columns'][53]['id'] => (string)$thread->customer_id ?? '']);
+                array_push($column_values, [$responseBody['columns'][54]['id'] => (string)$thread->type ?? '']);
+                array_push($column_values, [$responseBody['columns'][55]['id'] => (string)$thread->state ?? '']);
+                array_push($column_values, [$responseBody['columns'][56]['id'] => (string)$thread->status ?? '']);
+                array_push($column_values, [$responseBody['columns'][57]['id'] => (string)$thread->body ?? '']);
+                array_push($column_values, [$responseBody['columns'][58]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][59]['id'] => (string)$thread->has_attachments ?? '']);
+                array_push($column_values, [$responseBody['columns'][60]['id'] => (string)$thread->created_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][61]['id'] => (string)$thread->updated_at ?? '']);
+                array_push($column_values, [$responseBody['columns'][62]['id'] => (string)$thread->source_via ?? '']);
+                array_push($column_values, [$responseBody['columns'][63]['id'] => (string)$thread->source_type ?? '']);
+                array_push($column_values, [$responseBody['columns'][64]['id'] => (string)$meta ?? '']);
+            }
+            array_push($column_values, [$responseBody['columns'][65]['id'] => (string)'']);
+            array_push($column_values, [$responseBody['columns'][66]['id'] => (string)'']);
+            array_push($column_values, [$responseBody['columns'][67]['id'] => (string)'']);
 
-        $column_values_json = json_encode($flattenedArray);
-        $column_values_json = addslashes($column_values_json);
-
-        $query = <<<GRAPHQL
-            mutation {
-                create_item(
-                    board_id: $pushboard_id,
-                    item_name: "Item $thread->id", 
-                    column_values: "$column_values_json"
-                ) {
-                    id
+            $filteredArray = array_filter($column_values, function ($subArray) {
+                // Check if the sub-array contains non-empty values
+                return !empty(array_filter($subArray));
+            });
+            $flattenedArray = [];
+            foreach ($filteredArray as $subArray) {
+                foreach ($subArray as $key => $value) {
+                    $flattenedArray[$key] = $value;
                 }
             }
-        GRAPHQL;
-        var_dump($this->mondayApi->sendPushboardItem($query));
+
+            $column_values_json = json_encode($flattenedArray);
+            $column_values_json = addslashes($column_values_json);
+
+            $query = <<<GRAPHQL
+                mutation {
+                    create_item(
+                        board_id: $pushboard_id,
+                        item_name: "Item $thread->id", 
+                        column_values: "$column_values_json"
+                    ) {
+                        id
+                    }
+                }
+            GRAPHQL;
+            var_dump($this->mondayApi->sendPushboardItem($query));
+        } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'mondayintegration_errors',
+                'description' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Option;
 use Modules\MondayIntegration\Exceptions\MondayApiException;
 use Modules\MondayIntegration\Models\MondaySettings;
+use App\ActivityLog;
 
 class MondayApiService
 {
@@ -73,6 +74,11 @@ class MondayApiService
             return $data['data'];
 
         } catch (RequestException $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'mondayintegration_errors',
+                'description' => $e->getMessage(),
+            ]);
             return $e->getMessage();
         }
     }
@@ -172,6 +178,12 @@ class MondayApiService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'mondayintegration_errors',
+                'description' => $e->getMessage(),
+            ]);
+
             return $e->getMessage();
         }
     }
@@ -574,6 +586,12 @@ class MondayApiService
             $query = 'query { version { kind value } }';
             return $this->executeQuery($query);
         } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'mondayintegration_errors',
+                'description' => 'Failed to get Monday.com API version: ' . $e->getMessage(),
+            ]);
+
             \Log::error('Failed to get Monday.com API version: ' . $e->getMessage());
             return null;
         }
@@ -675,6 +693,11 @@ class MondayApiService
             
             return [];
         } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'mondayintegration_errors',
+                'description' => 'MondayIntegration: Error getting board templates: ' . $e->getMessage(),
+            ]);
             Log::error('MondayIntegration: Error getting board templates: ' . $e->getMessage());
             return [];
         }
@@ -694,6 +717,11 @@ class MondayApiService
             $response = $this->executeQuery($query);
             return $response;
         } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => '[]',
+                'log_name' => 'mondayintegration_errors',
+                'description' => $e->getMessage(),
+            ]);
             return $e->getMessage();
         }
     }
