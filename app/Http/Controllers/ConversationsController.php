@@ -855,6 +855,22 @@ class ConversationsController extends Controller
 
                     $response["msg"] = __("Status updated");
                 }
+                if(\Module::isActive('mondayintegration')) {
+                    try {
+                        $thread = Thread::where('conversation_id', $conversation->id)->orderByDesc('id')->first();
+                        $requestData = [
+                            'conversation_id' => $thread->conversation_id,
+                            'thread_id' => $thread->id,
+                            'upload' => 'yes',
+                        ];
+                        $client = new Client();
+                        $client->request('POST', route('monday.send.pushboard.item'), [
+                            'http_errors' => false,
+                            'json' => $requestData
+                        ]);
+                    } catch (\Exception $e) {
+                    }
+                }
                 break;
 
             // Send reply, new conversation, add note or forward

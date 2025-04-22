@@ -13,6 +13,7 @@ use Modules\MondayIntegration\Services\FieldMappingAssistantService;
 use App\Mailbox;
 use App\Conversation;
 use App\Thread;
+use App\Customer;
 use App\User;
 use DB;
 use GuzzleHttp\Client;
@@ -325,7 +326,7 @@ class MondaySettingsController extends Controller
                 $phone_number = "";
                 $jsonString = (string)$conversation->customer->phones;
                 $jsonArray = json_decode($jsonString, true);
-                if(count($jsonArray)) {
+                if($jsonArray != "" && count($jsonArray)) {
                     $phone_number = $jsonArray[0]['value'];
                 }
                 array_push($column_values, [$responseBody['columns'][13]['id'] => (string)$conversation->customer->id ?? '']);
@@ -391,9 +392,12 @@ class MondaySettingsController extends Controller
                 array_push($column_values, [$responseBody['columns'][63]['id'] => (string)$thread->source_type ?? '']);
                 array_push($column_values, [$responseBody['columns'][64]['id'] => (string)$meta ?? '']);
             }
+
             array_push($column_values, [$responseBody['columns'][65]['id'] => (string)'']);
             array_push($column_values, [$responseBody['columns'][66]['id'] => (string)'']);
             array_push($column_values, [$responseBody['columns'][67]['id'] => (string)'']);
+
+            $file_column_id = $responseBody['columns'][68]['id'];
 
             $filteredArray = array_filter($column_values, function ($subArray) {
                 // Check if the sub-array contains non-empty values
@@ -420,7 +424,13 @@ class MondaySettingsController extends Controller
                     }
                 }
             GRAPHQL;
-            var_dump($this->mondayApi->sendPushboardItem($query));
+            $res = $this->mondayApi->sendPushboardItem($query);
+            if(isset($res['data']) && $request->upload == 'yes') {
+                $item_id = $res['data']['create_item']['id'];
+                $this->exportHtml($conversation_id);
+                $response = $this->mondayApi->updateItem($item_id, $file_column_id);
+                var_dump($response);
+            }
         } catch (\Exception $e) {
             ActivityLog::create([
                 'properties' => '[]',
@@ -428,5 +438,59 @@ class MondaySettingsController extends Controller
                 'description' => $e->getMessage(),
             ]);
         }
+    }
+
+    public function exportHtml($conversation_id) {
+        $lang = 'he';
+        $chatView = 'y'; // 'y' = chat view, 'n' = full thread
+        
+        // Set UTF-8 globally just in case
+        DB::statement("SET NAMES utf8mb4");
+        DB::statement("SET SESSION group_concat_max_len = 1000000");
+
+        // Get the exported HTML by using a SQL view or a complex raw SQL query
+        $query = "
+            SELECT CONCAT(
+                '<!DOCTYPE html><html><head><meta charset=\"UTF-8\">',
+                '<title>', IF('$lang'='he','שיחה','Conversation'), ' #', c.id, '</title>',
+                '<style>',
+                'body { font-family: Arial, sans-serif; padding: 20px; direction:', IF('$lang'='he','rtl','ltr'), '; }',
+                '.conversation { border: 1px solid #ccc; padding: 10px; margin: 15px; }',
+                '.thread { margin-bottom: 10px; background: #f9f9f9; padding: 5px; white-space: pre-wrap; }',
+                '</style></head><body><div class=\"conversation\">',
+
+                '<h2>', IF('$lang'='he','שיחה #','Conversation #'), ' ', c.id, '</h2>',
+                '<p><strong>', IF('$lang'='he','נושא','Subject'), ':</strong> ', IFNULL(c.subject, ''), '</p>',
+                '<p><strong>', IF('$lang'='he','סטטוס','Status'), ':</strong> ', IF(c.status = 2, IF('$lang'='he','סגור','Closed'), IF('$lang'='he','פתוח','Open')), '</p>',
+                '<p><strong>', IF('$lang'='he','נוצר בתאריך','Created At'), ':</strong> ', DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s'), '</p>',
+                '<p><strong>', IF('$lang'='he','ערוץ','Channel'), ':</strong> ', 
+                    CASE cust.channel
+                        WHEN 13 THEN CONCAT('<img src=\"https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg\" width=\"16\"> ', IF('$lang'='he','ווטסאפ','WhatsApp'))
+                        ELSE IF('$lang'='he','לא ידוע','Unknown')
+                    END, '</p>',
+                '<p><strong>', IF('$lang'='he','מספר זיהוי','Caller ID'), ':</strong> ', cust.channel_id, '</p>',
+
+                '<h4>', IF('$chatView' = 'y', IF('$lang'='he','שיחה','Chat'), IF('$lang'='he','שרשורים','Threads')), ':</h4>',
+                GROUP_CONCAT(CONCAT('<p class=\"thread\"><strong>', u.first_name, ':</strong> ', t.body, '</p>') ORDER BY t.created_at SEPARATOR ''),
+                '</div></body></html>'
+            ) AS html
+            FROM conversations c
+            LEFT JOIN customers cust ON cust.id = c.customer_id
+            LEFT JOIN threads t ON t.conversation_id = c.id
+            LEFT JOIN users u ON u.id = t.user_id
+            WHERE c.id = ?
+            GROUP BY c.id
+        ";
+
+        $result = DB::select($query, [$conversation_id]);
+
+        if (empty($result)) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        }
+        $htmlPath = storage_path('logs/chat.html');
+        file_put_contents($htmlPath, $result[0]->html);
+
+        // return response($result[0]->html)
+        //     ->header('Content-Type', 'text/html; charset=utf-8');
     }
 }

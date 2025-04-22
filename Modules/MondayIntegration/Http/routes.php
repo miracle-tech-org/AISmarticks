@@ -16,6 +16,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::get('/clear-mapping', 'MondaySettingsController@clearMapping')->name('settings.clear');
         Route::post('/get-board-by-id', 'MondaySettingsController@getBoardById')->name('getboardbyid');
         Route::post('/send-push-board-item', 'MondaySettingsController@sendPushboardItem')->name('send.pushboard.item');
+        Route::get('/export-html/{conversation_id}', 'MondaySettingsController@exportHtml')->name('export.html');
 
         // Pullboard Settings
         Route::get('/mailbox/{mailbox_id}/pullboard', 'MondaySettingsController@pullboardSettings')->name('settings.pullboard');

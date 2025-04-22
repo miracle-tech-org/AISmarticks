@@ -527,6 +527,11 @@ class MondayApiService
                     title
                     type
                 }
+                html_file: create_column(board_id: $boardId, title: "HTML File", column_type: file) {
+                    id
+                    title
+                    type
+                }
             }
         GRAPHQL;
         ;
@@ -722,6 +727,51 @@ class MondayApiService
                 'log_name' => 'mondayintegration_errors',
                 'description' => $e->getMessage(),
             ]);
+            return $e->getMessage();
+        }
+    }
+
+    public function updateItem($item_id, $column_id)
+    {
+        try {
+            $filePath = storage_path('logs/chat.html');
+
+            $client = new Client();
+
+            $response = $client->request('POST', 'https://api.monday.com/v2/file', [
+                'headers' => [
+                    'API-Version'   => '2024-01',
+                    'Authorization' => 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjQ5NjkxNjYzMywiYWFpIjoxMSwidWlkIjo3NDMwODQzMCwiaWFkIjoiMjAyNS0wNC0wOFQwNzo0NzozNC4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6Mjg4NjIxMjEsInJnbiI6ImV1YzEifQ.ryQ28s3ptvuLIGYqaApYP87_vdpaJ2a-0mb2GTFnYFg',
+                    'Cookie'        => '__cf_bm=9XdwKS5o47o6JhGpTT7O0T9E.Pbe.QybruhQtelxu20-1745227740-1.0.1.1-gcfM5m7VN7AXGMdrEaenkB8vXvGCQ6icVPzvCxlzfC7UZYwTUQAmLdxJV7GDswxbelkzys95Zx2d0a6nQI10Mj00fEJFYCuYggywphg4VZGHwP6pOYayeY9V5nQwi6ov; _cfuvid=A_iMDmVxs4slzA.VZtlOgn7UJaDFnwUvTh97.lV712k-1745104651000-0.0.1.1-604800000',
+                ],
+                'multipart' => [
+                    [
+                        'name'     => 'query',
+                        'contents' => 'mutation($item_id: ID!, $column_id: String!, $file: File!) { add_file_to_column(item_id: $item_id, column_id: $column_id, file: $file) { id } }'
+                    ],
+                    [
+                        'name'     => 'variables',
+                        'contents' => json_encode([
+                            'item_id'   => $item_id,
+                            'column_id' => $column_id
+                        ])
+                    ],
+                    [
+                        'name'     => 'map',
+                        'contents' => json_encode([
+                            'file' => 'variables.file'
+                        ])
+                    ],
+                    [
+                        'name'     => 'file',
+                        'contents' => fopen($filePath, 'r'),
+                        'filename' => basename($filePath)
+                    ],
+                ],
+            ]);
+            
+            return json_encode($response->getBody(), true);
+        } catch (\Exception $e) {
             return $e->getMessage();
         }
     }
