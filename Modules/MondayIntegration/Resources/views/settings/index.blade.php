@@ -234,7 +234,7 @@
                     api_token: apiToken
                 },
                 success: function(response) {
-                    $status.removeClass('connection-error').addClass('connection-success').text(response.message);
+                    $status.removeClass('connection-error').addClass('connection-success').text(response.message + `: ${response.result.me.account.slug}`);
                 },
                 error: function(xhr) {
                     var errorMessage = '{{ __('Connection failed') }}';

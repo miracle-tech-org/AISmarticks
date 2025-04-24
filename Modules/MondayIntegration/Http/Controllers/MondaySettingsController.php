@@ -18,6 +18,7 @@ use App\User;
 use DB;
 use GuzzleHttp\Client;
 use App\ActivityLog;
+use Modules\MondayIntegration\Models\MondayFieldMapping;
 
 class MondaySettingsController extends Controller
 {
@@ -187,9 +188,23 @@ class MondaySettingsController extends Controller
         $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
         $boards = [];
 
+        // Get Monday.com columns for both boards
+        $pullboardColumns = [];
+        $pushboardColumns = [];
+        $boards = [];
+        $pullboardId = $settings['pullboard_id'] ?? null;
+        $pushboardId = $settings['pushboard_id'] ?? null;
+
         try {
             if (!empty($settings['api_token'])) {
                 $boards = $this->mondayApi->getBoards();
+                if ($pullboardId) {
+                    $pullboardColumns = $this->mondayApi->getBoardColumns($pullboardId);
+                }
+                
+                if ($pushboardId) {
+                    $pushboardColumns = $this->mondayApi->getBoardColumns($pushboardId);
+                }
             }
         } catch (\Exception $e) {
             // Log the error
@@ -201,10 +216,66 @@ class MondaySettingsController extends Controller
             session()->flash('error', $e->getMessage());
         }
         $mailbox = Mailbox::findOrFail($mailbox_id);
+        $freescoutFields = [
+            'Conversation' => [
+                'conversation.number' => __('Conversation Number'),
+                'conversation.subject' => __('Subject'),
+                'conversation.status' => __('Status'),
+                'conversation.created_at' => __('Created Date'),
+                'conversation.updated_at' => __('Updated Date')
+            ],
+            'Customer' => [
+                'customer.first_name' => __('First Name'),
+                'customer.last_name' => __('Last Name'),
+                'customer.email' => __('Email'),
+                'customer.phone' => __('Phone'),
+                'customer.company' => __('Company')
+            ],
+            'Assignee' => [
+                'assignee.first_name' => __('Agent First Name'),
+                'assignee.last_name' => __('Agent Last Name'),
+                'assignee.email' => __('Agent Email')
+            ],
+            'Custom Fields' => [
+                'custom_fields.priority' => __('Priority'),
+                'custom_fields.category' => __('Category'),
+                'custom_fields.due_date' => __('Due Date')
+            ]
+        ];
+
+        $transformRules = [
+            'uppercase' => __('Convert to Uppercase'),
+            'lowercase' => __('Convert to Lowercase'),
+            'date_format' => __('Format Date'),
+            'boolean' => __('Convert to Yes/No'),
+            'json' => __('Convert to JSON')
+        ];
+        // Get current mappings
+        $pullMappings = MondayFieldMapping::where('board_type', 'pull')
+            ->orderBy('order')
+            ->get();
+
+        $pushMappings = MondayFieldMapping::where('board_type', 'push')
+            ->orderBy('order')
+            ->get();
+        $mondayName = $this->mondayApi->testConnection();
+        if($mondayName) {
+            $mondayName = $mondayName['me']['account']['slug'];
+        } else {
+            $mondayName = "";
+        }
+
         return view('mondayintegration::settings.pullboard', [
+            'mondayName' => $mondayName,
             'settings' => $settings,
             'boards' => $boards,
             'mailbox' => $mailbox,
+            'pullboardColumns' => $pullboardColumns,
+            'pushboardColumns' => $pushboardColumns,
+            'freescoutFields' => $freescoutFields,
+            'pullMappings' => $pullMappings,
+            'pushMappings' => $pushMappings,
+            'transformRules' => $transformRules,
         ]);
     }
 
@@ -215,6 +286,12 @@ class MondaySettingsController extends Controller
 
         try {
             $boards = $this->mondayApi->getBoards();
+            $mondayName = $this->mondayApi->testConnection();
+            if($mondayName) {
+                $mondayName = $mondayName['me']['account']['slug'];
+            } else {
+                $mondayName = "";
+            }
         } catch (\Exception $e) {
             // Log the error
             \Log::error('MondayIntegration: Error retrieving boards', [
@@ -232,7 +309,8 @@ class MondaySettingsController extends Controller
             'settings' => $settings,
             'boards' => $boards,
             'mailbox' => $mailbox,
-            'fields' => $fields
+            'fields' => $fields,
+            'mondayName' => $mondayName
         ]);
     }
 

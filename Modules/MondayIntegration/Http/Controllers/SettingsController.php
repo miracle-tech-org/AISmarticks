@@ -80,13 +80,15 @@ class SettingsController extends Controller
     {
         try {
             $token = $request->input('api_token');
+            $result = "";
             if ($token) {
-                $this->apiService->testConnection($token);
+                $result = $this->apiService->testConnection($token);
             } else {
-                $this->apiService->testConnection();
+                $result = $this->apiService->testConnection();
             }
 
             return response()->json([
+                'result' => $result,
                 'message' => __('Connection successful')
             ]);
         } catch (\Exception $e) {

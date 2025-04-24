@@ -40,9 +40,12 @@ class FieldMappingController extends Controller
         // Get Monday.com columns for both boards
         $pullboardColumns = [];
         $pushboardColumns = [];
+        $boards = [];
 
         try {
             if (!empty($settings['api_token'])) {
+                $boards = $this->apiService->getBoards();
+    
                 if ($pullboardId) {
                     $pullboardColumns = $this->apiService->getBoardColumns($pullboardId);
                 }
@@ -74,6 +77,7 @@ class FieldMappingController extends Controller
             'transformRules' => $transformRules,
             'settings' => $settings,
             'mailbox' => $mailbox,
+            'boards' => $boards,
         ]);
     }
 

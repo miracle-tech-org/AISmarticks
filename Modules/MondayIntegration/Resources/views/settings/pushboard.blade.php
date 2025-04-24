@@ -27,10 +27,12 @@
                 </p>
                 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{{ __('API Token') }}</label>
+                    <label class="col-sm-3 control-label">{{ __('Monday Name') }}</label>
                     <div class="col-sm-9">
-                        <input type="password" name="api_token" class="form-control" 
+                        <input type="hidden" name="api_token" class="form-control" 
                                value="{{ old('api_token', $settings['api_token'] ?? '') }}" required>
+                        <input type="text" class="form-control" 
+                            value="{{$mondayName}}" >
                         <p class="help-block">
                             {{ __('Your Monday.com API token. Get it from your Monday.com account settings.') }}
                         </p>

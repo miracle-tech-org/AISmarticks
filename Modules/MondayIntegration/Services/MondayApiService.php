@@ -556,7 +556,23 @@ class MondayApiService
             ]
         ]);
 
-        return $this->getBoards($apiToken) !== null;
+        return $this->getAccountInfo();
+    }
+
+    public function getAccountInfo() {
+        $query = <<<GRAPHQL
+        query {
+            me {
+              account {
+                id
+                name
+                slug
+              }
+            }
+          }
+        GRAPHQL;
+        $response = $this->executeQuery($query);
+        return $response;
     }
 
     public function getBoardColumns($boardId = "")
