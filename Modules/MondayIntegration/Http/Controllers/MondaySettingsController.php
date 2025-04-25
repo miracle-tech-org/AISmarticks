@@ -14,6 +14,7 @@ use App\Mailbox;
 use App\Conversation;
 use App\Thread;
 use App\Customer;
+use App\Email;
 use App\User;
 use DB;
 use GuzzleHttp\Client;
@@ -201,10 +202,6 @@ class MondaySettingsController extends Controller
                 if ($pullboardId) {
                     $pullboardColumns = $this->mondayApi->getBoardColumns($pullboardId);
                 }
-                
-                if ($pushboardId) {
-                    $pushboardColumns = $this->mondayApi->getBoardColumns($pushboardId);
-                }
             }
         } catch (\Exception $e) {
             // Log the error
@@ -217,24 +214,12 @@ class MondaySettingsController extends Controller
         }
         $mailbox = Mailbox::findOrFail($mailbox_id);
         $freescoutFields = [
-            'Conversation' => [
-                'conversation.number' => __('Conversation Number'),
-                'conversation.subject' => __('Subject'),
-                'conversation.status' => __('Status'),
-                'conversation.created_at' => __('Created Date'),
-                'conversation.updated_at' => __('Updated Date')
-            ],
             'Customer' => [
                 'customer.first_name' => __('First Name'),
                 'customer.last_name' => __('Last Name'),
                 'customer.email' => __('Email'),
                 'customer.phone' => __('Phone'),
                 'customer.company' => __('Company')
-            ],
-            'Assignee' => [
-                'assignee.first_name' => __('Agent First Name'),
-                'assignee.last_name' => __('Agent Last Name'),
-                'assignee.email' => __('Agent Email')
             ],
             'Custom Fields' => [
                 'custom_fields.priority' => __('Priority'),
@@ -271,7 +256,6 @@ class MondaySettingsController extends Controller
             'boards' => $boards,
             'mailbox' => $mailbox,
             'pullboardColumns' => $pullboardColumns,
-            'pushboardColumns' => $pushboardColumns,
             'freescoutFields' => $freescoutFields,
             'pullMappings' => $pullMappings,
             'pushMappings' => $pushMappings,
@@ -570,5 +554,50 @@ class MondaySettingsController extends Controller
 
         // return response($result[0]->html)
         //     ->header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    public function syncNow(Request $request)
+    {
+        $board_id = $request->board_id;
+        $result = $this->mondayApi->getBoardItems($board_id, 200);
+        foreach ($result['items_page']['items'] as $key => $value) {
+            $name = $value['name'];
+            $phone = $value['column_values'][0]['text'];
+            $email = $value['column_values'][1]['text'];
+            $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
+
+            if($email == '') continue;
+
+            $existingCustomer = DB::table('customers')
+                ->where('phones', $phones)
+                ->first();
+
+            if ($existingCustomer) {
+                continue; // Skip if customer already exists
+            }
+
+            // Check if an email with the same address exists
+            $existingEmail = DB::table('emails')
+                ->where('email', $email)
+                ->first();
+
+            if ($existingEmail) {
+                continue; // Skip if email already exists
+            }
+
+            // Create a new customer
+            $customerId = DB::table('customers')->insertGetId([
+                'first_name' => $name,
+                'phones' => $phones,
+            ]);
+
+            // Create a new email associated with the customer
+            DB::table('emails')->insert([
+                'type' => 1,
+                'customer_id' => $customerId,
+                'email' => $email,
+            ]);
+        }
+        return $result;
     }
 }

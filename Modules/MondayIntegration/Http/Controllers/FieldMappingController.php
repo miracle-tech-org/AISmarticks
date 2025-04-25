@@ -97,7 +97,7 @@ class FieldMappingController extends Controller
                     'freescout_field' => $mapping['freescout_field'],
                     'monday_column' => $mapping['monday_column'],
                     'transform_rule' => $mapping['transform_rule'],
-                    'default_value' => $mapping['default_value'],
+                    'default_value' => "", //$mapping['default_value'],
                     'is_required' => !empty($mapping['is_required']),
                     'order' => $index
                 ]);

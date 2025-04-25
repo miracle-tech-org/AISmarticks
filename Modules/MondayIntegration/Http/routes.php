@@ -5,7 +5,6 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
         Route::get('/mailbox/{mailbox_id}/monday-dashboard', 'DashboardController@index')->name('dashboard');
         Route::post('/test-connection', 'SettingsController@testConnection')->name('test-connection');
         Route::post('/test-board-connection', 'MondaySettingsController@testBoardConnection')->name('test-board-connection');
-        Route::post('/sync-now', 'DashboardController@syncNow')->name('sync-now');
 
         // Settings
         Route::get('/mailbox/{mailbox_id}/monday-settings', 'MondaySettingsController@index')->name('settings');
@@ -20,7 +19,8 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
 
         // Pullboard Settings
         Route::get('/mailbox/{mailbox_id}/pullboard', 'MondaySettingsController@pullboardSettings')->name('settings.pullboard');
-        
+        Route::post('/sync-now', 'MondaySettingsController@syncNow')->name('sync-now');
+
         // Pushboard Settings
         Route::get('/mailbox/{mailbox_id}/pushboard', 'MondaySettingsController@pushboardSettings')->name('settings.pushboard');
         Route::post('/pullboard/create',              'MondaySettingsController@createBoard')->name('board.save');

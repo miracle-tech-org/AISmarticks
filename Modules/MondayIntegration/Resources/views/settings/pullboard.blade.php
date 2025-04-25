@@ -101,219 +101,251 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Mapping Tabs -->
-                <div class="form-section">
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active">
-                            <a href="#pull-mappings" aria-controls="pull-mappings" role="tab" data-toggle="tab">
-                                {{ __('Pull Mappings') }}
-                            </a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <!-- Pull Mappings Tab -->
-                        <div role="tabpanel" class="tab-pane active" id="pull-mappings">
-                            @if (!empty($settings['pullboard_id']) && count($pullboardColumns) > 0)
-                                <div class="mapping-container" id="pull-mapping-container">
-                                    <!-- Validation errors will be displayed here -->
-                                    <form id="pull-mapping-form" class="mapping-form" action="{{ route('monday.mappings.save') }}" method="POST" data-board-type="pull" data-validate-url="{{ route('monday.mappings.validate') }}">
-                                        {{ csrf_field() }}
-                                        <input type="hidden" name="board_type" value="pull">
-                                        <div class="mapping-header">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    {{ __('Smarticks Field') }}
-                                                    <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Smarticks field that will receive data from Monday.com') }}"></i>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    {{ __('Monday.com Column') }}
-                                                    <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Monday.com column that contains the data to be pulled') }}"></i>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    {{ __('Transform') }}
-                                                    <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('Optional transformation to apply to the data before storing it in Smarticks') }}"></i>
-                                                </div>
-                                                <div class="col-md-1">
-                                                    {{ __('Required') }}
-                                                </div>
-                                                <div class="col-md-1">
-                                                    {{ __('Actions') }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mapping-rows" id="pull-mapping-rows">
-                                            @foreach($pullMappings as $index => $mapping)
-                                            <div class="mapping-row" data-index="{{ $index }}">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <select name="mappings[{{ $index }}][freescout_field]" class="form-control freescout-field-select" required>
-                                                            <option value="">{{ __('Select Field') }}</option>
-                                                            @foreach($freescoutFields as $group => $fields)
-                                                                <optgroup label="{{ $group }}">
-                                                                    @foreach($fields as $field => $label)
-                                                                        <option value="{{ $field }}" {{ $mapping->freescout_field == $field ? 'selected' : '' }}>{{ $label }}</option>
-                                                                    @endforeach
-                                                                </optgroup>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <select name="mappings[{{ $index }}][monday_column]" class="form-control monday-column-select" required>
-                                                            <option value="">{{ __('Select Column') }}</option>
-                                                            @foreach($pullboardColumns as $column)
-                                                                <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}" {{ $mapping->monday_column == $column['id'] ? 'selected' : '' }}>
-                                                                    {{ $column['title'] }} ({{ $column['type'] }})
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <select name="mappings[{{ $index }}][transform_rule]" class="form-control transform-rule-select">
-                                                            @foreach($transformRules as $rule => $label)
-                                                                <option value="{{ $rule }}" {{ $mapping->transform_rule == $rule ? 'selected' : '' }}>{{ $label }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-1 text-center">
-                                                        <input type="checkbox" name="mappings[{{ $index }}][is_required]" value="1" {{ $mapping->is_required ? 'checked' : '' }}>
-                                                    </div>
-                                                    <div class="col-md-1 text-center">
-                                                        <button type="button" class="btn btn-sm btn-danger remove-mapping">
-                                                            <i class="glyphicon glyphicon-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="row default-value-row" style="{{ empty($mapping->default_value) ? 'display:none;' : '' }}">
-                                                    <div class="col-md-4 col-md-offset-8">
-                                                        <div class="input-group">
-                                                            <span class="input-group-addon">{{ __('Default Value') }}</span>
-                                                            <input type="text" name="mappings[{{ $index }}][default_value]" class="form-control default-value-input" value="{{ $mapping->default_value }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @endforeach
-                                            @if($pullMappings->count() == 0)
-                                            <div class="mapping-row" data-index="0">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <select name="mappings[0][freescout_field]" class="form-control freescout-field-select" required>
-                                                            <option value="">{{ __('Select Field') }}</option>
-                                                            @foreach($freescoutFields as $group => $fields)
-                                                                <optgroup label="{{ $group }}">
-                                                                    @foreach($fields as $field => $label)
-                                                                        <option value="{{ $field }}">{{ $label }}</option>
-                                                                    @endforeach
-                                                                </optgroup>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
-                                                            <option value="">{{ __('Select Column') }}</option>
-                                                            @foreach($pullboardColumns as $column)
-                                                                <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">
-                                                                    {{ $column['title'] }} ({{ $column['type'] }})
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <select name="mappings[0][transform_rule]" class="form-control transform-rule-select">
-                                                            @foreach($transformRules as $rule => $label)
-                                                                <option value="{{ $rule }}">{{ $label }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-1 text-center">
-                                                        <input type="checkbox" name="mappings[0][is_required]" value="1">
-                                                    </div>
-                                                    <div class="col-md-1 text-center">
-                                                        <button type="button" class="btn btn-sm btn-danger remove-mapping">
-                                                            <i class="glyphicon glyphicon-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="row default-value-row" style="display:none;">
-                                                    <div class="col-md-4 col-md-offset-8">
-                                                        <div class="input-group">
-                                                            <span class="input-group-addon">{{ __('Default Value') }}</span>
-                                                            <input type="text" name="mappings[0][default_value]" class="form-control default-value-input" value="">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        <div class="mapping-actions">
-                                            <button type="button" class="btn btn-default add-mapping-btn" data-board-type="pull">
-                                                <i class="glyphicon glyphicon-plus"></i> {{ __('Add Mapping') }}
-                                            </button>
-                                            <button type="button" class="btn btn-info suggest-mappings-btn" data-board-type="pull">
-                                                <i class="glyphicon glyphicon-magic"></i> {{ __('Suggest Mappings') }}
-                                            </button>
-                                            <button type="button" class="btn btn-info validate-mappings-btn" data-board-type="pull">
-                                                <i class="glyphicon glyphicon-check"></i> {{ __('Validate Mappings') }}
-                                            </button>
-                                            <button type="submit" class="btn btn-primary save-mappings-btn">
-                                                <i class="glyphicon glyphicon-floppy-disk"></i> {{ __('Save Pull Mappings') }}
-                                            </button>
-                                            <button type="button" class="btn btn-default import-mappings-btn" data-board-type="pull">
-                                                <i class="glyphicon glyphicon-upload"></i> {{ __('Import') }}
-                                            </button>
-                                            <input type="file" id="import-file-pull" class="import-file-input" data-board-type="pull" style="display: none;" accept=".json">
-                                            <button type="button" class="btn btn-default export-mappings-btn" data-board-type="pull">
-                                                <i class="glyphicon glyphicon-download-alt"></i> {{ __('Export') }}
-                                            </button>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="panel panel-default">
-                                                <div class="panel-heading">
-                                                    <h4 class="panel-title">{{ __('Import/Export Pull Mappings') }}</h4>
-                                                </div>
-                                                <div class="panel-body">
-                                                    <p class="help-block">{{ __('Import mappings from a JSON file or export your current mappings to a file.') }}</p>
-                                                    <div class="btn-group">
-                                                        <button type="button" class="btn btn-primary import-mappings-btn" data-board-type="pull">
-                                                            <i class="glyphicon glyphicon-upload"></i> {{ __('Import Mappings') }}
-                                                        </button>
-                                                        <button type="button" class="btn btn-default export-mappings-btn" data-board-type="pull">
-                                                            <i class="glyphicon glyphicon-download"></i> {{ __('Export Mappings') }}
-                                                        </button>
-                                                    </div>
-                                                    <input type="file" id="import-file-pull" class="import-file-input" data-board-type="pull" style="display: none;" accept=".json,application/json">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            @else
-                                <div class="alert alert-warning">
-                                    <p>{{ __('Please configure the Pullboard first to set up field mappings.') }}</p>
-                                    <a href="{{ route('monday.settings.pullboard', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-sm btn-warning">
-                                        {{ __('Configure Pullboard') }}
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
+                <div class="form-group margin-top">
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary">
+                            {{ __('Save Pullboard Settings') }}
+                        </button>
+                        <a href="{{ route('monday.settings', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-link">
+                            {{ __('Cancel') }}
+                        </a>
                     </div>
                 </div>
             </div>
+        </form>
 
-            <div class="form-group margin-top">
-                <div class="col-sm-offset-3 col-sm-9">
-                    <button type="submit" class="btn btn-primary">
-                        {{ __('Save Pullboard Settings') }}
-                    </button>
-                    <a href="{{ route('monday.settings', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-link">
-                        {{ __('Cancel') }}
-                    </a>
+        <!-- Mapping Tabs -->
+        <div class="form-section">
+            <ul class="nav nav-tabs" role="tablist">
+            </ul>
+            <div class="tab-content">
+                <!-- Pull Mappings Tab -->
+                <div role="tabpanel" class="tab-pane active" id="pull-mappings">
+                    @if (!empty($settings['pullboard_id']) && count($pullboardColumns) > 0)
+                        <div class="mapping-container" id="pull-mapping-container">
+                            <!-- Validation errors will be displayed here -->
+                            <form id="pull-mapping-form" class="mapping-form" action="{{ route('monday.mappings.save') }}" method="POST" data-board-type="pull">
+                                {{ csrf_field() }}
+                                <input type="hidden" name="board_type" value="pull">
+                                <div class="mapping-header">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            {{ __('Smarticks Field') }}
+                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Smarticks field that will receive data from Monday.com') }}"></i>
+                                        </div>
+                                        <div class="col-md-4">
+                                            {{ __('Monday.com Column') }}
+                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Monday.com column that contains the data to be pulled') }}"></i>
+                                        </div>
+                                        <div class="col-md-2">
+                                            {{ __('Transform') }}
+                                            <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('Optional transformation to apply to the data before storing it in Smarticks') }}"></i>
+                                        </div>
+                                        <div class="col-md-1">
+                                            {{ __('Required') }}
+                                        </div>
+                                        <div class="col-md-1">
+                                            {{ __('Actions') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mapping-rows" id="pull-mapping-rows">
+                                    @foreach($pullMappings as $index => $mapping)
+                                    <br/>
+                                    <div class="mapping-row" data-index="{{ $index }}">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <select name="mappings[{{ $index }}][freescout_field]" class="form-control freescout-field-select" required>
+                                                    <option value="">{{ __('Select Field') }}</option>
+                                                    @foreach($freescoutFields as $group => $fields)
+                                                        <optgroup label="{{ $group }}">
+                                                            @foreach($fields as $field => $label)
+                                                                <option value="{{ $field }}" {{ $mapping->freescout_field == $field ? 'selected' : '' }}>{{ $label }}</option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <select name="mappings[{{ $index }}][monday_column]" class="form-control monday-column-select" required>
+                                                    <option value="">{{ __('Select Column') }}</option>
+                                                    @foreach($pullboardColumns as $column)
+                                                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}" {{ $mapping->monday_column == $column['id'] ? 'selected' : '' }}>
+                                                            {{ $column['title'] }} ({{ $column['type'] }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="mappings[{{ $index }}][transform_rule]" class="form-control transform-rule-select">
+                                                    @foreach($transformRules as $rule => $label)
+                                                        <option value="{{ $rule }}" {{ $mapping->transform_rule == $rule ? 'selected' : '' }}>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1 text-center">
+                                                <input type="checkbox" name="mappings[{{ $index }}][is_required]" value="1" {{ $mapping->is_required ? 'checked' : '' }}>
+                                            </div>
+                                            <div class="col-md-1 text-center">
+                                                <button type="button" class="btn btn-sm btn-danger remove-mapping">
+                                                    <i class="glyphicon glyphicon-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="row default-value-row" style="{{ empty($mapping->default_value) ? 'display:none;' : '' }}">
+                                            <div class="col-md-4 col-md-offset-8">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon">{{ __('Default Value') }}</span>
+                                                    <input type="text" name="mappings[{{ $index }}][default_value]" class="form-control default-value-input" value="{{ $mapping->default_value }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                    @if($pullMappings->count() == 0)
+                                    <div class="mapping-row" data-index="0">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <select name="mappings[0][freescout_field]" class="form-control freescout-field-select" required>
+                                                    <option value="">{{ __('Select Field') }}</option>
+                                                    @foreach($freescoutFields as $group => $fields)
+                                                        <optgroup label="{{ $group }}">
+                                                            @foreach($fields as $field => $label)
+                                                                <option value="{{ $field }}">{{ $label }}</option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
+                                                    <option value="">{{ __('Select Column') }}</option>
+                                                    @foreach($pullboardColumns as $column)
+                                                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">
+                                                            {{ $column['title'] }} ({{ $column['type'] }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="mappings[0][transform_rule]" class="form-control transform-rule-select">
+                                                    @foreach($transformRules as $rule => $label)
+                                                        <option value="{{ $rule }}">{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1 text-center">
+                                                <input type="checkbox" name="mappings[0][is_required]" value="1">
+                                            </div>
+                                            <div class="col-md-1 text-center">
+                                                <button type="button" class="btn btn-sm btn-danger remove-mapping">
+                                                    <i class="glyphicon glyphicon-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="row default-value-row" style="display:none;">
+                                            <div class="col-md-4 col-md-offset-8">
+                                                <div class="input-group">
+                                                    <span class="input-group-addon">{{ __('Default Value') }}</span>
+                                                    <input type="text" name="mappings[0][default_value]" class="form-control default-value-input" value="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                                <br />
+                                <div class="mapping-actions">
+                                    <button type="button" class="btn btn-default add-mapping-btn" data-board-type="pull">
+                                        <i class="glyphicon glyphicon-plus"></i> {{ __('Add Mapping') }}
+                                    </button>
+                                    {{-- <button type="button" class="btn btn-info suggest-mappings-btn" data-board-type="pull">
+                                        <i class="glyphicon glyphicon-magic"></i> Suggest Mappings
+                                    </button>
+                                    <button type="button" class="btn btn-info validate-mappings-btn" data-board-type="pull">
+                                        <i class="glyphicon glyphicon-check"></i> Validate Mappings
+                                    </button> --}}
+                                    <button type="submit" class="btn btn-primary save-mappings-btn">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> {{ __('Save Pull Mappings') }}
+                                    </button>
+
+                                    <button type="button" class="btn btn-primary sync-mappings-btn">
+                                        <i class="glyphicon glyphicon-refresh"></i> {{ __('Sync now') }}
+                                    </button>
+                                    {{-- <button type="button" class="btn btn-default import-mappings-btn" data-board-type="pull">
+                                        <i class="glyphicon glyphicon-upload"></i> Import
+                                    </button> --}}
+                                    <input type="file" id="import-file-pull" class="import-file-input" data-board-type="pull" style="display: none;" accept=".json">
+                                    {{-- <button type="button" class="btn btn-default export-mappings-btn" data-board-type="pull">
+                                        <i class="glyphicon glyphicon-download-alt"></i> Export
+                                    </button> --}}
+                                </div>
+                                <br/>
+                                <textarea id="sync-status" cols="30" rows="10" class="form-control"></textarea>
+                                {{-- Here is Import Field --}}
+                            </form>
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <p>{{ __('Please configure the Pullboard first to set up field mappings.') }}</p>
+                            <a href="{{ route('monday.settings.pullboard', ['mailbox_id' => $mailbox->id]) }}" class="btn btn-sm btn-warning">
+                                {{ __('Configure Pullboard') }}
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<script type="text/template" id="pull-mapping-template">
+    <br/>
+    <div class="mapping-row" data-index="0">
+        <div class="row">
+            <div class="col-md-4">
+                <select name="mappings[0][freescout_field]" class="form-control freescout-field-select" required>
+                    <option value="">{{ __('Select Field') }}</option>
+                    @foreach($freescoutFields as $category => $fields)
+                    <optgroup label="{{ $category }}">
+                        @foreach($fields as $field => $title)
+                        <option value="{{ $field }}">{{ $title }}</option>
+                        @endforeach
+                    </optgroup>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
+                    <option value="">{{ __('Select Column') }}</option>
+                    @foreach($pullboardColumns as $column)
+                    <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">{{ $column['title'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="mappings[0][transform_rule]" class="form-control transform-rule-select">
+                    <option value="">{{ __('No Transform') }}</option>
+                    <option value="date_format">{{ __('Date Format') }}</option>
+                    <option value="phone_format">{{ __('Phone Format') }}</option>
+                    <option value="extract_email">{{ __('Extract Email') }}</option>
+                    <option value="extract_phone">{{ __('Extract Phone') }}</option>
+                    <option value="boolean">{{ __('Boolean') }}</option>
+                    <option value="default_value">{{ __('Default Value') }}</option>
+                    <option value="fallback_value">{{ __('Fallback Value') }}</option>
+                </select>
+                <div class="default-value-row">
+                    <input type="text" name="mappings[0][default_value]" class="form-control" placeholder="{{ __('Default/Fallback Value') }}">
+                </div>
+            </div>
+            <div class="col-md-1 text-right">
+                <div class="compatibility-indicator"></div>
+                <span class="drag-handle"><i class="glyphicon glyphicon-move"></i></span>
+                <span class="remove-mapping"><i class="glyphicon glyphicon-trash"></i></span>
+            </div>
+        </div>
+    </div>
+</script>
 
 @push('css')
 <style>
@@ -356,9 +388,32 @@
 </style>
 @endpush
 @endsection
+@php
+    // Initialize $pullboardName as null or an empty string
+    $pullboardName = "";
+
+    // Get the selected pullboard_id from old input or settings
+    $selectedPullboardId = old('pullboard_id', $settings['pullboard_id'] ?? null);
+
+    // Loop through boards to find the name of the selected board
+    foreach ($boards['boards'] as $board) {
+        if ($board['id'] == $selectedPullboardId) {
+            $pullboardName = $board['name'];
+            break; // Exit the loop once the match is found
+        }
+    }
+@endphp
 
 <script>
     window.onload = function () {
+        $(document).on('click', '.remove-mapping', function() {
+            const form = $(this).closest('form');
+            const boardType = form.data('board-type');
+            
+            $(this).closest('.mapping-row').remove();
+            updateMappingIndices(boardType);
+        });
+
         // Test board connection
         $('.test-board-connection').on('click', function() {
             var $button = $(this);
@@ -402,5 +457,111 @@
                 }
             });
         });
+
+        $('.add-mapping-btn').on('click', function() {
+            const boardType = $(this).data('board-type');
+            addNewMappingRow(boardType);
+        });
+
+        $(".sync-mappings-btn").on('click', function() {
+            var url = "{{route('monday.sync-now')}}";
+            const now = new Date();
+
+            // Extract hours, minutes, and seconds
+            const hours = String(now.getHours()).padStart(2, '0'); // Ensure two digits
+            const minutes = String(now.getMinutes()).padStart(2, '0'); // Ensure two digits
+            const seconds = String(now.getSeconds()).padStart(2, '0'); // Ensure two digits
+
+            // Optionally, extract milliseconds if needed
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0'); // Ensure three digits
+
+            // Format the time string
+            const currentTime = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+            $("#sync-status").html(`Sync started on: ${currentTime}\n`);
+            var data = {
+                board_id: "{{$settings['pullboard_id']}}"
+            }
+            $.post(url, data, (res) => {
+                $("#sync-status").append(`Connected to board: "{{$pullboardName}}"\n`);
+                $("#sync-status").append(`Found ${res['items_page']['items'].length} row to sync.\n`);
+                
+                res['items_page']['items'].forEach(item => {
+                    $("#sync-status").append(`ID: ${item.id} Name: ${item.name} URL: ${item.url} Columns: ${JSON.stringify(item.column_values)}\n`);
+                });
+
+                $("#sync-status").append(`${res['items_page']['items'].length} rows has been successfully synced\n0 rows ware skipped.\n`);
+            })
+        })
+
+        function addNewMappingRow(boardType) {
+            const row = addMappingRow(boardType);
+            
+            // Scroll to the new row
+            $('html, body').animate({
+                scrollTop: row.offset().top - 100
+            }, 500);
+        }
+
+        function addMappingRow(boardType, mappingData = null) {
+            // Get the template
+            const template = $('#' + boardType + '-mapping-template').html();
+            const mappingRows = $('#' + boardType + '-mapping-rows');
+            
+            // Get the next index
+            const nextIndex = mappingRows.children().length;
+            
+            // Replace the index placeholder with the actual index
+            const row = $(template.replace(/\[0\]/g, '[' + nextIndex + ']'));
+            
+            // Set values if mapping data is provided
+            if (mappingData) {
+                row.find('.freescout-field-select').val(mappingData.freescout_field);
+                row.find('.monday-column-select').val(mappingData.monday_column);
+                row.find('.transform-rule-select').val(mappingData.transform_rule || '');
+                row.find('.default-value-input').val(mappingData.default_value || '');
+                row.find('.required-checkbox').prop('checked', mappingData.is_required || false);
+                
+                // Show/hide default value row based on transform rule
+                const transformRule = mappingData.transform_rule || '';
+                if (transformRule === 'default_value' || transformRule === 'fallback_value') {
+                    row.find('.default-value-row').show();
+                } else {
+                    row.find('.default-value-row').hide();
+                }
+            }
+            
+            // Add the row to the container
+            mappingRows.append(row);
+            
+            // Initialize tooltips
+            row.find('[data-toggle="tooltip"]').tooltip();
+            
+            // Trigger change event to validate compatibility
+            row.find('.monday-column-select, .freescout-field-select').trigger('change');
+            
+            return row;
+        }
+
+        function updateMappingIndices(boardType) {
+            const mappingRows = $('#' + boardType + '-mapping-rows').children();
+            
+            mappingRows.each(function(index) {
+                const row = $(this);
+                
+                // Update the index data attribute
+                row.attr('data-index', index);
+                
+                // Update the name attributes of all form elements
+                row.find('select, input').each(function() {
+                    const element = $(this);
+                    const name = element.attr('name');
+                    
+                    if (name) {
+                        const newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                        element.attr('name', newName);
+                    }
+                });
+            });
+        }
     };
 </script>

@@ -648,12 +648,12 @@ class MondayApiService
         throw new \Exception('Board not found or access denied');
     }
 
-    public function getBoardItems($boardId)
+    public function getBoardItems($boardId, $count = 10)
     {
         $query = <<<GRAPHQL
         {
             boards(ids: $boardId) {
-                items_page(limit: 10) {
+                items_page(limit: $count) {
                     items {
                         id
                         name

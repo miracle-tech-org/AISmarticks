@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MondayFieldMapping extends Model
 {
     protected $fillable = [
-        'smarticks_field',
+        'freescout_field',
         'monday_column',
         'transform_rule',
         'is_required',
