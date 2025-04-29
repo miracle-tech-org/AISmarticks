@@ -272,6 +272,11 @@
                                     <button type="button" class="btn btn-primary sync-mappings-btn">
                                         <i class="glyphicon glyphicon-refresh"></i> {{ __('Sync now') }}
                                     </button>
+                                    
+                                    <label for="overwrite-all">
+                                        <input type="checkbox" name="overwrite-all" id="overwrite-all">
+                                        Overwite all
+                                    </label>
                                     {{-- <button type="button" class="btn btn-default import-mappings-btn" data-board-type="pull">
                                         <i class="glyphicon glyphicon-upload"></i> Import
                                     </button> --}}
