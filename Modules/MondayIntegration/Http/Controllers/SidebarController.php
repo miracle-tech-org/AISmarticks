@@ -330,29 +330,21 @@ class SidebarController extends Controller
                 return [];
             }
             $data = $result['items_page']['items'];
+
             foreach ($data as $i => $entry) {
-                if ($settings['customer_search_field'] === 'name') {
-                    if ($entry['name'] === $customer->first_name) {
+                if ($entry['name'] === $customer->first_name) {
+                    return $entry;
+                }
+
+                foreach ($entry['column_values'] as $column) {
+                    if ($column['type'] === 'email' && $column['text'] === $conversation->customer_email) {
                         return $entry;
                     }
-                }
 
-                else if ($settings['customer_search_field'] === 'contact_email') {
-                    foreach ($entry['column_values'] as $column) {
-                        if ($column['type'] === 'email' && $column['text'] === $conversation->customer_mail) {
+                    if ($customer->phones != "" && isset($column['type']) && isset($column['text']) &&  $column['type'] === 'phone') {
+                        $lst = json_decode($customer->phones);
+                        if(count($lst) && $phoneNormalizer->compare($column['text'], json_decode($customer->phones)[0]->value)[0]) 
                             return $entry;
-                        }
-                    }
-                }
-
-                else if ($settings['customer_search_field'] === 'contact_phone') {
-                    foreach ($entry['column_values'] as $column) {
-                        if($customer->phones == "") break;
-                        if (isset($column['type']) && isset($column['text']) &&  $column['type'] === 'phone') {
-                            $lst = json_decode($customer->phones);
-                            if(count($lst) && $phoneNormalizer->compare($column['text'], json_decode($customer->phones)[0]->value)[0]) 
-                                return $entry;
-                        }
                     }
                 }
             }
