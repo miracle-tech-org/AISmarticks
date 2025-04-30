@@ -34,19 +34,19 @@ class MondayIntegrationServiceProvider extends ServiceProvider
      */
     public function hooks()
     {
-        \Eventy::addAction('conversation.send_reply_save', function($conversation, $thread) {
-            $sidebarController = app(SidebarController::class);
-            $mondayItems = $sidebarController->sidebarWidget($conversation->id);
-        }, 20, 3);
+        // \Eventy::addAction('conversation.send_reply_save', function($conversation, $thread) {
+        //     $sidebarController = app(SidebarController::class);
+        //     $mondayItems = $sidebarController->sidebarWidget($conversation->id);
+        // }, 20, 3);
 
         // Register assets
-        \Eventy::addFilter('javascripts', function($javascripts) {
+        // \Eventy::addFilter('javascripts', function($javascripts) {
             // $javascripts[] = public_path('modules/mondayintegration/js/sidebar-widget.js');
             // $javascripts[] = public_path('modules/mondayintegration/js/templates-index.js');
             // $javascripts[] = public_path('modules/mondayintegration/js/templates-editor.js');
             // $javascripts[] = public_path('modules/mondayintegration/js/field-mapping.js');
-            return $javascripts;
-        });
+            // return $javascripts;
+        // });
 
         \Eventy::addAction('menu.manage.after_mailboxes', function($mailbox) {
         }, 15);
@@ -58,17 +58,8 @@ class MondayIntegrationServiceProvider extends ServiceProvider
         }, 35);
 
         \Eventy::addFilter('menu.selected', function($menu) {
-            $menu['monday.dashboard'] = [
-                'monday.dashboard',
-            ];
             $menu['monday.settings'] = [
                 'monday.settings',
-            ];
-            $menu['monday.mappings'] = [
-                'monday.mappings',
-            ];
-            $menu['sidebar-widget'] = [
-                'sidebar-widget',
             ];
             return $menu;
         });

@@ -487,7 +487,7 @@ class MondaySettingsController extends Controller
                 }
             GRAPHQL;
             $res = $this->mondayApi->sendPushboardItem($query);
-            if(isset($res['data']) && $request->upload == 'yes') {
+            if(isset($res['data'])/* && $request->upload == 'yes'*/) {
                 $item_id = $res['data']['create_item']['id'];
                 $this->exportHtml($conversation_id);
                 $response = $this->mondayApi->updateItem($item_id, $file_column_id);
@@ -503,57 +503,81 @@ class MondaySettingsController extends Controller
     }
 
     public function exportHtml($conversation_id) {
+        $conversation = Conversation::with(['customer', 'threads.user'])
+            ->where('id', $conversation_id)
+            ->firstOrFail();
+
         $lang = 'he';
         $chatView = 'y'; // 'y' = chat view, 'n' = full thread
-        
-        // Set UTF-8 globally just in case
-        DB::statement("SET NAMES utf8mb4");
-        DB::statement("SET SESSION group_concat_max_len = 1000000");
 
-        // Get the exported HTML by using a SQL view or a complex raw SQL query
-        $query = "
-            SELECT CONCAT(
-                '<!DOCTYPE html><html><head><meta charset=\"UTF-8\">',
-                '<title>', IF('$lang'='he','שיחה','Conversation'), ' #', c.id, '</title>',
-                '<style>',
-                'body { font-family: Arial, sans-serif; padding: 20px; direction:', IF('$lang'='he','rtl','ltr'), '; }',
-                '.conversation { border: 1px solid #ccc; padding: 10px; margin: 15px; }',
-                '.thread { margin-bottom: 10px; background: #f9f9f9; padding: 5px; white-space: pre-wrap; }',
-                '</style></head><body><div class=\"conversation\">',
+        $html = "
+        <html>
+            <head>
+                <meta charset=\"UTF-8\">
+                <title>" . ($lang === 'he' ? 'שיחה #' : 'Conversation #') . $conversation->id . "</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        padding: 20px;
+                        direction: " . ($lang === 'he' ? 'rtl' : 'ltr') . ";
+                    }
+                    .conversation {
+                        border: 1px solid #ccc;
+                        padding: 10px;
+                        margin: 15px;
+                    }
+                    .thread {
+                        margin-bottom: 10px;
+                        background: #f9f9f9;
+                        padding: 5px;
+                        white-space: pre-wrap;
+                    }
+                </style>
+            </head>
+            <body>
+            <div class=\"conversation\">
+                <h2>" . ($lang === 'he' ? 'שיחה #' : 'Conversation #') . " {$conversation->id}</h2>
 
-                '<h2>', IF('$lang'='he','שיחה #','Conversation #'), ' ', c.id, '</h2>',
-                '<p><strong>', IF('$lang'='he','נושא','Subject'), ':</strong> ', IFNULL(c.subject, ''), '</p>',
-                '<p><strong>', IF('$lang'='he','סטטוס','Status'), ':</strong> ', IF(c.status = 2, IF('$lang'='he','סגור','Closed'), IF('$lang'='he','פתוח','Open')), '</p>',
-                '<p><strong>', IF('$lang'='he','נוצר בתאריך','Created At'), ':</strong> ', DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s'), '</p>',
-                '<p><strong>', IF('$lang'='he','ערוץ','Channel'), ':</strong> ', 
-                    CASE cust.channel
-                        WHEN 13 THEN CONCAT('<img src=\"https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg\" width=\"16\"> ', IF('$lang'='he','ווטסאפ','WhatsApp'))
-                        ELSE IF('$lang'='he','לא ידוע','Unknown')
-                    END, '</p>',
-                '<p><strong>', IF('$lang'='he','מספר זיהוי','Caller ID'), ':</strong> ', cust.channel_id, '</p>',
+                <p><strong>" . ($lang === 'he' ? 'נושא:' : 'Subject:') . "</strong> " . ($conversation->subject ?? '') . "</p>
+                <p><strong>" . ($lang === 'he' ? 'סטטוס:' : 'Status:') . "</strong> " .
+                    ($conversation->status === 2
+                        ? ($lang === 'he' ? 'סגור' : 'Closed')
+                        : ($lang === 'he' ? 'פתוח' : 'Open')) .
+                "</p>
+                <p><strong>" . ($lang === 'he' ? 'נוצר בתאריך:' : 'Created At:') . "</strong> " . $conversation->created_at->format('Y-m-d H:i:s') . "</p>
 
-                '<h4>', IF('$chatView' = 'y', IF('$lang'='he','שיחה','Chat'), IF('$lang'='he','שרשורים','Threads')), ':</h4>',
-                GROUP_CONCAT(CONCAT('<p class=\"thread\"><strong>', u.first_name, ':</strong> ', t.body, '</p>') ORDER BY t.created_at SEPARATOR ''),
-                '</div></body></html>'
-            ) AS html
-            FROM conversations c
-            LEFT JOIN customers cust ON cust.id = c.customer_id
-            LEFT JOIN threads t ON t.conversation_id = c.id
-            LEFT JOIN users u ON u.id = t.user_id
-            WHERE c.id = ?
-            GROUP BY c.id
-        ";
+                <p><strong>" . ($lang === 'he' ? 'ערוץ:' : 'Channel:') . "</strong> " .
+                    ($conversation->customer->channel === 13
+                        ? '<img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="16"> ' . ($lang === 'he' ? 'ווטסאפ' : 'WhatsApp')
+                        : ($lang === 'he' ? 'לא ידוע' : 'Unknown')) .
+                "</p>
 
-        $result = DB::select($query, [$conversation_id]);
+                <p><strong>" . ($lang === 'he' ? 'מספר זיהוי:' : 'Caller ID:') . "</strong> " . $conversation->customer->channel_id . "</p>
 
-        if (empty($result)) {
-            return response()->json(['error' => 'Conversation not found'], 404);
-        }
+                <h4>" .
+                    ($chatView === 'y'
+                        ? ($lang === 'he' ? 'שיחה:' : 'Chat:')
+                        : ($lang === 'he' ? 'שרשורים:' : 'Threads:')) .
+                "</h4>";
+
+                foreach ($conversation->threads as $thread) {
+                    $first_name = "משתמש לא ידוע";
+                    if($thread->created_by_customer_id != "") {
+                        $first_name = $thread->customer->first_name;
+                    }
+                    if($thread->created_by_user_id != "") {
+                        $first_name = User::find($thread->created_by_user_id)->first_name;
+                    }
+                    $html .= "<p class=\"thread\"><strong>{$first_name}:</strong> {$thread->body}</p>";
+                }
+
+                $html .= "
+            </div>
+            </body>
+            </html>";
+
         $htmlPath = storage_path('logs/chat.html');
-        file_put_contents($htmlPath, $result[0]->html);
-
-        // return response($result[0]->html)
-        //     ->header('Content-Type', 'text/html; charset=utf-8');
+        file_put_contents($htmlPath, $html);
     }
 
     public function syncNow(Request $request)

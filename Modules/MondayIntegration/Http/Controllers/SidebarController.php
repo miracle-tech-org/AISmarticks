@@ -97,11 +97,11 @@ class SidebarController extends Controller
 
         $tmp = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
         if(is_null($tmp)) {
-            return "";
+            return view('mondayintegration::sidebar.empty_widget');
         }
 
         if(count($tmp) == 0) {
-            return "";
+            return view('mondayintegration::sidebar.empty_widget');
         }
 
         array_push($mondayItems, $tmp);
