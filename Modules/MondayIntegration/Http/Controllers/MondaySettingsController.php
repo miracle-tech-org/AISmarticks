@@ -588,6 +588,7 @@ class MondaySettingsController extends Controller
             $name = $value['name'];
             $phone = $value['column_values'][0]['text'];
             $email = $value['column_values'][1]['text'];
+            $company = $value['column_values'][2]['text'];
             $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
 
             if($email == '') continue;
@@ -596,24 +597,24 @@ class MondaySettingsController extends Controller
                 ->where('phones', $phones)
                 ->first();
 
-            if ($existingCustomer) {
+            if (!is_null($existingCustomer)) {
                 continue; // Skip if customer already exists
             }
+
+            $customerId = DB::table('customers')->insertGetId([
+                'first_name' => $name,
+                'company' => $company,
+                'phones' => $phones,
+            ]);
 
             // Check if an email with the same address exists
             $existingEmail = DB::table('emails')
                 ->where('email', $email)
                 ->first();
 
-            if ($existingEmail) {
+            if (!is_null($existingEmail)) {
                 continue; // Skip if email already exists
             }
-
-            // Create a new customer
-            $customerId = DB::table('customers')->insertGetId([
-                'first_name' => $name,
-                'phones' => $phones,
-            ]);
 
             // Create a new email associated with the customer
             DB::table('emails')->insert([

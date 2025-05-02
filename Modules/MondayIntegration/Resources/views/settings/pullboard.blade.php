@@ -491,7 +491,7 @@
                 $("#sync-status").append(`Found ${res['items_page']['items'].length} row to sync.\n`);
                 
                 res['items_page']['items'].forEach(item => {
-                    $("#sync-status").append(`ID: ${item.id} Name: ${item.name} URL: ${item.url} Columns: ${JSON.stringify(item.column_values)}\n`);
+                    $("#sync-status").append(`Customer name: ${item.name} Pulled\n`);
                 });
 
                 $("#sync-status").append(`${res['items_page']['items'].length} rows has been successfully synced\n0 rows ware skipped.\n`);
