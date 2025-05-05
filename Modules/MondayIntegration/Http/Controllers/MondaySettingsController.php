@@ -92,7 +92,7 @@ class MondaySettingsController extends Controller
             }
         }
         if($request->has('form_origin') && $request->input('form_origin') == 'pushboard') {
-            MondaySettings::whereIn('key', ['push_on_conversation_created', 'push_on_conversation_closed', 'push_on_conversation_updated', 'push_on_conversation_fully_closed'])->delete();
+            MondaySettings::whereIn('key', ['push_on_conversation_created', 'push_on_conversation_closed', 'push_on_conversation_updated', 'push_on_conversation_fully_closed', 'push_attachments'])->delete();
         }
         // Save all settings
         foreach ($settings as $key => $value) {
@@ -213,19 +213,32 @@ class MondaySettingsController extends Controller
             session()->flash('error', $e->getMessage());
         }
         $mailbox = Mailbox::findOrFail($mailbox_id);
+        $results = DB::select('SELECT * FROM customer_fields');
+        $customerFields = [];
+        foreach ($results as $key => $value) {
+            $customerFields[('customer_fields.' . $key)] = $value->name;
+        }
         $freescoutFields = [
             'Customer' => [
                 'customer.first_name' => __('First Name'),
                 'customer.last_name' => __('Last Name'),
                 'customer.email' => __('Email'),
                 'customer.phone' => __('Phone'),
-                'customer.company' => __('Company')
+                'customer.company' => __('Company'),
+                'customer.websites' => __('Website'),
+                'customer.job_title' => __('Job Title'),
+                'customer.photo_type' => __('Photo Type'),
+                'customer.photo_url' => __('Photo Url'),
+                'customer.phones' => __('Phones'),
+                'customer.social_profiles' => __('Social Profiles'),
+                'customer.notes' => __('Notes'),
+                'customer.address' => __('Address'),
+                'customer.city' => __('City'),
+                'customer.state' => __('State'),
+                'customer.zip' => __('Zip'),
+                'customer.country' => __('Country'),
             ],
-            'Custom Fields' => [
-                'custom_fields.priority' => __('Priority'),
-                'custom_fields.category' => __('Category'),
-                'custom_fields.due_date' => __('Due Date')
-            ]
+            'Custom Fields' => $customerFields
         ];
 
         $transformRules = [
@@ -487,7 +500,7 @@ class MondaySettingsController extends Controller
                 }
             GRAPHQL;
             $res = $this->mondayApi->sendPushboardItem($query);
-            if(isset($res['data'])/* && $request->upload == 'yes'*/) {
+            if(isset($res['data']) && $request->upload == 'yes') {
                 $item_id = $res['data']['create_item']['id'];
                 $this->exportHtml($conversation_id);
                 $response = $this->mondayApi->updateItem($item_id, $file_column_id);
@@ -589,6 +602,7 @@ class MondaySettingsController extends Controller
             $phone = $value['column_values'][0]['text'];
             $email = $value['column_values'][1]['text'];
             $company = $value['column_values'][2]['text'];
+            $websites = $value['column_values'][3]['text'];
             $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
 
             if($email == '') continue;
@@ -598,13 +612,22 @@ class MondaySettingsController extends Controller
                 ->first();
 
             if (!is_null($existingCustomer)) {
-                continue; // Skip if customer already exists
+                DB::table('customers')
+                    ->where('id', $existingCustomer->id)
+                    ->update([
+                        'first_name' => $name,
+                        'company' => $company,
+                        'phones' => $phones,
+                        'websites' => $websites,
+                    ]);
+                continue;
             }
 
             $customerId = DB::table('customers')->insertGetId([
                 'first_name' => $name,
                 'company' => $company,
                 'phones' => $phones,
+                'websites' => $websites,
             ]);
 
             // Check if an email with the same address exists

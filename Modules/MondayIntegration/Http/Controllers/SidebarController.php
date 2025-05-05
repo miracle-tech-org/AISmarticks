@@ -94,7 +94,6 @@ class SidebarController extends Controller
         $boardType = request()->get('board_type', 'primary');
 
         $mondayItems = [];
-
         $tmp = $this->getMondayItemsForCustomer($customer, $conversation, $settings, $skipCache, $boardType);
         if(is_null($tmp)) {
             return view('mondayintegration::sidebar.empty_widget');
@@ -323,7 +322,8 @@ class SidebarController extends Controller
         if (is_null($result)) {
             // If no match found via conversation, try customer directly
             // $result = $this->mondayApi->searchItems($boardId, $settings['customer_search_field'], $customer->first_name);
-            $result = $this->mondayApi->getBoardItems($boardId);
+            $result = $this->mondayApi->getBoardItems($boardId, 300);
+
             $phoneNormalizer = new PhoneNormalizer;
 
             if(count($result) == 0) {
@@ -332,16 +332,16 @@ class SidebarController extends Controller
             $data = $result['items_page']['items'];
 
             foreach ($data as $i => $entry) {
-                if ($entry['name'] === $customer->first_name) {
+                if (str_contains($entry['name'], $customer->first_name)) {
                     return $entry;
                 }
 
                 foreach ($entry['column_values'] as $column) {
-                    if ($column['type'] === 'email' && $column['text'] === $conversation->customer_email) {
+                    if ($column['type'] == 'email' && $column['text'] == $conversation->customer_email && $column['text'] != "") {
                         return $entry;
                     }
 
-                    if ($customer->phones != "" && isset($column['type']) && isset($column['text']) &&  $column['type'] === 'phone') {
+                    if ($customer->phones != "" && isset($column['type']) && isset($column['text']) &&  $column['type'] === 'phone' && $column['text'] != "") {
                         $lst = json_decode($customer->phones);
                         if(count($lst) && $phoneNormalizer->compare($column['text'], json_decode($customer->phones)[0]->value)[0]) 
                             return $entry;

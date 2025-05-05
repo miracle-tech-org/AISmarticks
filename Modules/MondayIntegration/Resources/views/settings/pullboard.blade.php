@@ -86,21 +86,13 @@
                             <option value="60" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '60' ? 'selected' : '' }}>
                                 {{ __('Every hour') }}
                             </option>
+                            <option value="0" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '0' ? 'selected' : '' }}>
+                                {{ __('Disable Pull Frequency') }}
+                            </option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <div class="col-sm-offset-3 col-sm-9">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="pull_attachments" value="1" 
-                                    {{ old('pull_attachments', $settings['pull_attachments'] ?? '') ? 'checked' : '' }}>
-                                {{ __('Pull attachments') }}
-                            </label>
-                        </div>
-                    </div>
-                </div>
                 <div class="form-group margin-top">
                     <div class="col-sm-offset-3 col-sm-9">
                         <button type="submit" class="btn btn-primary">
@@ -129,20 +121,20 @@
                                 <input type="hidden" name="board_type" value="pull">
                                 <div class="mapping-header">
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-5">
                                             {{ __('Smarticks Field') }}
                                             <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Smarticks field that will receive data from Monday.com') }}"></i>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-5">
                                             {{ __('Monday.com Column') }}
                                             <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Monday.com column that contains the data to be pulled') }}"></i>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-2" style="display: none;">
                                             {{ __('Transform') }}
                                             <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('Optional transformation to apply to the data before storing it in Smarticks') }}"></i>
                                         </div>
-                                        <div class="col-md-1">
-                                            {{ __('Required') }}
+                                        <div class="col-md-1" style="display: none">
+                                            {{ __('Overwrite') }}
                                         </div>
                                         <div class="col-md-1">
                                             {{ __('Actions') }}
@@ -154,7 +146,7 @@
                                     <br/>
                                     <div class="mapping-row" data-index="{{ $index }}">
                                         <div class="row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <select name="mappings[{{ $index }}][freescout_field]" class="form-control freescout-field-select" required>
                                                     <option value="">{{ __('Select Field') }}</option>
                                                     @foreach($freescoutFields as $group => $fields)
@@ -166,24 +158,24 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <select name="mappings[{{ $index }}][monday_column]" class="form-control monday-column-select" required>
                                                     <option value="">{{ __('Select Column') }}</option>
                                                     @foreach($pullboardColumns as $column)
                                                         <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}" {{ $mapping->monday_column == $column['id'] ? 'selected' : '' }}>
-                                                            {{ $column['title'] }} ({{ $column['type'] }})
+                                                            {{ $column['title'] }} ({{ $column['title'] == 'Status' ? 'number' : 'text' }})
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-md-2" style="display: none;">
                                                 <select name="mappings[{{ $index }}][transform_rule]" class="form-control transform-rule-select">
                                                     @foreach($transformRules as $rule => $label)
                                                         <option value="{{ $rule }}" {{ $mapping->transform_rule == $rule ? 'selected' : '' }}>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-1 text-center">
+                                            <div class="col-md-1 text-center" style="display: none">
                                                 <input type="checkbox" name="mappings[{{ $index }}][is_required]" value="1" {{ $mapping->is_required ? 'checked' : '' }}>
                                             </div>
                                             <div class="col-md-1 text-center">
@@ -273,10 +265,6 @@
                                         <i class="glyphicon glyphicon-refresh"></i> {{ __('Sync now') }}
                                     </button>
                                     
-                                    <label for="overwrite-all">
-                                        <input type="checkbox" name="overwrite-all" id="overwrite-all">
-                                        Overwite all
-                                    </label>
                                     {{-- <button type="button" class="btn btn-default import-mappings-btn" data-board-type="pull">
                                         <i class="glyphicon glyphicon-upload"></i> Import
                                     </button> --}}
@@ -308,7 +296,7 @@
     <br/>
     <div class="mapping-row" data-index="0">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <select name="mappings[0][freescout_field]" class="form-control freescout-field-select" required>
                     <option value="">{{ __('Select Field') }}</option>
                     @foreach($freescoutFields as $category => $fields)
@@ -320,7 +308,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
                     <option value="">{{ __('Select Column') }}</option>
                     @foreach($pullboardColumns as $column)
@@ -328,7 +316,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3" style="display: none">
                 <select name="mappings[0][transform_rule]" class="form-control transform-rule-select">
                     <option value="">{{ __('No Transform') }}</option>
                     <option value="date_format">{{ __('Date Format') }}</option>
