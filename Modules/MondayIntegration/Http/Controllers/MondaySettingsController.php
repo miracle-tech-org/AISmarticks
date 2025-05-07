@@ -218,6 +218,11 @@ class MondaySettingsController extends Controller
         foreach ($results as $key => $value) {
             $customerFields[('customer_fields.' . $key)] = $value->name;
         }
+        $results = DB::select('SELECT * FROM custom_fields');
+        foreach ($results as $key => $value) {
+            $customerFields[('custom_fields.' . $key)] = $value->name;
+        }
+
         $freescoutFields = [
             'Customer' => [
                 'customer.first_name' => __('First Name'),
@@ -605,8 +610,6 @@ class MondaySettingsController extends Controller
             $websites = $value['column_values'][3]['text'];
             $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
 
-            if($email == '') continue;
-
             $existingCustomer = DB::table('customers')
                 ->where('phones', $phones)
                 ->first();
@@ -629,6 +632,7 @@ class MondaySettingsController extends Controller
                 'phones' => $phones,
                 'websites' => $websites,
             ]);
+            if($email == '') continue;
 
             // Check if an email with the same address exists
             $existingEmail = DB::table('emails')

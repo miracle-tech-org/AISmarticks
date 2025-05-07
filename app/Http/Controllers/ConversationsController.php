@@ -857,6 +857,9 @@ class ConversationsController extends Controller
                 }
                 if(\Module::isActive('mondayintegration')) {
                     try {
+                        if($request->status != "3")
+                            return;
+
                         $thread = Thread::where('conversation_id', $conversation->id)->orderByDesc('id')->first();
                         $requestData = [
                             'conversation_id' => $thread->conversation_id,
