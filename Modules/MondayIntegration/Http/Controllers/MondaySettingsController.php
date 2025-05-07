@@ -367,6 +367,16 @@ class MondaySettingsController extends Controller
     public function sendPushboardItem(Request $request)
     {
         try {
+            $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
+            $isSend = 0;
+            if (!empty($settings['push_on_conversation_created']) || $settings['push_on_conversation_created'] != '1')
+                $isSend++;
+            if (!empty($settings['push_on_conversation_updated']) || $settings['push_on_conversation_updated'] != '1')
+                $isSend++;
+            
+            if($isSend == 0 && $request->upload != 'yes')
+                return;
+
             $pushboard_id = DB::table('monday_settings')
                 ->where('key', 'pushboard_id')
                 ->value('value');
@@ -376,6 +386,9 @@ class MondaySettingsController extends Controller
             $thread_id = $request->thread_id;
             $conversation = Conversation::find($conversation_id);
             $thread = Thread::find($thread_id);
+            if($thread->created_by_user_id != '')
+                return;
+            
             $column_values = [
                 [$responseBody['columns'][0]['id'] => "Name"]
             ];
@@ -455,6 +468,10 @@ class MondaySettingsController extends Controller
                 $jsonArray = $thread->meta;
                 if($jsonArray != "" && count($jsonArray)) {
                     $meta = $jsonArray['channel'];
+                }
+                if($meta == "") {
+                    if($conversation->customer_email != "") $meta = "email";
+                    else $meta = "telegram";
                 }
                 array_push($column_values, [$responseBody['columns'][50]['id'] => (string)$thread->id ?? '']);
                 array_push($column_values, [$responseBody['columns'][51]['id'] => (string)$thread->conversation_id ?? '']);

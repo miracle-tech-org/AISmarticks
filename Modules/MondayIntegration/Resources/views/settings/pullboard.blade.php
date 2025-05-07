@@ -74,6 +74,9 @@
                     <label class="col-sm-3 control-label">{{ __('Pull Frequency') }}</label>
                     <div class="col-sm-9">
                         <select name="pull_frequency" class="form-control">
+                            <option value="0" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '0' ? 'selected' : '' }}>
+                                {{ __('Disable Pull Frequency') }}
+                            </option>
                             <option value="5" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '5' ? 'selected' : '' }}>
                                 {{ __('Every 5 minutes') }}
                             </option>
@@ -85,9 +88,6 @@
                             </option>
                             <option value="60" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '60' ? 'selected' : '' }}>
                                 {{ __('Every hour') }}
-                            </option>
-                            <option value="0" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '0' ? 'selected' : '' }}>
-                                {{ __('Disable Pull Frequency') }}
                             </option>
                         </select>
                     </div>

@@ -329,8 +329,6 @@
             })
         });
 
-
-
         $("#pushboard_id").on('change', loadItems)
         $("#btn-create-board").on('click', function() {
             var board_name = $("#board_name").val();
@@ -346,8 +344,10 @@
                 board_kind: board_kind,
                 fields: fields,
             }, (res) => {
-                showFloatingAlert('success', 'Saved successfully.');
-                location.reload();
+                showFloatingAlert('success', `You pushedboard was created successfully. Pushboard name: ${board_name}`);
+                setTimeout(() => {
+                    window.reload();
+                }, 2000);
             })
         });
 

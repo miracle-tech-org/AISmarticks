@@ -857,15 +857,21 @@ class ConversationsController extends Controller
                 }
                 if(\Module::isActive('mondayintegration')) {
                     try {
-                        if($request->status != "3")
-                            return;
-
                         $thread = Thread::where('conversation_id', $conversation->id)->orderByDesc('id')->first();
-                        $requestData = [
-                            'conversation_id' => $thread->conversation_id,
-                            'thread_id' => $thread->id,
-                            'upload' => 'yes',
-                        ];
+                        $requestData = [];
+                        if($request->status == "3") {
+                            $requestData = [
+                                'conversation_id' => $thread->conversation_id,
+                                'thread_id' => $thread->id,
+                                'upload' => 'yes',
+                            ];
+                        } else {
+                            $requestData = [
+                                'conversation_id' => $thread->conversation_id,
+                                'thread_id' => $thread->id,
+                            ];
+                        }
+
                         $client = new Client();
                         $client->request('POST', route('monday.send.pushboard.item'), [
                             'http_errors' => false,

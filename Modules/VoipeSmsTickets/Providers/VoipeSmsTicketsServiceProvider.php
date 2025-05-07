@@ -14,6 +14,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
 use Illuminate\Support\Facades\File;
 use Modules\VoipeIntegration\Providers\VoipeIntegrationServiceProvider;
+use GuzzleHttp\Client;
 
 use Modules\AIAssistant\Jobs\ProcessAIResponse;
 use Modules\AIAssistant\Models\Ticket;
@@ -113,6 +114,22 @@ END;
                                     $ticket->message = $smsMessage;
                                     $job = new ProcessAIResponse($ticket);
                                     $job->execute();
+                                }
+
+                                if(\Module::isActive('mondayintegration')) {
+                                    try {
+                                        $thread = Thread::latest('id')->first();
+                                        $requestData = [
+                                            'conversation_id' => $thread->conversation_id,
+                                            'thread_id' => $thread->id
+                                        ];
+                                        $client = new Client();
+                                        $client->request('POST', route('monday.send.pushboard.item'), [
+                                            'http_errors' => false,
+                                            'json' => $requestData
+                                        ]);
+                                    } catch (\Exception $e) {
+                                    }
                                 }
                             }
                             // $client = new \GuzzleHttp\Client();

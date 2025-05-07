@@ -68,61 +68,23 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Sync Frequency') }}</label>
                     <div class="col-sm-9">
-                        <select name="sync_frequency" class="form-control">
-                            <option value="5" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '5' ? 'selected' : '' }}>
+                        <select name="pull_frequency" class="form-control" disabled>
+                            <option value="0" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '0' ? 'selected' : '' }}>
+                                {{ __('Disable Pull Frequency') }}
+                            </option>
+                            <option value="5" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '5' ? 'selected' : '' }}>
                                 {{ __('Every 5 minutes') }}
                             </option>
-                            <option value="15" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '15' ? 'selected' : '' }}>
+                            <option value="15" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '15' ? 'selected' : '' }}>
                                 {{ __('Every 15 minutes') }}
                             </option>
-                            <option value="30" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '30' ? 'selected' : '' }}>
+                            <option value="30" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '30' ? 'selected' : '' }}>
                                 {{ __('Every 30 minutes') }}
                             </option>
-                            <option value="60" {{ old('sync_frequency', $settings['sync_frequency'] ?? '') == '60' ? 'selected' : '' }}>
+                            <option value="60" {{ old('pull_frequency', $settings['pull_frequency'] ?? '') == '60' ? 'selected' : '' }}>
                                 {{ __('Every hour') }}
                             </option>
                         </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notification Settings -->
-            <div class="form-section">
-                <h3>{{ __('Notification Settings') }}</h3>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{{ __('Error Notifications') }}</label>
-                    <div class="col-sm-9">
-                        <select name="error_notification" class="form-control">
-                            <option value="none" {{ old('error_notification', $settings['error_notification'] ?? '') == 'none' ? 'selected' : '' }}>
-                                {{ __('Disabled') }}
-                            </option>
-                            <option value="immediate" {{ old('error_notification', $settings['error_notification'] ?? '') == 'immediate' ? 'selected' : '' }}>
-                                {{ __('Immediate') }}
-                            </option>
-                            <option value="daily" {{ old('error_notification', $settings['error_notification'] ?? '') == 'daily' ? 'selected' : '' }}>
-                                {{ __('Daily Summary') }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{{ __('Notification Email') }}</label>
-                    <div class="col-sm-9">
-                        <input type="email" name="notification_email" class="form-control" 
-                               value="{{ old('notification_email', $settings['notification_email'] ?? '') }}">
-                        <p class="help-block">
-                            {{ __('Email address for error notifications. Leave empty to use system default.') }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="form-group margin-top">
-                    <div class="col-sm-offset-3 col-sm-9">
-                        <a href="{{route('monday.settings.clear')}}" class="btn btn-primary">
-                            {{ __('Clear Mappings') }}
-                        </a>
                     </div>
                 </div>
             </div>
@@ -225,7 +187,6 @@
             
             $button.prop('disabled', true);
             $status.removeClass('connection-success connection-error').text('{{ __('Testing connection...') }}');
-            
             $.ajax({
                 url: '{{ route("monday.test-connection") }}',
                 type: 'POST',
@@ -234,7 +195,14 @@
                     api_token: apiToken
                 },
                 success: function(response) {
-                    $status.removeClass('connection-error').addClass('connection-success').text(response.message + `: ${response.result.me.account.slug}`);
+                    if(response.result.me == undefined) {
+                        showFloatingAlert('error', 'Incorrect API key provided');
+                        $status.removeClass('connection-error').addClass('connection-success').text('Incorrect API key provided')
+                    }
+                    else {
+                        $status.removeClass('connection-error').addClass('connection-success').text(response.message + `: ${response.result.me.account.slug}`);
+                    }
+
                 },
                 error: function(xhr) {
                     var errorMessage = '{{ __('Connection failed') }}';
