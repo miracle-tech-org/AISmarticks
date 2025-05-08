@@ -641,6 +641,7 @@ class MondaySettingsController extends Controller
                 ->where('phones', $phones)
                 ->first();
 
+            $customerId = "";
             if (!is_null($existingCustomer)) {
                 DB::table('customers')
                     ->where('id', $existingCustomer->id)
@@ -650,20 +651,23 @@ class MondaySettingsController extends Controller
                         'phones' => $phones,
                         'websites' => $websites,
                     ]);
-                continue;
+                $customerId = $existingCustomer->id;
+            } else {
+                $customerId = DB::table('customers')->insertGetId([
+                    'first_name' => $name,
+                    'company' => $company,
+                    'phones' => $phones,
+                    'websites' => $websites,
+                ]);
             }
 
-            $customerId = DB::table('customers')->insertGetId([
-                'first_name' => $name,
-                'company' => $company,
-                'phones' => $phones,
-                'websites' => $websites,
-            ]);
             if($email == '') continue;
 
             // Check if an email with the same address exists
             $existingEmail = DB::table('emails')
-                ->where('email', $email)
+                ->where([
+                    'email' => $email,
+                ])
                 ->first();
 
             if (!is_null($existingEmail)) {
