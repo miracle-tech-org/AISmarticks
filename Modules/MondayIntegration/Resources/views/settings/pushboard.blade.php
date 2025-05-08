@@ -344,7 +344,7 @@
                 board_kind: board_kind,
                 fields: fields,
             }, (res) => {
-                showFloatingAlert('success', `You pushedboard was created successfully. Pushboard name: ${board_name}`);
+                showFloatingAlert('success', `You pushedboard was created successfully. Pushboard name: "${board_name}" id: ${res.board_id}`);
                 setTimeout(() => {
                     window.reload();
                 }, 2000);

@@ -333,9 +333,19 @@ class MondaySettingsController extends Controller
         $board_id = $result['create_board']['id'];
 
         if($fields != "all") {
-            return $this->mondayApi->createColumn($board_id, $fields);
+            $columns = $this->mondayApi->createColumn($board_id, $fields);
+            $res = [
+                'board_id' => $board_id,
+                'columns' => $columns
+            ];
+            return $res;
         } else {
-            return $this->mondayApi->createColumnsWithAllFields($board_id);
+            $columns = $this->mondayApi->createColumnsWithAllFields($board_id);
+            $res = [
+                'board_id' => $board_id,
+                'columns' => $columns
+            ];
+            return $res;
         }
     }
 
