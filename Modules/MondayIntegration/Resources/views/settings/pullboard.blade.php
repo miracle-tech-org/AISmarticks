@@ -40,19 +40,25 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Pullboard ID') }}</label>
-                    <div class="col-sm-9">
-                        <select name="pullboard_id" class="form-control" required>
+                    <div class="col-sm-4">
+                        <input type="text" value="{{$settings['pullboard_id']}}" class="form-control" id="selected_id"/>
+                        <p class="help-block">
+                            {{ __('Select the Monday.com board to pull data from.') }}
+                        </p>
+                    </div>
+                    <div class="col-sm-4">
+                        <select name="pullboard_id" id="pullboard_id" class="form-control" required>
                             <option value="">{{ __('Select Board') }}</option>
                             @foreach($boards['boards'] as $board)
                                 <option value="{{ $board['id'] }}" 
                                     {{ (old('pullboard_id', $settings['pullboard_id'] ?? '') == $board['id']) ? 'selected' : '' }}>
-                                    {{ $board['name'] }}
+                                        {{ $board['name'] }}
                                 </option>
                             @endforeach
                         </select>
-                        <p class="help-block">
-                            {{ __('Select the Monday.com board to pull data from.') }}
-                        </p>
+                    </div>
+                    <div class="col-sm-1">
+                        <button class="btn btn-primary" type="button" id="btnApply">Apply</button>
                     </div>
                 </div>
 
@@ -556,5 +562,22 @@
                 });
             });
         }
+
+        $("#btnApply").on('click', function() {
+            var selected_id = $("#selected_id").val();
+
+            var exists = $("#pullboard_id").find(`option[value="${selected_id}"]`).length > 0;
+            if(!exists) {
+                alert("Invalid Monday board ID provided. Please verify the ID and try again.")
+                return;
+            }
+
+            $("#pullboard_id").val(selected_id);
+        })
+
+        $("#pullboard_id").on('change', function() {
+            var selected_id = $("#pullboard_id").val();
+            $("#selected_id").val(selected_id);
+        })
     };
 </script>

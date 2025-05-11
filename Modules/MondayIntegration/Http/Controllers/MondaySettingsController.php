@@ -20,6 +20,7 @@ use DB;
 use GuzzleHttp\Client;
 use App\ActivityLog;
 use Modules\MondayIntegration\Models\MondayFieldMapping;
+use App\Jobs\SendAlert;
 
 class MondaySettingsController extends Controller
 {
@@ -627,6 +628,21 @@ class MondaySettingsController extends Controller
 
     public function syncNow(Request $request)
     {
+        $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
+        $boards = $this->mondayApi->getBoards();
+        $pull_exist = false;
+        foreach ($boards['boards'] as $board) {
+            if($board['id'] == $settings['pullboard_id']) {
+                $pull_exist = true;
+                exit();
+            }
+        }
+        if($pull_exist == false) {
+            $alert = new SendAlert("Monday: Pullboard doesn't exist. please configure pullboard");
+            $alert->handle();
+            return [];
+        }
+
         $board_id = $request->board_id;
         $result = $this->mondayApi->getBoardItems($board_id, 200);
         foreach ($result['items_page']['items'] as $key => $value) {

@@ -55,8 +55,17 @@ class MondayApiService
             ]
         ]);
 
-        $query = 'query { boards { id name columns { id title type } } }';
-        return $this->executeQuery($query);
+        // $query = 'query { workspaces { id name }}';
+        // $res = $this->executeQuery($query);
+        // $workspaces = [];
+        // foreach ($res['workspaces'] as $value) {
+        //     array_push($workspaces, $value['id']);
+        // }
+        // $workspaceIdsString = implode(',', $workspaces);
+        // $query = "query { boards(workspace_ids: [$workspaceIdsString]) { id name columns { id title type } } }";
+        $query = "query { boards(limit: 200) { id name columns { id title type } } }";
+        $res = $this->executeQuery($query);
+        return $res;
     }
 
     public function executeQuery($query, $variables = [])

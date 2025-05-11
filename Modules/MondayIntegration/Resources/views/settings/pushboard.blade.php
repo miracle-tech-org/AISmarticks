@@ -41,7 +41,14 @@
 
                     <div class="form-group">
                         <label class="col-sm-3 control-label">{{ __('Pushboard ID') }}</label>
-                        <div class="col-sm-9">
+                        <div class="col-sm-4">
+                            <input type="text" value="{{ $settings['pushboard_id'] }}" class="form-control"
+                                id="selected_id" />
+                            <p class="help-block">
+                                {{ __('Select the Monday.com board to push data to.') }}
+                            </p>
+                        </div>
+                        <div class="col-sm-4">
                             <select name="pushboard_id" id="pushboard_id" class="form-control" required>
                                 <option value="">{{ __('Select Board') }}</option>
                                 @foreach ($boards['boards'] as $board)
@@ -51,9 +58,9 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="help-block">
-                                {{ __('Select the Monday.com board to push data to.') }}
-                            </p>
+                        </div>
+                        <div class="col-sm-1">
+                            <button class="btn btn-primary" type="button" id="btnApply">Apply</button>
                         </div>
                     </div>
 
@@ -191,7 +198,8 @@
                                     <optgroup label="{{ $category }}">
                                         @foreach ($items as $key => $value)
                                             <option value="{{ $key }}">{{ $value }}
-                                                ({{ $key }})</option>
+                                                ({{ $key }})
+                                            </option>
                                         @endforeach
                                     </optgroup>
                                 @endforeach
@@ -205,7 +213,9 @@
                 </div>
                 <div class="form-group margin-top">
                     <div class="col-sm-offset-3 col-sm-9">
-                        <button id="btn-create-board" class="btn btn-primary">Create a Pushboard</a>
+                        <button id="btn-create-board" style="position: relative; display: flex; gap: 0.5rem; overflow: hidden;" class="btn btn-primary">
+                            Create a Pushboard
+                        </button>
                     </div>
                 </div>
             </div>
@@ -294,6 +304,7 @@
                 $("#tblItems").html("");
                 return;
             }
+            $("#selected_id").val(board_id);
 
             var url = "{{ route('monday.get.board-items') }}";
             var data = {
@@ -336,17 +347,21 @@
                 showFloatingAlert('error', 'Please input board name');
                 return;
             }
+            $("#btn-create-board").attr('disabled', true);
             var board_kind = $("#board_kind").val();
             var fields = $("#fields").val();
             var url = "{{ route('monday.board.save') }}";
+            $("#btn-create-board").html(`<span class="loading-spinner"></span> Processing...`);
             $.post(url, {
                 board_name: board_name,
                 board_kind: board_kind,
                 fields: fields,
             }, (res) => {
-                showFloatingAlert('success', `You pushedboard was created successfully. Pushboard name: "${board_name}" id: ${res.board_id}`);
+                showFloatingAlert('success',
+                    `You pushedboard was created successfully. Pushboard name: "${board_name}" id: ${res.board_id}`
+                    );
                 setTimeout(() => {
-                    window.reload();
+                    window.location.reload();
                 }, 2000);
             })
         });
@@ -429,6 +444,47 @@
             console.log($("#push_attachments").val())
         });
 
+        $("#btnApply").on('click', function() {
+            var selected_id = $("#selected_id").val();
+
+            var exists = $("#pushboard_id").find(`option[value="${selected_id}"]`).length > 0;
+            if (!exists) {
+                alert("Invalid Monday board ID provided. Please verify the ID and try again.")
+                return;
+            }
+
+            $("#pushboard_id").val(selected_id);
+            loadItems();
+        })
+
         loadItems();
     };
 </script>
+
+<style>
+    .loading-btn .loading-spinner+span {
+        transition: opacity 0.3s ease;
+    }
+
+    .loading-btn:disabled .loading-spinner+span {
+        opacity: 0;
+    }
+
+    /* Circular Spinner */
+    .loading-spinner {
+        margin-top: 0.6rem;
+        width: 1.4rem;
+        height: 1.4rem;
+        border: 2px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    /* Optional: Fade out text and scale spinner slightly when active */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>

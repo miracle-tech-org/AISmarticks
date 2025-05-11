@@ -69,6 +69,13 @@
         <td class="subs-cb "><input type="checkbox" id="ai_23" class="checkbox-state"/></td>
         <td class="subs-cb "><input type="checkbox" id="ai_24" class="checkbox-state"/></td>
     </tr>
+    <tr>
+        <td>Monday alert</td>
+        <td class="subs-cb "><input type="checkbox" id="monday_1" checked class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_2" checked class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_3" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_4" class="checkbox-state"/></td>
+    </tr>
 
     @action('notifications_table.general.append', ['person' => $person, 'subscriptions' => $subscriptions, 'mobile_available' => $mobile_available, 'subscriptions_formname' => $subscriptions_formname])
     <tr class="table-header">
