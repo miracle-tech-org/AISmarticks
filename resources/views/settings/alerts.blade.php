@@ -103,4 +103,20 @@
 @section('javascript')
     @parent
     notificationsInit();
+
+    $(document).ready(function () {
+        $('.checkbox-state').each(function () {
+            const id = $(this).attr('id');
+            const savedState = localStorage.getItem(id);
+            if (savedState !== null) {
+                $(this).prop('checked', savedState === 'true');
+            }
+        });
+
+        // Save state to localStorage on change
+        $('.checkbox-state').on('change', function () {
+            const id = $(this).attr('id');
+            localStorage.setItem(id, $(this).is(':checked'));
+        });
+    });
 @endsection

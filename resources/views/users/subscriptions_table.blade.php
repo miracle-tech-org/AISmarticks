@@ -70,11 +70,32 @@
         <td class="subs-cb "><input type="checkbox" id="ai_24" class="checkbox-state"/></td>
     </tr>
     <tr>
-        <td>Monday alert</td>
-        <td class="subs-cb "><input type="checkbox" id="monday_1" checked class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_2" checked class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_3" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_4" class="checkbox-state"/></td>
+        <td>When some error is received and logged in Monday log</td>
+        <td class="subs-cb "><input type="checkbox" id="monday_11" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_12" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_13" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_14" class="checkbox-state"/></td>
+    </tr>
+    <tr>
+        <td>When some error was received while smarticks tried to push data to Monday</td>
+        <td class="subs-cb "><input type="checkbox" id="monday_21" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_22" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_23" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_24" class="checkbox-state"/></td>
+    </tr>
+    <tr>
+        <td>when some error was received while smarticks tried to pull data from Monday</td>
+        <td class="subs-cb "><input type="checkbox" id="monday_31" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_32" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_33" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_34" class="checkbox-state"/></td>
+    </tr>
+    <tr>
+        <td>when a timeout occurred from Monday</td>
+        <td class="subs-cb "><input type="checkbox" id="monday_41" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_42" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_43" class="checkbox-state"/></td>
+        <td class="subs-cb "><input type="checkbox" id="monday_44" class="checkbox-state"/></td>
     </tr>
 
     @action('notifications_table.general.append', ['person' => $person, 'subscriptions' => $subscriptions, 'mobile_available' => $mobile_available, 'subscriptions_formname' => $subscriptions_formname])
