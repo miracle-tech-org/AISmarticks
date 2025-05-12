@@ -634,7 +634,7 @@ class MondaySettingsController extends Controller
         foreach ($boards['boards'] as $board) {
             if($board['id'] == $settings['pullboard_id']) {
                 $pull_exist = true;
-                exit();
+                break;
             }
         }
         if($pull_exist == false) {
@@ -643,7 +643,7 @@ class MondaySettingsController extends Controller
             return [];
         }
 
-        $board_id = $request->board_id;
+        $board_id = $settings['pullboard_id'];
         $result = $this->mondayApi->getBoardItems($board_id, 200);
         foreach ($result['items_page']['items'] as $key => $value) {
             $name = $value['name'];
