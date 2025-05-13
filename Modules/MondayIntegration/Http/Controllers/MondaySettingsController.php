@@ -644,14 +644,31 @@ class MondaySettingsController extends Controller
         }
 
         $board_id = $settings['pullboard_id'];
-        $result = $this->mondayApi->getBoardItems($board_id, 200);
+        $result = $this->mondayApi->getBoardItems($board_id, 500);
+        
         foreach ($result['items_page']['items'] as $key => $value) {
             $name = $value['name'];
-            $phone = $value['column_values'][0]['text'];
-            $email = $value['column_values'][1]['text'];
-            $company = $value['column_values'][2]['text'];
-            $websites = $value['column_values'][3]['text'];
-            $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
+            $phone = "";
+            $phones = "";
+            $email = "";
+            $company = "";
+            $websites = "";
+
+            foreach ($value['column_values'] as $col) {
+                if($col['type'] == 'phone') {
+                    $phone = $col['text'];
+                    $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
+                }
+                if($col['type'] == 'email') {
+                    $email = $col['text'];
+                }
+                if($col['type'] == 'text') {
+                    $company = $col['text'];
+                }
+                if($col['type'] == 'link') {
+                    $websites = $col['text'];
+                }
+            }
 
             $existingCustomer = DB::table('customers')
                 ->where('phones', $phones)
