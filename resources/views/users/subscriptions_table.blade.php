@@ -64,40 +64,11 @@
     </tr>
     <tr>
         <td>AI agent monthly usage alert</td>
-        <td class="subs-cb "><input type="checkbox" id="ai_21" checked class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="ai_22" checked class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="ai_23" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="ai_24" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_21" checked class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_22" checked class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_23" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="ai_24" class="checkbox-state"/></td>
     </tr>
-    <tr>
-        <td>When some error is received and logged in Monday log</td>
-        <td class="subs-cb "><input type="checkbox" id="monday_11" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_12" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_13" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_14" class="checkbox-state"/></td>
-    </tr>
-    <tr>
-        <td>When some error was received while smarticks tried to push data to Monday</td>
-        <td class="subs-cb "><input type="checkbox" id="monday_21" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_22" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_23" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_24" class="checkbox-state"/></td>
-    </tr>
-    <tr>
-        <td>when some error was received while smarticks tried to pull data from Monday</td>
-        <td class="subs-cb "><input type="checkbox" id="monday_31" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_32" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_33" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_34" class="checkbox-state"/></td>
-    </tr>
-    <tr>
-        <td>when a timeout occurred from Monday</td>
-        <td class="subs-cb "><input type="checkbox" id="monday_41" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_42" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_43" class="checkbox-state"/></td>
-        <td class="subs-cb "><input type="checkbox" id="monday_44" class="checkbox-state"/></td>
-    </tr>
-
     @action('notifications_table.general.append', ['person' => $person, 'subscriptions' => $subscriptions, 'mobile_available' => $mobile_available, 'subscriptions_formname' => $subscriptions_formname])
     <tr class="table-header">
         <th>
@@ -177,6 +148,46 @@
         <td class="subs-cb subscriptions-mobile"><input type="checkbox" @include('users/is_subscribed', ['medium' => App\Subscription::MEDIUM_MOBILE, 'event' => App\Subscription::EVENT_USER_REPLIED_TO_ASSIGNED]) name="{{ $subscriptions_formname }}[{{ App\Subscription::MEDIUM_MOBILE }}][]" @if (!$mobile_available) disabled="disabled" @endif value="{{ App\Subscription::EVENT_USER_REPLIED_TO_ASSIGNED }}"></td>
         @action('notifications_table.td', App\Subscription::EVENT_USER_REPLIED_TO_ASSIGNED, $subscriptions_formname, $subscriptions)
     </tr>
+
+    <tr class="table-header">
+        <th>
+            @if ($person)
+                {{ __("Notify :person when monday… ", ['person' => $person]) }}
+            @else
+                {{ __('Notify me when monday… ') }}
+            @endif
+        </th>
+        <td class="text-center">&nbsp;</td>
+        <td class="text-center">&nbsp;</td>
+        <td class="text-center">&nbsp;</td>
+    </tr>
+    <tr>
+        <td>When some error is received and logged in Monday log</td>
+        <td class="subs-cb"><input type="checkbox" id="monday_11" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_12" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_13" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_14" class="checkbox-state"/></td>
+    </tr>
+    <tr>
+        <td>When some error was received while smarticks tried to push data to Monday</td>
+        <td class="subs-cb"><input type="checkbox" id="monday_21" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_22" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_23" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_24" class="checkbox-state"/></td>
+    </tr>
+    <tr>
+        <td>when some error was received while smarticks tried to pull data from Monday</td>
+        <td class="subs-cb"><input type="checkbox" id="monday_31" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_32" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_33" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_34" class="checkbox-state"/></td>
+    </tr>
+    <tr>
+        <td>when a timeout occurred from Monday</td>
+        <td class="subs-cb"><input type="checkbox" id="monday_41" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_42" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_43" class="checkbox-state"/></td>
+        <td class="subs-cb"><input type="checkbox" id="monday_44" class="checkbox-state"/></td>
+    </tr>
+
 </table>
-
-
