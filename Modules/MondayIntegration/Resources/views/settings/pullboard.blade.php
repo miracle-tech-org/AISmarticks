@@ -478,7 +478,7 @@
             const currentTime = `${hours}:${minutes}:${seconds}.${milliseconds}`;
             $("#sync-status").html(`Sync started on: ${currentTime}\n`);
             var data = {
-                board_id: "{{old('pullboard_id', $settings['pullboard_id'] ?? '')}}"
+                isClick: 'yes'
             }
             $.post(url, data, (res) => {
                 $("#sync-status").append(`Connected to board: "{{$pullboardName}}"\n`);

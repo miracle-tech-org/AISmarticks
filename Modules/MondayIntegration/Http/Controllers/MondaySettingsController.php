@@ -21,6 +21,7 @@ use GuzzleHttp\Client;
 use App\ActivityLog;
 use Modules\MondayIntegration\Models\MondayFieldMapping;
 use App\Jobs\SendAlert;
+use Carbon;
 
 class MondaySettingsController extends Controller
 {
@@ -568,6 +569,9 @@ class MondaySettingsController extends Controller
                 }
             }
         } catch (\Exception $e) {
+            $alert = new SendAlert("Monday: Push Error\n".$e->getMessage());
+            $alert->handle();
+
             ActivityLog::create([
                 'properties' => '[]',
                 'log_name' => 'mondayintegration_errors',
@@ -660,6 +664,31 @@ class MondaySettingsController extends Controller
     public function syncNow(Request $request)
     {
         $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
+        $frequency = (int)$settings['pull_frequency'];
+
+        if($frequency == 0 && $request->isClick != 'yes') {
+            return;
+        }
+
+        $lastRunTime = null;
+        $filePath = storage_path('app/sync_last_run.log');
+
+        if (file_exists($filePath)) {
+            $lastRun = trim(file_get_contents($filePath));
+            $lastRunTime = Carbon::parse($lastRun);
+        } else {
+            $lastRunTime = null;
+        }
+        $now = Carbon::now();
+
+        $shouldRun = !$lastRunTime || $now->diffInMinutes($lastRunTime) >= $frequency || $request->isClick === 'yes';
+        if($shouldRun == false)
+            return;
+
+        if ($request->isClick !== 'yes') {
+            file_put_contents($filePath, $now->toDateTimeString());
+        }
+    
         $boards = $this->mondayApi->getBoards();
         $pull_exist = false;
         foreach ($boards['boards'] as $board) {
