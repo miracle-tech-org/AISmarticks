@@ -98,7 +98,7 @@
                 <!-- Push Settings -->
                 <div class="form-section">
                     <h3>{{ __('Push Settings') }}</h3>
-
+                    
                     <div class="form-group">
                         <label class="col-sm-3 control-label">{{ __('Push Triggers') }}</label>
                         <div class="col-sm-9">
@@ -130,6 +130,23 @@
                                     {{ __('When conversation fully closed & Send full conversation attachment') }}
                                 </label>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{{ __('HTML Display Method') }}</label>
+                        <div class="col-sm-9">
+                            <select name="html_display_method" class="form-control">
+                                <option value="update" {{ old('html_display_method', $settings['html_display_method'] ?? '') == 'update' ? 'selected' : '' }}>
+                                    {{ __('As Update (Comment)') }}
+                                </option>
+                                <option value="attachment" {{ old('html_display_method', $settings['html_display_method'] ?? '') == 'attachment' ? 'selected' : '' }}>
+                                    {{ __('As File Attachment') }}
+                                </option>
+                            </select>
+                            <p class="help-block">
+                                {{ __('Choose how HTML conversation content will be displayed in Monday.com') }}
+                            </p>
                         </div>
                     </div>
 

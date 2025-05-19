@@ -762,12 +762,10 @@ class MondayApiService
             $filePath = storage_path('logs/chat.html');
 
             $client = new Client();
-
-            $response = $client->request('POST', 'https://api.monday.com/v2/file', [
+            $response = $client->request('POST', config('monday-integration.api.base_file_url'), [
                 'headers' => [
-                    'API-Version'   => '2024-01',
-                    'Authorization' => 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjQ5NjkxNjYzMywiYWFpIjoxMSwidWlkIjo3NDMwODQzMCwiaWFkIjoiMjAyNS0wNC0wOFQwNzo0NzozNC4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6Mjg4NjIxMjEsInJnbiI6ImV1YzEifQ.ryQ28s3ptvuLIGYqaApYP87_vdpaJ2a-0mb2GTFnYFg',
-                    'Cookie'        => '__cf_bm=9XdwKS5o47o6JhGpTT7O0T9E.Pbe.QybruhQtelxu20-1745227740-1.0.1.1-gcfM5m7VN7AXGMdrEaenkB8vXvGCQ6icVPzvCxlzfC7UZYwTUQAmLdxJV7GDswxbelkzys95Zx2d0a6nQI10Mj00fEJFYCuYggywphg4VZGHwP6pOYayeY9V5nQwi6ov; _cfuvid=A_iMDmVxs4slzA.VZtlOgn7UJaDFnwUvTh97.lV712k-1745104651000-0.0.1.1-604800000',
+                    'API-Version'   => config('monday.api.version'),
+                    'Authorization' => $this->apiToken,
                 ],
                 'multipart' => [
                     [
@@ -794,10 +792,45 @@ class MondayApiService
                     ],
                 ],
             ]);
-            
+
             return json_encode($response->getBody(), true);
         } catch (\Exception $e) {
             return $e->getMessage();
+        }
+    }
+
+    
+    public function addHtmlUpdate($itemId, $htmlContent, $convertToPlainText = false)
+    {
+        try {
+            $mutation = <<<'GQL'
+                mutation ($itemId: ID!, $body: String!) {
+                    create_update(item_id: $itemId, body: $body) {
+                        id
+                        body
+                        created_at
+                    }
+                }
+            GQL;
+    
+            $response = $this->client->post('', [
+                'json' => [
+                    'query'     => $mutation,
+                    'variables' => [
+                        'itemId' => $itemId,
+                        'body'   => $htmlContent,
+                    ],
+                ],
+                // 'debug' => true,
+            ]);
+
+            return $response;
+        } catch (\Exception $e) {
+            ActivityLog::create([
+                'properties' => json_encode(['item_id' => $itemId]),
+                'log_name' => 'mondayintegration_errors',
+                'description' => 'HTML update failed: ' . $e->getMessage(),
+            ]);
         }
     }
 }

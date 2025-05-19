@@ -5,7 +5,8 @@ return [
     
     'api' => [
         'base_url' => 'https://api.monday.com/v2',
-        'version' => '2023-10',
+        'base_file_url' => 'https://api.monday.com/v2/file',
+        'version' => '2024-01',
         'timeout' => env('MONDAY_API_TIMEOUT', 30),
         'retry_attempts' => env('MONDAY_RETRY_ATTEMPTS', 3),
         'retry_delay' => env('MONDAY_RETRY_DELAY', 5),

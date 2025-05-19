@@ -378,27 +378,28 @@ class MondaySettingsController extends Controller
     public function sendPushboardItem(Request $request)
     {
         try {
+
             $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
-            $isSend = 0;
-            if (!empty($settings['push_on_conversation_created']) || $settings['push_on_conversation_created'] != '1')
-                $isSend++;
-            if (!empty($settings['push_on_conversation_updated']) || $settings['push_on_conversation_updated'] != '1')
-                $isSend++;
+            // $isSend = 0;
+            // if (!empty($settings['push_on_conversation_created']) || $settings['push_on_conversation_created'] != '1')
+            //     $isSend++;
+            // if (!empty($settings['push_on_conversation_updated']) || $settings['push_on_conversation_updated'] != '1')
+            //     $isSend++;
             
-            if($isSend == 0 && $request->upload != 'yes')
-                return;
+            // if($isSend == 0 && $request->upload != 'yes')
+            //     return;
 
             $pushboard_id = DB::table('monday_settings')
                 ->where('key', 'pushboard_id')
                 ->value('value');
-
+    
             $responseBody = $this->mondayApi->getBoardById($pushboard_id);
             $conversation_id = $request->conversation_id;
             $thread_id = $request->thread_id;
             $conversation = Conversation::find($conversation_id);
             $thread = Thread::find($thread_id);
-            if($thread->created_by_user_id != '')
-                return;
+            // if($thread->created_by_user_id != '')
+            //     return;
             
             $column_values = [
                 [$responseBody['columns'][0]['id'] => "Name"]
@@ -506,7 +507,7 @@ class MondaySettingsController extends Controller
             array_push($column_values, [$responseBody['columns'][67]['id'] => (string)'']);
 
             $file_column_id = $responseBody['columns'][68]['id'];
-
+            
             $filteredArray = array_filter($column_values, function ($subArray) {
                 // Check if the sub-array contains non-empty values
                 return !empty(array_filter($subArray));
@@ -532,12 +533,39 @@ class MondaySettingsController extends Controller
                     }
                 }
             GRAPHQL;
+
             $res = $this->mondayApi->sendPushboardItem($query);
             if(isset($res['data']) && $request->upload == 'yes') {
                 $item_id = $res['data']['create_item']['id'];
-                $this->exportHtml($conversation_id);
-                $response = $this->mondayApi->updateItem($item_id, $file_column_id);
-                var_dump($response);
+                $htmlContent = $this->exportHtml($conversation_id);
+                try {
+                    if(isset($settings['html_display_method']) && $settings['html_display_method'] == 'update') {
+                        $response = $this->mondayApi->addHtmlUpdate($item_id, $htmlContent);
+            
+                        // Log success 
+                        \Log::info('MondayIntegration: Successfully attached HTML to Monday item', [
+                            'item_id' => $item_id,
+                            'conversation_id' => $conversation_id
+                        ]);
+                        return $response;
+                    } else {
+                        $response = $this->mondayApi->updateItem($item_id, $file_column_id);
+                        // Log success 
+                        \Log::info('MondayIntegration: Successfully attached HTML to Monday item', [
+                            'item_id' => $item_id,
+                            'conversation_id' => $conversation_id
+                        ]);
+                        return $response;
+                    }
+        
+                } catch (\Exception $e) {
+                    \Log::error('MondayIntegration: Failed to attach HTML to Monday item', [
+                        'item_id' => $item_id,
+                        'conversation_id' => $conversation_id,
+                        'error' => $e->getMessage()
+                    ]);
+                    return ['error' => $e->getMessage()];
+                }
             }
         } catch (\Exception $e) {
             ActivityLog::create([
@@ -548,7 +576,7 @@ class MondaySettingsController extends Controller
         }
     }
 
-    public function exportHtml($conversation_id) {
+    public function exportHtml($conversation_id, $saveToFile = true) {
         $conversation = Conversation::with(['customer', 'threads.user'])
             ->where('id', $conversation_id)
             ->firstOrFail();
@@ -622,8 +650,11 @@ class MondaySettingsController extends Controller
             </body>
             </html>";
 
-        $htmlPath = storage_path('logs/chat.html');
-        file_put_contents($htmlPath, $html);
+        if($saveToFile) {
+            $htmlPath = storage_path('logs/chat.html');
+            file_put_contents($htmlPath, $html);
+        }
+        return $html;
     }
 
     public function syncNow(Request $request)
