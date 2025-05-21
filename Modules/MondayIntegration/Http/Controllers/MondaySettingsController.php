@@ -380,16 +380,6 @@ class MondaySettingsController extends Controller
     {
         try {
 
-            $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
-            $push_on_conversation_create = !empty($settings['push_on_conversation_created']);
-            $push_on_conversation_updated = !empty($settings['push_on_conversation_updated']);
-            $push_on_conversation_closed = !empty($settings['push_on_conversation_closed']);
-            $push_on_conversation_fully_closed = !empty($settings['push_on_conversation_fully_closed']);
-
-            if($push_on_conversation_create && $push_on_conversation_updated && $push_on_conversation_closed && $push_on_conversation_fully_closed) {
-                return;
-            }
-
             $pushboard_id = DB::table('monday_settings')
                 ->where('key', 'pushboard_id')
                 ->value('value');
