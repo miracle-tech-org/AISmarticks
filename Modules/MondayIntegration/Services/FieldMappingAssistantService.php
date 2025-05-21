@@ -13,10 +13,10 @@ class FieldMappingAssistantService
     {
         $fields = [
             'User Data' => $this->getUserFields(),
-            'Customer Data' => $this->getCustomerFields(),
+            'Customer Data' => $this->getCustomerData(),
             'Conversation Data' => $this->getConversationFields(),
             'Thread Data' => $this->getThreadFields(),
-            'Custom Fields' => $this->getCustomFields(),
+            'Customer Fields' => $this->getCustomerFields(),
         ];
 
         return $fields;
@@ -50,7 +50,7 @@ class FieldMappingAssistantService
      * 
      * @return array
      */
-    public function getCustomerFields()
+    public function getCustomerData()
     {
         return [
             'customer.id' => 'Customer ID',
@@ -134,26 +134,26 @@ class FieldMappingAssistantService
      * 
      * @return array
      */
-    protected function getCustomFields()
+    protected function getCustomerFields()
     {
         try {
             // Try to get custom fields from the database
             $customFields = [];
 
             // Check if the CustomField model exists in FreeScout
-            if (class_exists('\App\CustomField')) {
-                $fields = \App\CustomField::all();
-                foreach ($fields as $field) {
-                    $key = 'custom_fields.' . $field->id;
-                    $customFields[$key] = $field->name;
-                }
-            }
+            // if (class_exists('\App\CustomField')) {
+            //     $fields = \App\CustomField::all();
+            //     foreach ($fields as $field) {
+            //         $key = 'custom_fields.' . $field->id;
+            //         $customFields[$key] = $field->name;
+            //     }
+            // }
             
             // If there's a module for custom fields, try to get fields from there too
-            if (class_exists('\Modules\CustomFields\Entities\CustomField')) {
-                $fields = \Modules\CustomFields\Entities\CustomField::all();
+            if (class_exists('\Modules\Crm\Entities\CustomerField')) {
+                $fields = \Modules\Crm\Entities\CustomerField::all();
                 foreach ($fields as $field) {
-                    $key = 'custom_fields.' . $field->id;
+                    $key = 'customer_fields_' . $field->id;
                     $customFields[$key] = $field->name;
                 }
             }

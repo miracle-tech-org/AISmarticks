@@ -381,14 +381,14 @@ class MondaySettingsController extends Controller
         try {
 
             $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
-            // $isSend = 0;
-            // if (!empty($settings['push_on_conversation_created']) || $settings['push_on_conversation_created'] != '1')
-            //     $isSend++;
-            // if (!empty($settings['push_on_conversation_updated']) || $settings['push_on_conversation_updated'] != '1')
-            //     $isSend++;
-            
-            // if($isSend == 0 && $request->upload != 'yes')
-            //     return;
+            $push_on_conversation_create = !empty($settings['push_on_conversation_created']);
+            $push_on_conversation_updated = !empty($settings['push_on_conversation_updated']);
+            $push_on_conversation_closed = !empty($settings['push_on_conversation_closed']);
+            $push_on_conversation_fully_closed = !empty($settings['push_on_conversation_fully_closed']);
+
+            if($push_on_conversation_create && $push_on_conversation_updated && $push_on_conversation_closed && $push_on_conversation_fully_closed) {
+                return;
+            }
 
             $pushboard_id = DB::table('monday_settings')
                 ->where('key', 'pushboard_id')
@@ -503,11 +503,7 @@ class MondaySettingsController extends Controller
                 array_push($column_values, [$responseBody['columns'][64]['id'] => (string)$meta ?? '']);
             }
 
-            array_push($column_values, [$responseBody['columns'][65]['id'] => (string)'']);
-            array_push($column_values, [$responseBody['columns'][66]['id'] => (string)'']);
-            array_push($column_values, [$responseBody['columns'][67]['id'] => (string)'']);
-
-            $file_column_id = $responseBody['columns'][68]['id'];
+            $file_column_id = $responseBody['columns'][65]['id'];
             
             $filteredArray = array_filter($column_values, function ($subArray) {
                 // Check if the sub-array contains non-empty values
@@ -664,30 +660,30 @@ class MondaySettingsController extends Controller
     public function syncNow(Request $request)
     {
         $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
-        $frequency = (int)$settings['pull_frequency'];
+        // $frequency = (int)$settings['pull_frequency'];
 
-        if($frequency == 0 && $request->isClick != 'yes') {
-            return;
-        }
+        // if($frequency == 0 && $request->isClick != 'yes') {
+        //     return;
+        // }
 
-        $lastRunTime = null;
-        $filePath = storage_path('app/sync_last_run.log');
+        // $lastRunTime = null;
+        // $filePath = storage_path('app/sync_last_run.log');
 
-        if (file_exists($filePath)) {
-            $lastRun = trim(file_get_contents($filePath));
-            $lastRunTime = Carbon::parse($lastRun);
-        } else {
-            $lastRunTime = null;
-        }
-        $now = Carbon::now();
+        // if (file_exists($filePath)) {
+        //     $lastRun = trim(file_get_contents($filePath));
+        //     $lastRunTime = Carbon::parse($lastRun);
+        // } else {
+        //     $lastRunTime = null;
+        // }
+        // $now = Carbon::now();
 
-        $shouldRun = !$lastRunTime || $now->diffInMinutes($lastRunTime) >= $frequency || $request->isClick === 'yes';
-        if($shouldRun == false)
-            return;
+        // $shouldRun = !$lastRunTime || $now->diffInMinutes($lastRunTime) >= $frequency || $request->isClick === 'yes';
+        // if($shouldRun == false)
+        //     return;
 
-        if ($request->isClick !== 'yes') {
-            file_put_contents($filePath, $now->toDateTimeString());
-        }
+        // if ($request->isClick !== 'yes') {
+        //     file_put_contents($filePath, $now->toDateTimeString());
+        // }
     
         $boards = $this->mondayApi->getBoards();
         $pull_exist = false;
