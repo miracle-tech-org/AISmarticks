@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Conversation;
 use App\Thread;
+use GuzzleHttp\Client;
 
 class ThreadObserver
 {
@@ -81,6 +82,27 @@ class ThreadObserver
             || ($thread->type == Thread::TYPE_MESSAGE && $thread->state == Thread::STATE_DRAFT)
         ) {
             Conversation::refreshConversations($conversation, $thread);
+        }
+
+        if(\Module::isActive('mondayintegration')) {
+            try {
+                $settings = \Modules\MondayIntegration\Models\MondaySettings::all()->pluck('value', 'key')->toArray();
+                $push_on_conversation_created = !empty($settings['push_on_conversation_created']);
+                $push_on_conversation_updated = !empty($settings['push_on_conversation_updated']);
+
+                if($push_on_conversation_created || $push_on_conversation_updated) {
+                    $requestData = [
+                        'conversation_id' => $conversation->id,
+                        'thread_id' => $thread->id
+                    ];
+                    $client = new Client();
+                    $client->request('POST', route('monday.send.pushboard.item'), [
+                        'http_errors' => false,
+                        'json' => $requestData
+                    ]);
+                }
+            } catch (\Exception $e) {
+            }
         }
 
         \Eventy::action('thread.created', $thread);

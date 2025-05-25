@@ -10,8 +10,8 @@ class MondayFieldMapping extends Model
         'freescout_field',
         'monday_column',
         'transform_rule',
-        'is_required',
-        'default_value',
+        'is_overwrite',
+        'search_key',
         'order'
     ];
 

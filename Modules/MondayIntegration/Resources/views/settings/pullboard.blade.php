@@ -123,23 +123,22 @@
                         <div class="mapping-container" id="pull-mapping-container">
                             <!-- Validation errors will be displayed here -->
                             <form id="pull-mapping-form" class="mapping-form" action="{{ route('monday.mappings.save') }}" method="POST" data-board-type="pull">
-                                {{ csrf_field() }}
                                 <input type="hidden" name="board_type" value="pull">
                                 <div class="mapping-header">
                                     <div class="row">
-                                        <div class="col-md-5">
+                                        <div class="col-md-4">
                                             {{ __('Smarticks Field') }}
                                             <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Smarticks field that will receive data from Monday.com') }}"></i>
                                         </div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-4">
                                             {{ __('Monday.com Column') }}
                                             <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('The Monday.com column that contains the data to be pulled') }}"></i>
                                         </div>
-                                        <div class="col-md-2" style="display: none;">
-                                            {{ __('Transform') }}
+                                        <div class="col-md-2">
+                                            {{ __('Search KEY') }}
                                             <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="{{ __('Optional transformation to apply to the data before storing it in Smarticks') }}"></i>
                                         </div>
-                                        <div class="col-md-1" style="display: none">
+                                        <div class="col-md-1">
                                             {{ __('Overwrite') }}
                                         </div>
                                         <div class="col-md-1">
@@ -149,120 +148,49 @@
                                 </div>
                                 <div class="mapping-rows" id="pull-mapping-rows">
                                     @foreach($pullMappings as $index => $mapping)
-                                    <br/>
-                                    <div class="mapping-row" data-index="{{ $index }}">
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <select name="mappings[{{ $index }}][freescout_field]" class="form-control freescout-field-select" required>
-                                                    <option value="">{{ __('Select Field') }}</option>
-                                                    @foreach($freescoutFields as $group => $fields)
-                                                        <optgroup label="{{ $group }}">
-                                                            @foreach($fields as $field => $label)
-                                                                <option value="{{ $field }}" {{ $mapping->freescout_field == $field ? 'selected' : '' }}>{{ $label }}</option>
-                                                            @endforeach
-                                                        </optgroup>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <select name="mappings[{{ $index }}][monday_column]" class="form-control monday-column-select" required>
-                                                    <option value="">{{ __('Select Column') }}</option>
-                                                    @foreach($pullboardColumns as $column)
-                                                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}" {{ $mapping->monday_column == $column['id'] ? 'selected' : '' }}>
-                                                            {{ $column['title'] }} ({{ $column['title'] == 'Status' ? 'number' : 'text' }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2" style="display: none;">
-                                                <select name="mappings[{{ $index }}][transform_rule]" class="form-control transform-rule-select">
-                                                    @foreach($transformRules as $rule => $label)
-                                                        <option value="{{ $rule }}" {{ $mapping->transform_rule == $rule ? 'selected' : '' }}>{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-1 text-center" style="display: none">
-                                                <input type="checkbox" name="mappings[{{ $index }}][is_required]" value="1" {{ $mapping->is_required ? 'checked' : '' }}>
-                                            </div>
-                                            <div class="col-md-1 text-center">
-                                                <button type="button" class="btn btn-sm btn-danger remove-mapping">
-                                                    <i class="glyphicon glyphicon-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="row default-value-row" style="{{ empty($mapping->default_value) ? 'display:none;' : '' }}">
-                                            <div class="col-md-4 col-md-offset-8">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon">{{ __('Default Value') }}</span>
-                                                    <input type="text" name="mappings[{{ $index }}][default_value]" class="form-control default-value-input" value="{{ $mapping->default_value }}">
+                                        <div class="mapping-row" data-index="{{ $index }}" style="margin-top: 2%">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <select name="mappings[{{ $index }}][freescout_field]" class="form-control freescout-field-select" required>
+                                                        <option value="">{{ __('Select Field') }}</option>
+                                                        @foreach($freescoutFields as $group => $fields)
+                                                            <optgroup label="{{ $group }}">
+                                                                @foreach($fields as $field => $label)
+                                                                    <option value="{{ $field }}" {{ $mapping->freescout_field == $field ? 'selected' : '' }}>{{ $label }}</option>
+                                                                @endforeach
+                                                            </optgroup>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <select name="mappings[{{ $index }}][monday_column]" class="form-control monday-column-select" required>
+                                                        <option value="">{{ __('Select Column') }}</option>
+                                                        @foreach($pullboardColumns as $column)
+                                                            <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}" {{ $mapping->monday_column == $column['id'] ? 'selected' : '' }}>
+                                                                {{ $column['title'] }} ({{ $column['title'] == 'Status' ? 'number' : 'text' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="radio" name="search_key" value="{{ $index }}" {{ $mapping->search_key ? 'checked' : '' }}>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <input type="checkbox" name="mappings[{{ $index }}][is_overwrite]" value="1" {{ $mapping->is_overwrite ? 'checked' : '' }}>
+                                                </div>
+                                                <div class="col-md-1 text-center">
+                                                    <button type="button" class="btn btn-sm btn-danger remove-mapping">
+                                                        <i class="glyphicon glyphicon-trash"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                     @endforeach
-                                    @if($pullMappings->count() == 0)
-                                    <div class="mapping-row" data-index="0">
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <select name="mappings[0][freescout_field]" class="form-control freescout-field-select" required>
-                                                    <option value="">{{ __('Select Field') }}</option>
-                                                    @foreach($freescoutFields as $group => $fields)
-                                                        <optgroup label="{{ $group }}">
-                                                            @foreach($fields as $field => $label)
-                                                                <option value="{{ $field }}">{{ $label }}</option>
-                                                            @endforeach
-                                                        </optgroup>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
-                                                    <option value="">{{ __('Select Column') }}</option>
-                                                    @foreach($pullboardColumns as $column)
-                                                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">
-                                                            {{ $column['title'] }} ({{ $column['type'] }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <select name="mappings[0][transform_rule]" class="form-control transform-rule-select">
-                                                    @foreach($transformRules as $rule => $label)
-                                                        <option value="{{ $rule }}">{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-1 text-center">
-                                                <input type="checkbox" name="mappings[0][is_required]" value="1">
-                                            </div>
-                                            <div class="col-md-1 text-center">
-                                                <button type="button" class="btn btn-sm btn-danger remove-mapping">
-                                                    <i class="glyphicon glyphicon-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="row default-value-row" style="display:none;">
-                                            <div class="col-md-4 col-md-offset-8">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon">{{ __('Default Value') }}</span>
-                                                    <input type="text" name="mappings[0][default_value]" class="form-control default-value-input" value="">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
                                 </div>
-                                <br />
-                                <div class="mapping-actions">
+                                <div class="mapping-actions" style="margin-top: 2%; margin-bottom: 2%">
                                     <button type="button" class="btn btn-default add-mapping-btn" data-board-type="pull">
                                         <i class="glyphicon glyphicon-plus"></i> {{ __('Add Mapping') }}
                                     </button>
-                                    {{-- <button type="button" class="btn btn-info suggest-mappings-btn" data-board-type="pull">
-                                        <i class="glyphicon glyphicon-magic"></i> Suggest Mappings
-                                    </button>
-                                    <button type="button" class="btn btn-info validate-mappings-btn" data-board-type="pull">
-                                        <i class="glyphicon glyphicon-check"></i> Validate Mappings
-                                    </button> --}}
                                     <button type="submit" class="btn btn-primary save-mappings-btn">
                                         <i class="glyphicon glyphicon-floppy-disk"></i> {{ __('Save Pull Mappings') }}
                                     </button>
@@ -270,18 +198,20 @@
                                     <button type="button" class="btn btn-primary sync-mappings-btn">
                                         <i class="glyphicon glyphicon-refresh"></i> {{ __('Sync now') }}
                                     </button>
-                                    
-                                    {{-- <button type="button" class="btn btn-default import-mappings-btn" data-board-type="pull">
-                                        <i class="glyphicon glyphicon-upload"></i> Import
-                                    </button> --}}
                                     <input type="file" id="import-file-pull" class="import-file-input" data-board-type="pull" style="display: none;" accept=".json">
-                                    {{-- <button type="button" class="btn btn-default export-mappings-btn" data-board-type="pull">
-                                        <i class="glyphicon glyphicon-download-alt"></i> Export
-                                    </button> --}}
                                 </div>
-                                <br/>
                                 <textarea id="sync-status" cols="30" rows="10" class="form-control"></textarea>
-                                {{-- Here is Import Field --}}
+                                <h4>Last Sync Logs</h4>
+                                @if(!empty($logs))
+                                    <ul class="list-disc pl-5 text-sm text-gray-700">
+                                        @foreach($logs as $log)
+                                            <li>{{ $log }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <p class="text-gray-500">No sync logs found.</p>
+                                @endif
+
                             </form>
                         </div>
                     @else
@@ -300,51 +230,43 @@
 
 <script type="text/template" id="pull-mapping-template">
     <br/>
-    <div class="mapping-row" data-index="0">
+    <div class="mapping-row" data-index="__INDEX__">
         <div class="row">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <select name="mappings[0][freescout_field]" class="form-control freescout-field-select" required>
                     <option value="">{{ __('Select Field') }}</option>
                     @foreach($freescoutFields as $category => $fields)
-                    <optgroup label="{{ $category }}">
-                        @foreach($fields as $field => $title)
-                        <option value="{{ $field }}">{{ $title }}</option>
-                        @endforeach
-                    </optgroup>
+                        <optgroup label="{{ $category }}">
+                            @foreach($fields as $field => $title)
+                                <option value="{{ $field }}">{{ $title }}</option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
                     <option value="">{{ __('Select Column') }}</option>
                     @foreach($pullboardColumns as $column)
-                    <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">{{ $column['title'] }}</option>
+                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">{{ $column['title'] }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3" style="display: none">
-                <select name="mappings[0][transform_rule]" class="form-control transform-rule-select">
-                    <option value="">{{ __('No Transform') }}</option>
-                    <option value="date_format">{{ __('Date Format') }}</option>
-                    <option value="phone_format">{{ __('Phone Format') }}</option>
-                    <option value="extract_email">{{ __('Extract Email') }}</option>
-                    <option value="extract_phone">{{ __('Extract Phone') }}</option>
-                    <option value="boolean">{{ __('Boolean') }}</option>
-                    <option value="default_value">{{ __('Default Value') }}</option>
-                    <option value="fallback_value">{{ __('Fallback Value') }}</option>
-                </select>
-                <div class="default-value-row">
-                    <input type="text" name="mappings[0][default_value]" class="form-control" placeholder="{{ __('Default/Fallback Value') }}">
-                </div>
+            <div class="col-md-2">
+                <input type="radio" name="search_key" value="__INDEX__" />
+            </div>
+            <div class="col-md-1">
+                <input type="checkbox" name="mappings[0][is_overwrite]" value="1" />
             </div>
             <div class="col-md-1 text-right">
-                <div class="compatibility-indicator"></div>
-                <span class="drag-handle"><i class="glyphicon glyphicon-move"></i></span>
-                <span class="remove-mapping"><i class="glyphicon glyphicon-trash"></i></span>
+                <button type="button" class="btn btn-sm btn-danger remove-mapping">
+                    <i class="glyphicon glyphicon-trash"></i>
+                </button>
             </div>
         </div>
     </div>
 </script>
+
 
 @push('css')
 <style>
@@ -481,14 +403,18 @@
                 isClick: 'yes'
             }
             $.post(url, data, (res) => {
-                $("#sync-status").append(`Connected to board: "{{$pullboardName}}"\n`);
-                $("#sync-status").append(`Found ${res['items_page']['items'].length} row to sync.\n`);
-                
-                res['items_page']['items'].forEach(item => {
-                    $("#sync-status").append(`Customer name: ${item.name} Pulled\n`);
-                });
-
-                $("#sync-status").append(`${res['items_page']['items'].length} rows has been successfully synced\n0 rows ware skipped.\n`);
+                if(res['items_page'] == undefined) {
+                    $("#sync-status").append(`No item to sync`);
+                } else {
+                    $("#sync-status").append(`Connected to board: "{{$pullboardName}}"\n`);
+                    $("#sync-status").append(`Found ${res['items_page']['items'].length} row to sync.\n`);
+                    
+                    res['items_page']['items'].forEach(item => {
+                        $("#sync-status").append(`Customer name: ${item.name} Pulled\n`);
+                    });
+    
+                    $("#sync-status").append(`${res['items_page']['items'].length} rows has been successfully synced\n0 rows ware skipped.\n`);
+                }
             })
         })
 
@@ -508,9 +434,14 @@
             
             // Get the next index
             const nextIndex = mappingRows.children().length;
+
+            const updatedTemplate = template
+                .replace(/\[0\]/g, '[' + nextIndex + ']')
+                .replace(/__INDEX__/g, nextIndex); // For radio value
             
             // Replace the index placeholder with the actual index
-            const row = $(template.replace(/\[0\]/g, '[' + nextIndex + ']'));
+            // const row = $(template.replace(/\[0\]/g, '[' + nextIndex + ']'));
+            const row = $(updatedTemplate);
             
             // Set values if mapping data is provided
             if (mappingData) {

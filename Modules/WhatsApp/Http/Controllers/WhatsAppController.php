@@ -356,28 +356,6 @@ class WhatsAppController extends Controller
                 $job->execute();
             }
         }
-
-        if(\Module::isActive('mondayintegration')) {
-            try {
-                $settings = \Modules\MondayIntegration\Models\MondaySettings::all()->pluck('value', 'key')->toArray();
-                $push_on_conversation_created = !empty($settings['push_on_conversation_created']);
-                $push_on_conversation_updated = !empty($settings['push_on_conversation_updated']);
-
-                if($push_on_conversation_created || $push_on_conversation_updated) {
-                    $thread = Thread::latest('id')->first();
-                    $requestData = [
-                        'conversation_id' => $thread->conversation_id,
-                        'thread_id' => $thread->id
-                    ];
-                    $client = new Client();
-                    $client->request('POST', route('monday.send.pushboard.item'), [
-                        'http_errors' => false,
-                        'json' => $requestData
-                    ]);
-                }
-            } catch (\Exception $e) {
-            }
-        }
     }
 
     /**

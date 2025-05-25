@@ -22,6 +22,7 @@ use App\ActivityLog;
 use Modules\MondayIntegration\Models\MondayFieldMapping;
 use App\Jobs\SendAlert;
 use Carbon;
+use Schema;
 
 class MondaySettingsController extends Controller
 {
@@ -227,23 +228,22 @@ class MondaySettingsController extends Controller
 
         $freescoutFields = [
             'Customer' => [
-                'customer.first_name' => __('First Name'),
-                'customer.last_name' => __('Last Name'),
-                'customer.email' => __('Email'),
-                'customer.phone' => __('Phone'),
-                'customer.company' => __('Company'),
-                'customer.websites' => __('Website'),
-                'customer.job_title' => __('Job Title'),
-                'customer.photo_type' => __('Photo Type'),
-                'customer.photo_url' => __('Photo Url'),
-                'customer.phones' => __('Phones'),
-                'customer.social_profiles' => __('Social Profiles'),
-                'customer.notes' => __('Notes'),
-                'customer.address' => __('Address'),
-                'customer.city' => __('City'),
-                'customer.state' => __('State'),
-                'customer.zip' => __('Zip'),
-                'customer.country' => __('Country'),
+                'customers.first_name' => __('First Name'),
+                'customers.last_name' => __('Last Name'),
+                'emails.email' => __('Email'),
+                'customers.phones' => __('Phones'),
+                'customers.company' => __('Company'),
+                'customers.websites' => __('Website'),
+                'customers.job_title' => __('Job Title'),
+                'customers.photo_type' => __('Photo Type'),
+                'customers.photo_url' => __('Photo Url'),
+                'customers.social_profiles' => __('Social Profiles'),
+                'customers.notes' => __('Notes'),
+                'customers.address' => __('Address'),
+                'customers.city' => __('City'),
+                'customers.state' => __('State'),
+                'customers.zip' => __('Zip'),
+                'customers.country' => __('Country'),
             ],
             'Custom Fields' => $customerFields
         ];
@@ -270,6 +270,16 @@ class MondaySettingsController extends Controller
             $mondayName = "";
         }
 
+        // var_dump($pullMappings->toArray());
+        // exit();
+
+        $logFile = storage_path('logs/sync_status.log');
+        $logs = [];
+
+        if (file_exists($logFile)) {
+            $logs = file($logFile, FILE_IGNORE_NEW_LINES);
+        }
+
         return view('mondayintegration::settings.pullboard', [
             'mondayName' => $mondayName,
             'settings' => $settings,
@@ -280,6 +290,7 @@ class MondaySettingsController extends Controller
             'pullMappings' => $pullMappings,
             'pushMappings' => $pushMappings,
             'transformRules' => $transformRules,
+            'logs' => $logs
         ]);
     }
 
@@ -379,6 +390,7 @@ class MondaySettingsController extends Controller
     public function sendPushboardItem(Request $request)
     {
         try {
+            $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
 
             $pushboard_id = DB::table('monday_settings')
                 ->where('key', 'pushboard_id')
@@ -527,6 +539,7 @@ class MondaySettingsController extends Controller
                 $htmlContent = $this->exportHtml($conversation_id);
                 try {
                     if(isset($settings['html_display_method']) && $settings['html_display_method'] == 'update') {
+
                         $response = $this->mondayApi->addHtmlUpdate($item_id, $htmlContent);
             
                         // Log success 
@@ -650,32 +663,11 @@ class MondaySettingsController extends Controller
     public function syncNow(Request $request)
     {
         $settings = MondaySettings::all()->pluck('value', 'key')->toArray();
-        // $frequency = (int)$settings['pull_frequency'];
+        $mappings = MondayFieldMapping::all();
 
-        // if($frequency == 0 && $request->isClick != 'yes') {
-        //     return;
-        // }
-
-        // $lastRunTime = null;
-        // $filePath = storage_path('app/sync_last_run.log');
-
-        // if (file_exists($filePath)) {
-        //     $lastRun = trim(file_get_contents($filePath));
-        //     $lastRunTime = Carbon::parse($lastRun);
-        // } else {
-        //     $lastRunTime = null;
-        // }
-        // $now = Carbon::now();
-
-        // $shouldRun = !$lastRunTime || $now->diffInMinutes($lastRunTime) >= $frequency || $request->isClick === 'yes';
-        // if($shouldRun == false)
-        //     return;
-
-        // if ($request->isClick !== 'yes') {
-        //     file_put_contents($filePath, $now->toDateTimeString());
-        // }
-    
         $boards = $this->mondayApi->getBoards();
+        $status = false;
+
         $pull_exist = false;
         foreach ($boards['boards'] as $board) {
             if($board['id'] == $settings['pullboard_id']) {
@@ -691,75 +683,223 @@ class MondaySettingsController extends Controller
 
         $board_id = $settings['pullboard_id'];
         $result = $this->mondayApi->getBoardItems($board_id, 500);
-        
-        foreach ($result['items_page']['items'] as $key => $value) {
-            $name = $value['name'];
-            $phone = "";
-            $phones = "";
-            $email = "";
-            $company = "";
-            $websites = "";
 
-            foreach ($value['column_values'] as $col) {
-                if($col['type'] == 'phone') {
-                    $phone = $col['text'];
-                    $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
-                }
-                if($col['type'] == 'email') {
-                    $email = $col['text'];
-                }
-                if($col['type'] == 'text') {
-                    $company = $col['text'];
-                }
-                if($col['type'] == 'link') {
-                    $websites = $col['text'];
-                }
+        $search_monday_key = "";
+        $search_freescout_key = "";
+        foreach ($mappings as $value) {
+            if($value['search_key'] == 1) {
+                $search_monday_key = $value['monday_column'];
+                $search_freescout_key = $value["freescout_field"];
             }
-
-            $existingCustomer = DB::table('customers')
-                ->where('phones', $phones)
-                ->first();
-
-            $customerId = "";
-            if (!is_null($existingCustomer)) {
-                DB::table('customers')
-                    ->where('id', $existingCustomer->id)
-                    ->update([
-                        'first_name' => $name,
-                        'company' => $company,
-                        'phones' => $phones,
-                        'websites' => $websites,
-                    ]);
-                $customerId = $existingCustomer->id;
-            } else {
-                $customerId = DB::table('customers')->insertGetId([
-                    'first_name' => $name,
-                    'company' => $company,
-                    'phones' => $phones,
-                    'websites' => $websites,
-                ]);
-            }
-
-            if($email == '') continue;
-
-            // Check if an email with the same address exists
-            $existingEmail = DB::table('emails')
-                ->where([
-                    'email' => $email,
-                ])
-                ->first();
-
-            if (!is_null($existingEmail)) {
-                continue; // Skip if email already exists
-            }
-
-            // Create a new email associated with the customer
-            DB::table('emails')->insert([
-                'type' => 1,
-                'customer_id' => $customerId,
-                'email' => $email,
-            ]);
         }
+        if($search_freescout_key == "") {
+            return [];
+        }
+
+        $mappings = MondayFieldMapping::where('is_overwrite', 1)->get();
+
+        foreach ($result['items_page']['items'] as $key => $value) {
+            $query = "SELECT customers.id AS customer_id, customers.first_name, customers.last_name, emails.email, emails.id AS email_id, customers.phones, customers.company, customers.websites, customers.job_title, customers.photo_type, customers.photo_url, customers.social_profiles, customers.notes, customers.address, customers.city, customers.state, customers.zip, customers.country FROM customers INNER JOIN emails ON customers.id = emails.customer_id WHERE ";
+            $found = false;
+            if($search_monday_key == "name") {
+                $query .= "$search_freescout_key = \"".$value['name']."\"";
+                $found = true;
+            }
+
+            if($found == false) {
+                foreach ($value['column_values'] as $col) {
+                    if($col['id'] == $search_monday_key) {
+                        $found = true;
+                        $query .= "$search_freescout_key = \"".$col['text']."\"";
+                        break;
+                    }
+                }
+            }
+
+            if($found) {
+                $res = DB::select($query);
+                if(!empty($res)) {
+                    foreach ($res as $row) {
+                        $customerId = $row->customer_id;
+                        $emailId = $row->email_id;
+                    
+                        $customerUpdates = [];
+                        $emailUpdates = [];
+    
+                        foreach ($mappings as $mapping) {
+                            $mondayColumnId = $mapping->monday_column;
+                            $freescoutField = $mapping->freescout_field;
+                            $is_overwrite = $mapping->is_overwrite;
+                    
+                            // Find the value in Monday item
+                            $mondayValue = null;
+                            if ($mondayColumnId === 'name') {
+                                $mondayValue = $value['name'];
+                            } else {
+                                foreach ($value['column_values'] as $col) {
+                                    if ($col['id'] === $mondayColumnId && $is_overwrite == 1) {
+                                        $mondayValue = $col['text'];
+                                        break;
+                                    }
+                                }
+                            }
+                    
+                            if (!is_null($mondayValue)) {
+                                // Determine if this field is in customers or emails table
+                                if ($freescoutField == "emails.email") {
+                                    $field = str_replace("emails.", "", $freescoutField);
+                                    $emailUpdates[$field] = $mondayValue;
+                                } else {
+                                    $field = str_replace("customers.", "", $freescoutField);
+                                    $customerUpdates[$field] = $mondayValue;
+                                }
+                            }
+                        }
+
+                        if (!empty($customerUpdates)) {
+                            DB::table('customers')
+                                ->where('id', $customerId)
+                                ->update($customerUpdates);
+                        }
+
+                        if (!empty($emailUpdates)) {
+                            DB::table('emails')
+                                ->where('id', $emailId)
+                                ->update($emailUpdates);
+                        }
+                    }
+                }
+                else {
+                    $customerInsert = [];
+                    $emailInsert = [];
+
+                    foreach ($mappings as $mapping) {
+                        $mondayColumnId = $mapping->monday_column;
+                        $freescoutField = $mapping->freescout_field;
+
+                        // Get value from Monday item
+                        $mondayValue = null;
+                        if ($mondayColumnId === 'name') {
+                            $mondayValue = $value['name'];
+                        } else {
+                            foreach ($value['column_values'] as $col) {
+                                if ($col['id'] === $mondayColumnId) {
+                                    $mondayValue = $col['text'];
+                                    break;
+                                }
+                            }
+                        }
+                        if (!is_null($mondayValue)) {
+                            if ($freescoutField == "emails.email") {
+                                $field = str_replace("emails.", "", $freescoutField);
+                                $emailInsert[$field] = $mondayValue;
+                            } else {
+                                $field = str_replace("customers.", "", $freescoutField);
+                                $customerInsert[$field] = $mondayValue;
+                            }
+                        }
+                    }
+
+                    // Step 2: Insert customer and get ID
+                    $customerId = DB::table('customers')->insertGetId($customerInsert);
+
+                    // Step 3: Insert email and link to customer
+                    if(count($emailInsert) != 0 && $emailInsert['email'] != "") {
+                        $emailInsert['customer_id'] = $customerId;
+                        DB::table('emails')->insert($emailInsert);
+                    }
+                }
+            }
+            $status = true;
+        }
+
+        if($request->isClick != 'yes') {
+            $logFile = storage_path('logs/sync_status.log');
+            $status = $status ? 'successfully' : 'unsuccessfully';
+            $timestamp = now()->format('d.m.Y H:i');
+            $logLine = "Synced at $timestamp, status- $status";
+
+            // Read existing log lines
+            $lines = file_exists($logFile) ? file($logFile, FILE_IGNORE_NEW_LINES) : [];
+
+            // Add new line
+            $lines[] = $logLine;
+
+            // Keep only the last 3
+            $lines = array_slice($lines, -3);
+
+            // Save back to file
+            file_put_contents($logFile, implode(PHP_EOL, $lines));
+        }
+
+        // foreach ($result['items_page']['items'] as $key => $value) {
+        //     $name = $value['name'];
+        //     $phone = "";
+        //     $phones = "";
+        //     $email = "";
+        //     $company = "";
+        //     $websites = "";
+
+        //     foreach ($value['column_values'] as $col) {
+        //         if($col['type'] == 'phone') {
+        //             $phone = $col['text'];
+        //             $phones = "[{\"value\":\"$phone\",\"type\":1,\"n\":\"$phone\"}]";
+        //         }
+        //         if($col['type'] == 'email') {
+        //             $email = $col['text'];
+        //         }
+        //         if($col['type'] == 'text') {
+        //             $company = $col['text'];
+        //         }
+        //         if($col['type'] == 'link') {
+        //             $websites = $col['text'];
+        //         }
+        //     }
+
+        //     $existingCustomer = DB::table('customers')
+        //         ->where('phones', $phones)
+        //         ->first();
+
+        //     $customerId = "";
+        //     if (!is_null($existingCustomer)) {
+        //         DB::table('customers')
+        //             ->where('id', $existingCustomer->id)
+        //             ->update([
+        //                 'first_name' => $name,
+        //                 'company' => $company,
+        //                 'phones' => $phones,
+        //                 'websites' => $websites,
+        //             ]);
+        //         $customerId = $existingCustomer->id;
+        //     } else {
+        //         $customerId = DB::table('customers')->insertGetId([
+        //             'first_name' => $name,
+        //             'company' => $company,
+        //             'phones' => $phones,
+        //             'websites' => $websites,
+        //         ]);
+        //     }
+
+        //     if($email == '') continue;
+
+        //     // Check if an email with the same address exists
+        //     $existingEmail = DB::table('emails')
+        //         ->where([
+        //             'email' => $email,
+        //         ])
+        //         ->first();
+
+        //     if (!is_null($existingEmail)) {
+        //         continue; // Skip if email already exists
+        //     }
+
+        //     // Create a new email associated with the customer
+        //     DB::table('emails')->insert([
+        //         'type' => 1,
+        //         'customer_id' => $customerId,
+        //         'email' => $email,
+        //     ]);
+        // }
         return $result;
     }
 }

@@ -19,7 +19,7 @@ Route::group(['middleware' => 'web', 'prefix' => \Helper::getSubdirectory(), 'na
 
         // Pullboard Settings
         Route::get('/mailbox/{mailbox_id}/pullboard', 'MondaySettingsController@pullboardSettings')->name('settings.pullboard');
-        Route::post('/sync-now', 'MondaySettingsController@syncNow')->name('sync-now');
+        Route::get('/sync-now', 'MondaySettingsController@syncNow')->name('sync-now');
 
         // Pushboard Settings
         Route::get('/mailbox/{mailbox_id}/pushboard', 'MondaySettingsController@pushboardSettings')->name('settings.pushboard');

@@ -83,28 +83,20 @@ class FieldMappingController extends Controller
 
     public function save(Request $request)
     {
-
         try {
-            // Start transaction
-            // \DB::beginTransaction();
+            $searchKeyIndex = $request->input('search_key'); // Get selected row index
+            $mappings = $request->input('mappings', []);
 
-            // Delete existing mappings
             MondayFieldMapping::truncate();
-
             // Create new mappings
-            foreach ($request->mappings as $index => $mapping) {
+            foreach ($mappings as $index => $data) {
                 MondayFieldMapping::create([
-                    'freescout_field' => $mapping['freescout_field'],
-                    'monday_column' => $mapping['monday_column'],
-                    'transform_rule' => $mapping['transform_rule'],
-                    'default_value' => "", //$mapping['default_value'],
-                    'is_required' => !empty($mapping['is_required']),
-                    'order' => $index
+                    'freescout_field' => $data['freescout_field'],
+                    'monday_column' => $data['monday_column'],
+                    'search_key' => (int)($index == (int)$searchKeyIndex), // true only for selected
+                    'is_overwrite' => isset($data['is_overwrite']) ? 1 : 0,
                 ]);
             }
-
-            // \DB::commit();
-
             return redirect()->back();
         } catch (\Exception $e) {
             \DB::rollBack();
