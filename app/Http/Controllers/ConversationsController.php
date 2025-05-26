@@ -25,7 +25,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Validator;
 use DB;
-use GuzzleHttp\Client;
 
 class ConversationsController extends Controller
 {
@@ -854,37 +853,6 @@ class ConversationsController extends Controller
                     \Session::flash("flash_success_floating", $flash_message);
 
                     $response["msg"] = __("Status updated");
-                }
-                if(\Module::isActive('mondayintegration')) {
-                    try {
-                        $settings = \Modules\MondayIntegration\Models\MondaySettings::all()->pluck('value', 'key')->toArray();
-                        $push_on_conversation_closed = !empty($settings['push_on_conversation_closed']);
-                        $push_on_conversation_fully_closed = !empty($settings['push_on_conversation_fully_closed']);
-
-                        if($push_on_conversation_closed || $push_on_conversation_fully_closed) {
-                            $thread = Thread::where('conversation_id', $conversation->id)->orderByDesc('id')->first();
-                            $requestData = [];
-                            if($request->status == "3" && $push_on_conversation_fully_closed) {
-                                $requestData = [
-                                    'conversation_id' => $thread->conversation_id,
-                                    'thread_id' => $thread->id,
-                                    'upload' => 'yes',
-                                ];
-                            } else {
-                                $requestData = [
-                                    'conversation_id' => $thread->conversation_id,
-                                    'thread_id' => $thread->id,
-                                ];
-                            }
-    
-                            $client = new Client();
-                            $client->request('POST', route('monday.send.pushboard.item'), [
-                                'http_errors' => false,
-                                'json' => $requestData
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                    }
                 }
                 break;
 

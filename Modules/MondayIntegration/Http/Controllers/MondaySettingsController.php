@@ -420,7 +420,7 @@ class MondaySettingsController extends Controller
                 array_push($column_values, [$responseBody['columns'][2]['id'] => (string)$conversation->user->first_name ?? '']);
                 array_push($column_values, [$responseBody['columns'][3]['id'] => (string)$conversation->user->last_name ?? '']);
                 array_push($column_values, [$responseBody['columns'][4]['id'] => (string)$conversation->user->email ?? '']);
-                array_push($column_values, [$responseBody['columns'][5]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][5]['id'] => (string)$conversation->user->phone ?? '']);
                 array_push($column_values, [$responseBody['columns'][6]['id'] => (string)$conversation->user->job_title ?? '']);
                 array_push($column_values, [$responseBody['columns'][7]['id'] => (string)$conversation->user->timezone ?? '']);
                 array_push($column_values, [$responseBody['columns'][8]['id'] => (string)$conversation->user->photo_url ?? '']);
@@ -437,10 +437,11 @@ class MondaySettingsController extends Controller
                 if($jsonArray != "" && count($jsonArray)) {
                     $phone_number = $jsonArray[0]['value'];
                 }
+                $email = Email::where('customer_id', $conversation->customer->id)->value('email') ?? '';
                 array_push($column_values, [$responseBody['columns'][13]['id'] => (string)$conversation->customer->id ?? '']);
                 array_push($column_values, [$responseBody['columns'][14]['id'] => (string)$conversation->customer->first_name ?? '']);
                 array_push($column_values, [$responseBody['columns'][15]['id'] => (string)$conversation->customer->last_name ?? '']);
-                array_push($column_values, [$responseBody['columns'][16]['id'] => (string)'']);
+                array_push($column_values, [$responseBody['columns'][16]['id'] => (string)$email]);
                 array_push($column_values, [$responseBody['columns'][17]['id'] => (string)'']);
                 array_push($column_values, [$responseBody['columns'][18]['id'] => (string)$phone_number ?? '']);
                 array_push($column_values, [$responseBody['columns'][19]['id'] => (string)$conversation->customer->company ?? '']);
@@ -617,7 +618,7 @@ class MondaySettingsController extends Controller
 
                 <p><strong>" . ($lang === 'he' ? 'נושא:' : 'Subject:') . "</strong> " . ($conversation->subject ?? '') . "</p>
                 <p><strong>" . ($lang === 'he' ? 'סטטוס:' : 'Status:') . "</strong> " .
-                    ($conversation->status === 2
+                    ($conversation->status === 3
                         ? ($lang === 'he' ? 'סגור' : 'Closed')
                         : ($lang === 'he' ? 'פתוח' : 'Open')) .
                 "</p>
@@ -645,7 +646,8 @@ class MondaySettingsController extends Controller
                     if($thread->created_by_user_id != "") {
                         $first_name = User::find($thread->created_by_user_id)->first_name;
                     }
-                    $html .= "<p class=\"thread\"><strong>{$first_name}:</strong> {$thread->body}</p>";
+                    if($thread->body != "")
+                        $html .= "<p class=\"thread\"><strong>{$first_name}:</strong> {$thread->body}</p>";
                 }
 
                 $html .= "
