@@ -219,12 +219,12 @@ class MondaySettingsController extends Controller
         $results = DB::select('SELECT * FROM customer_fields');
         $customerFields = [];
         foreach ($results as $key => $value) {
-            $customerFields[('customer_fields.' . $key)] = $value->name;
+            $customerFields[('customer_fields.' . $value->id)] = $value->name;
         }
-        $results = DB::select('SELECT * FROM custom_fields');
-        foreach ($results as $key => $value) {
-            $customerFields[('custom_fields.' . $key)] = $value->name;
-        }
+        // $results = DB::select('SELECT * FROM custom_fields');
+        // foreach ($results as $key => $value) {
+        //     $customerFields[('custom_fields.' . $key)] = $value->name;
+        // }
 
         $freescoutFields = [
             'Customer' => [
@@ -699,25 +699,31 @@ class MondaySettingsController extends Controller
         $mappings = MondayFieldMapping::where('is_overwrite', 1)->get();
 
         foreach ($result['items_page']['items'] as $key => $value) {
-            $query = "SELECT customers.id AS customer_id, customers.first_name, customers.last_name, emails.email, emails.id AS email_id, customers.phones, customers.company, customers.websites, customers.job_title, customers.photo_type, customers.photo_url, customers.social_profiles, customers.notes, customers.address, customers.city, customers.state, customers.zip, customers.country FROM customers INNER JOIN emails ON customers.id = emails.customer_id WHERE ";
+            $query = "SELECT customers.id AS customer_id, customers.first_name, customers.last_name, emails.email, emails.id AS email_id, customers.phones, customers.company, customers.websites, customers.job_title, customers.photo_type, customers.photo_url, customers.social_profiles, customers.notes, customers.address, customers.city, customers.state, customers.zip, customers.country FROM customers LEFT JOIN emails ON customers.id = emails.customer_id WHERE $search_freescout_key = ?";
             $found = false;
+            $searchValue = "";
             if($search_monday_key == "name") {
-                $query .= "$search_freescout_key = \"".$value['name']."\"";
+                $searchValue = $value['name'];
                 $found = true;
             }
 
             if($found == false) {
                 foreach ($value['column_values'] as $col) {
                     if($col['id'] == $search_monday_key) {
+                        $searchValue = $col['text'];
+                        if($col['type'] == 'phone') {
+                            $searchValue = "[{\"value\":\"$searchValue\",\"type\":1,\"n\":\"$searchValue\"}]";
+                        }
                         $found = true;
-                        $query .= "$search_freescout_key = \"".$col['text']."\"";
                         break;
                     }
                 }
             }
+            if($searchValue == "")
+                continue;
 
             if($found) {
-                $res = DB::select($query);
+                $res = DB::select($query, [$searchValue]);
                 if(!empty($res)) {
                     foreach ($res as $row) {
                         $customerId = $row->customer_id;
@@ -725,11 +731,11 @@ class MondaySettingsController extends Controller
                     
                         $customerUpdates = [];
                         $emailUpdates = [];
+                        $customerFieldUpdates = [];
     
                         foreach ($mappings as $mapping) {
                             $mondayColumnId = $mapping->monday_column;
                             $freescoutField = $mapping->freescout_field;
-                            $is_overwrite = $mapping->is_overwrite;
                     
                             // Find the value in Monday item
                             $mondayValue = null;
@@ -737,7 +743,7 @@ class MondaySettingsController extends Controller
                                 $mondayValue = $value['name'];
                             } else {
                                 foreach ($value['column_values'] as $col) {
-                                    if ($col['id'] === $mondayColumnId && $is_overwrite == 1) {
+                                    if ($col['id'] === $mondayColumnId) {
                                         $mondayValue = $col['text'];
                                         break;
                                     }
@@ -749,9 +755,22 @@ class MondaySettingsController extends Controller
                                 if ($freescoutField == "emails.email") {
                                     $field = str_replace("emails.", "", $freescoutField);
                                     $emailUpdates[$field] = $mondayValue;
-                                } else {
+                                }
+                                else if(strstr($freescoutField, "customers.")) {
                                     $field = str_replace("customers.", "", $freescoutField);
-                                    $customerUpdates[$field] = $mondayValue;
+                                    if($field == 'phones') {
+                                          $customerUpdates[$field] = "[{\"value\":\"$mondayValue\",\"type\":1,\"n\":\"$mondayValue\"}]";
+                                    } else {
+                                        $customerUpdates[$field] = $mondayValue;
+                                    }
+                                }
+                                else {
+                                    $field = str_replace("customer_fields.", "", $freescoutField);
+                                    array_push($customerFieldUpdates, [
+                                        'customer_field_id' => $field,
+                                        'customer_id' => $customerId,
+                                        'value' => $mondayValue,
+                                    ]);
                                 }
                             }
                         }
@@ -767,11 +786,26 @@ class MondaySettingsController extends Controller
                                 ->where('id', $emailId)
                                 ->update($emailUpdates);
                         }
+                        if(!empty($customerFieldUpdates)) {
+                            DB::table('customer_customer_field')
+                                ->where('customer_id', $customerId)
+                                ->delete();
+
+                            foreach ($customerFieldUpdates as $cfu) {
+                                DB::table('customer_customer_field')
+                                    ->insert([
+                                        'customer_id' => $cfu['customer_id'],
+                                        'customer_field_id' => $cfu['customer_field_id'],
+                                        'value' => $cfu['value']
+                                    ]);
+                            }
+                        }
                     }
                 }
                 else {
                     $customerInsert = [];
                     $emailInsert = [];
+                    $customerFieldInsert = [];
 
                     foreach ($mappings as $mapping) {
                         $mondayColumnId = $mapping->monday_column;
@@ -793,9 +827,21 @@ class MondaySettingsController extends Controller
                             if ($freescoutField == "emails.email") {
                                 $field = str_replace("emails.", "", $freescoutField);
                                 $emailInsert[$field] = $mondayValue;
-                            } else {
+                            }
+                            else if(strstr($freescoutField, "customers.")) {
                                 $field = str_replace("customers.", "", $freescoutField);
-                                $customerInsert[$field] = $mondayValue;
+                                if($field == 'phones') {
+                                    $customerInsert[$field] = "[{\"value\":\"$mondayValue\",\"type\":1,\"n\":\"$mondayValue\"}]";
+                                } else {
+                                    $customerInsert[$field] = $mondayValue;
+                                }
+                            }
+                            else {
+                                $field = str_replace("customer_fields.", "", $freescoutField);
+                                array_push($customerFieldInsert, [
+                                    'customer_field_id' => $field,
+                                    'value' => $mondayValue,
+                                ]);
                             }
                         }
                     }
@@ -807,6 +853,21 @@ class MondaySettingsController extends Controller
                     if(count($emailInsert) != 0 && $emailInsert['email'] != "") {
                         $emailInsert['customer_id'] = $customerId;
                         DB::table('emails')->insert($emailInsert);
+                    }
+
+                    if(!empty($customerFieldInsert)) {
+                        DB::table('customer_customer_field')
+                            ->where('customer_id', $customerId)
+                            ->delete();
+
+                        foreach ($customerFieldInsert as $cfu) {
+                            DB::table('customer_customer_field')
+                                ->insert([
+                                    'customer_id' => $customerId,
+                                    'customer_field_id' => $cfu['customer_field_id'],
+                                    'value' => $cfu['value']
+                                ]);
+                        }
                     }
                 }
             }
