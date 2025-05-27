@@ -456,6 +456,19 @@ class MondaySettingsController extends Controller
                 array_push($column_values, [$responseBody['columns'][28]['id'] => (string)$conversation->customer->photo_url ?? '']);
                 array_push($column_values, [$responseBody['columns'][29]['id'] => (string)$conversation->customer->created_at ?? '']);
                 array_push($column_values, [$responseBody['columns'][30]['id'] => (string)$conversation->customer->updated_at ?? '']);
+                for($i = 66; isset($responseBody['columns'][$i]); $i++) {
+                    $customerFieldName = $responseBody['columns'][$i]['title'];
+                    $customerFieldId = DB::table('customer_fields')
+                        ->where('name', $customerFieldName)
+                        ->value('id');
+
+                    $fieldValue = DB::table('customer_customer_field')
+                        ->where('customer_id', $conversation->customer->id)
+                        ->where('customer_field_id', $customerFieldId)
+                        ->value('value');
+
+                    array_push($column_values, [$responseBody['columns'][$i]['id'] => (string)($fieldValue ?? '')]);
+                }
             }
             
             if($conversation) {

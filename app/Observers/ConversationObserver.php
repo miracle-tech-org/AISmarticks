@@ -61,7 +61,7 @@ class ConversationObserver
                     if($push_on_conversation_closed || $push_on_conversation_fully_closed) {
                         $thread = Thread::where('conversation_id', $conversation->id)->orderByDesc('id')->first();
                         $requestData = [];
-                        if($request->status == "3" && $push_on_conversation_fully_closed) {
+                        if($push_on_conversation_fully_closed) {
                             $requestData = [
                                 'conversation_id' => $thread->conversation_id,
                                 'thread_id' => $thread->id,
