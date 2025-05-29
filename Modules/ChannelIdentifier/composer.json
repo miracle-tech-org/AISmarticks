@@ -1,0 +1,25 @@
+{
+    "name": "freescout/channelidentifier",
+    "description": "",
+    "authors": [
+        {
+            "name": "FreeScout",
+            "email": "support@freescout.net"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\ChannelIdentifier\\Providers\\ChannelIdentifierServiceProvider"
+            ],
+            "aliases": {
+                
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ChannelIdentifier\\": ""
+        }
+    }
+}
