@@ -579,7 +579,9 @@ class MondayApiService
                 id
                 name
                 slug
-              }
+                country_code
+              },
+              time_zone_identifier
             }
           }
         GRAPHQL;

@@ -248,7 +248,7 @@
                 <select name="mappings[0][monday_column]" class="form-control monday-column-select" required>
                     <option value="">{{ __('Select Column') }}</option>
                     @foreach($pullboardColumns as $column)
-                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">{{ $column['title'] }}</option>
+                        <option value="{{ $column['id'] }}" data-type="{{ $column['type'] }}">{{ $column['title']  }} ({{ $column['title'] == 'Status' ? 'number' : 'text' }})</option>
                     @endforeach
                 </select>
             </div>
@@ -383,6 +383,33 @@
             const boardType = $(this).data('board-type');
             addNewMappingRow(boardType);
         });
+
+        $(".save-mappings-btn").on('click', function(e) {
+            const mappingRows = $('#pull-mapping-rows');
+            const nextIndex = mappingRows.children().length;
+            for(var i = 0; i < nextIndex; i++) {
+                let mondaySide = $(`select[name="mappings[${i}][freescout_field]"] option:selected`).text();
+                let freescoutSide = $(`select[name="mappings[${i}][monday_column]"] option:selected`).text();
+
+                mondaySide = getDataType(mondaySide);
+                freescoutSide = getDataType(freescoutSide);
+                
+                if(mondaySide != freescoutSide) {
+                    showFloatingAlert('error', `It is not possible to map two different field types. Please review and adjust the mapping settings accordingly.`);
+                    e.preventDefault();
+                    return;
+                }
+            }
+        })
+
+        function getDataType(str) {
+            const match = str.match(/\((.*?)\)/);
+            if (match && match[1]) {
+                return match[1].toLowerCase();
+            }
+            return "";
+        }
+
 
         $(".sync-mappings-btn").on('click', function() {
             var url = "{{route('monday.sync-now')}}";

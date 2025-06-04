@@ -42,6 +42,29 @@
                         <span class="connection-status"></span>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="row col-sm-offset-3">
+                        <div class="col-sm-4" id="div-countryCode">
+                            Country Code: 
+                            @if (isset($settings['country_code']))
+                                {{$settings['country_code']}}
+                            @else
+                                N/A
+                            @endif
+                        </div>
+                        <div class="col-sm-4" id="div-timezone">
+                            Timezone: 
+                            @if (isset($settings['time_zone_identifier']))
+                                {{$settings['time_zone_identifier']}}
+                            @else
+                                N/A
+                            @endif
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Dual-Board Architecture Info -->
@@ -201,6 +224,8 @@
                     }
                     else {
                         $status.removeClass('connection-error').addClass('connection-success').text(response.message + `: ${response.result.me.account.slug}`);
+                        $("#div-countryCode").html("Country Code: " + response.result.me.account.country_code);
+                        $("#div-timezone").html("Timezone: " + response.result.me.time_zone_identifier);
                     }
 
                 },

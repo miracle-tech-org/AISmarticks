@@ -113,7 +113,7 @@
                                 <label>
                                     <input type="checkbox" name="push_on_conversation_updated" value="1"
                                         {{ old('push_on_conversation_updated', $settings['push_on_conversation_updated'] ?? '') ? 'checked' : '' }}>
-                                    {{ __('When a conversation is updated') }}
+                                    {{ __('When a conversation is updated (That on update duplicate rows can be added)') }}
                                 </label>
                             </div>
                             <div class="checkbox">

@@ -83,7 +83,7 @@ class ThreadObserver
         ) {
             Conversation::refreshConversations($conversation, $thread);
         }
-
+        
         if(\Module::isActive('mondayintegration')) {
             try {
                 $newStatus = $conversation->status;
@@ -92,7 +92,7 @@ class ThreadObserver
                     $push_on_conversation_created = !empty($settings['push_on_conversation_created']);
                     $push_on_conversation_updated = !empty($settings['push_on_conversation_updated']);
     
-                    if($push_on_conversation_created || $push_on_conversation_updated) {
+                    if(($push_on_conversation_created || $push_on_conversation_updated) && $thread->created_by_user_id == "") {
                         $requestData = [
                             'conversation_id' => $conversation->id,
                             'thread_id' => $thread->id

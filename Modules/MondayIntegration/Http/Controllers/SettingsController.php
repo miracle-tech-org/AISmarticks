@@ -86,6 +86,16 @@ class SettingsController extends Controller
             } else {
                 $result = $this->apiService->testConnection();
             }
+            MondaySettings::whereIn('key', ['time_zone_identifier', 'country_code'])->delete();
+            MondaySettings::updateOrCreate(
+                ['key' => 'time_zone_identifier'],
+                ['value' => $result['me']['time_zone_identifier']]
+            );
+
+            MondaySettings::updateOrCreate(
+                ['key' => 'country_code'],
+                ['value' => $result['me']['account']['country_code']]
+            );
 
             return response()->json([
                 'result' => $result,
