@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>README - MobileNotifications Module</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+        code { font-family: monospace; }
+        ul, ol { padding-left: 20px; }
+        li { margin-bottom: 5px; }
+        a { color: #007bff; }
+        .code-block-wrapper { background-color: #f4f4f4; padding: 1px 15px; border-radius: 5px; margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+<h1 id="mobile-notifications-module-for-freescout">Mobile Notifications
+Module for FreeScout</h1>
+<p>This module integrates Firebase Cloud Messaging (FCM) to enable
+mobile push notifications for agents in FreeScout. It provides features
+for administrators to manage registered devices and monitor notification
+logs, and for agents to manage their own devices.</p>
+<h2 id="features">Features</h2>
+<h3 id="admin-features">Admin Features</h3>
+<ul>
+<li><strong>Firebase Configuration:</strong> Set up Firebase credentials
+(service account JSON) and Project ID via <em>Settings → Mobile
+Notifications</em>.</li>
+<li><strong>Test Notification:</strong> Send a test notification to the
+currently logged-in admin user from the settings page to verify setup
+(simulates sending if not fully configured or if SDK issues).</li>
+<li><strong>Device Management:</strong> View a list of all registered
+mobile devices across all users at <em>Mobile Notifications → Registered
+Devices</em>. Admins can remove any registered device.</li>
+<li><strong>Notification Logs:</strong> View a log of all notification
+attempts (prepared, sent, failed, no tokens, etc.) at <em>Mobile
+Notifications → Notification Logs</em>. This helps in monitoring and
+troubleshooting.</li>
+<li><strong>Rate Limiting:</strong> The device registration endpoint is
+rate-limited to prevent abuse.</li>
+</ul>
+<h3 id="agent-features">Agent Features</h3>
+<ul>
+<li><strong>Device Registration:</strong> Agents receive a signed link
+(sent by an admin from their user profile’s “Mobile Registration”
+section) to register their mobile device. The registration page allows
+selecting the platform (Android, iOS, Web) and auto-detects it.</li>
+<li><strong>Manage Own Devices:</strong> Agents can view and remove
+their own registered mobile devices via a dedicated page in their user
+profile area (“My Mobile Devices”).</li>
+</ul>
+<h3 id="notification-triggers">Notification Triggers</h3>
+<p>The module currently sends notifications for the following events: *
+<strong>New Customer Reply:</strong> Notifies the assigned agent when a
+customer replies to a conversation. * <strong>Conversation Assigned to
+Agent:</strong> Notifies an agent when a conversation is assigned to
+them. <em>(More triggers can be added in the future.)</em></p>
+<h2 id="installation">Installation</h2>
+<ol type="1">
+<li>Copy the <code>MobileNotifications</code> module directory into your
+FreeScout <code>Modules/</code> directory.</li>
+<li><strong>Dependency Installation:</strong>
+<ul>
+<li>This module requires <code>kreait/firebase-php</code> (version 5.x,
+6.x or 7.x). Add it to your main FreeScout <code>composer.json</code> or
+ensure it’s installed via the module’s <code>composer.json</code>.
+<div class="code-block-wrapper"><pre><code>json     // In your root composer.json     "require": {         // ... other requirements         "kreait/firebase-php": "^5.0 || ^6.0 || ^7.0"     }</code></pre></div></li>
+<li>Then run <code>composer update kreait/firebase-php</code> from your
+FreeScout root directory.</li>
+<li><strong>Important Note on Dependencies:</strong> The
+<code>kreait/firebase-php</code> library is modern and requires a
+compatible PHP version (typically PHP 7.2+ for v5, higher for v6/v7) and
+dependencies. If your FreeScout installation runs on an older PHP
+version or has conflicting older package versions locked in
+<code>composer.lock</code>, you might encounter issues installing this
+dependency. Resolving such conflicts may require updating other parts of
+your FreeScout environment or finding a compatible older version of
+<code>kreait/firebase-php</code> if available (though v4 and below have
+a different API).</li>
+</ul></li>
+<li>Run <code>php artisan module:enable MobileNotifications</code> (or
+activate via the GUI if that’s how your FreeScout handles it).</li>
+<li>Run database migrations: <code>php artisan migrate</code>. This will
+create the necessary tables (<code>device_tokens</code>,
+<code>notification_logs</code>).</li>
+</ol>
+<h2 id="configuration">Configuration</h2>
+<ol type="1">
+<li>Navigate to <strong>Settings → Mobile Notifications</strong> in the
+FreeScout admin area.</li>
+<li><strong>Project ID:</strong> Enter your Firebase Project ID.</li>
+<li><strong>Firebase Credentials:</strong> Upload your Firebase Admin
+SDK service account JSON file. This file is securely stored in the
+<code>storage/app/mobilenotifications</code> directory, which should not
+be publicly accessible.</li>
+<li><strong>Enable Push Notifications:</strong> Toggle the switch to
+enable or disable sending notifications.</li>
+<li>Save the settings.</li>
+</ol>
+<h2 id="device-registration-process-for-agents">Device Registration
+Process for Agents</h2>
+<ol type="1">
+<li><strong>Admin Action:</strong> An administrator navigates to a
+user’s profile in FreeScout, goes to the “Mobile Registration” section
+(this tab/section would be part of the core user profile, extended by
+this module conceptually).</li>
+<li>The admin clicks a “Send Registration Link” button. This emails a
+unique, signed, and short-lived registration link to the agent.</li>
+<li><strong>Agent Action:</strong> The agent opens this link on the
+mobile device they wish to register.</li>
+<li>The page allows them to submit their FCM device token. The platform
+(Android, iOS, Web) can be selected, with an attempt to
+auto-detect.</li>
+<li>Upon successful registration, the device will appear in their “My
+Registered Mobile Devices” list in their profile and in the admin’s
+central device management list.</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<ul>
+<li><strong>Dependency Installation Issues:</strong> See the “Important
+Note on Dependencies” under Installation. Compatibility issues with
+older PHP versions or conflicting packages in your main FreeScout
+<code>composer.lock</code> file are the most common cause.</li>
+<li><strong>Notifications Not Sending:</strong>
+<ul>
+<li>Check that “Enable Push Notifications” is active in settings.</li>
+<li>Verify <code>storage/logs/laravel.log</code> for any errors from the
+<code>FirebaseNotificationService</code> during initialization or
+sending.</li>
+<li>Check the “Notification Logs” in the admin area for specific error
+messages related to individual sends (e.g., ‘failure’,
+‘no_tokens_found’, ‘service_not_configured’).</li>
+<li>Ensure the uploaded Firebase service account JSON is valid and has
+the necessary permissions for FCM.</li>
+<li>Ensure the Firebase Project ID is correctly entered.</li>
+<li>Confirm the device has an active internet connection and has granted
+notification permissions to the (future) client app.</li>
+</ul></li>
+</ul>
+<h2 id="for-developers">For Developers</h2>
+<ul>
+<li><strong>Events Handled:</strong>
+<code>App\Events\CustomerReplied</code>,
+<code>App\Events\ConversationUserChanged</code>.</li>
+<li><strong>Listeners:</strong> Located in
+<code>Modules/MobileNotifications/Listeners/</code>.</li>
+<li><strong>Core Service:</strong>
+<code>Modules/MobileNotifications/Services/FirebaseNotificationService.php</code>
+handles Firebase interaction and logging.</li>
+<li><strong>Testing:</strong> See
+<code>Modules/MobileNotifications/docs/TESTING_GUIDELINES.md</code> for
+an outline of recommended tests.</li>
+</ul>
+</body>
+</html>

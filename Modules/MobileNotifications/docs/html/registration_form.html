@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Registration - MobileNotifications Module</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: monospace; }
+        a { color: #007bff; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { display: inline-block; padding: 6px 12px; margin-bottom: 0; font-size: 14px; font-weight: 400; line-height: 1.42857143; text-align: center; white-space: nowrap; vertical-align: middle; cursor: pointer; user-select: none; background-image: none; border: 1px solid transparent; border-radius: 4px; color: #fff; background-color: #007bff; border-color: #007bff; }
+        .btn-danger { background-color: #d9534f; border-color: #d43f3a; }
+        .form-control { display: block; width: calc(100% - 18px); padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; background-clip: padding-box; border: 1px solid #ced4da; border-radius: .25rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: inline-block; margin-bottom: .5rem; }
+        .section { padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <!-- @extends('layouts.app') -->
+
+    <!-- @section('title', 'Register Device') -->
+
+    <!-- @section('content') -->
+    <div class="section">
+        <p>Use the form below on your mobile device to register it for push notifications.</p>
+        <form method="POST" action="[route:mobilenotifications.register]">
+            <!-- @csrf -->
+            <div class="form-group">
+                <label for="platform">Platform</label>
+                <select name="platform" id="platform" class="form-control" required>
+                    <option value="Android">Android</option>
+                    <option value="iOS">iOS</option>
+                    <option value="Web">Web</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Device Token</label>
+                <input type="text" name="token" class="form-control" required>
+            </div>
+            <button class="btn btn-primary" type="submit">Register</button>
+        </form>
+    </div>
+    <!-- @endsection -->
+
+    <!-- @push('scripts') -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const platformSelect = document.querySelector('select[name="platform"]');
+            if (platformSelect) {
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                if (/android/i.test(ua)) {
+                    platformSelect.value = 'Android';
+                } else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+                    platformSelect.value = 'iOS';
+                } else {
+                    // Default or could be 'Web' if that's a target
+                    platformSelect.value = 'Web';
+                }
+            }
+        });
+    </script>
+    <!-- @endpush -->
+</body>
+</html>

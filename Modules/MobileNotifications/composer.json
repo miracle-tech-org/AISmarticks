@@ -1,20 +1,18 @@
 {
-    "name": "freescout/mobilenotifications",
-    "description": "",
+    "name": "freescout/mobile-notifications",
+    "description": "Mobile push notifications module",
     "authors": [
-        {
-            "name": "FreeScout",
-            "email": "support@freescout.net"
-        }
+        {"name": "FreeScout", "email": "support@freescout.net"}
     ],
+    "require": {
+        "kreait/firebase-php": "^5.0 || ^6.0 || ^7.0"
+    },
     "extra": {
         "laravel": {
             "providers": [
                 "Modules\\MobileNotifications\\Providers\\MobileNotificationsServiceProvider"
             ],
-            "aliases": {
-                
-            }
+            "aliases": {}
         }
     },
     "autoload": {

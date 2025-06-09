@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent - My Registered Mobile Devices - MobileNotifications Module</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: monospace; }
+        a { color: #007bff; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { display: inline-block; padding: 6px 12px; margin-bottom: 0; font-size: 14px; font-weight: 400; line-height: 1.42857143; text-align: center; white-space: nowrap; vertical-align: middle; cursor: pointer; user-select: none; background-image: none; border: 1px solid transparent; border-radius: 4px; color: #fff; background-color: #007bff; border-color: #007bff; }
+        .btn.btn-sm { padding: 5px 10px; font-size: 12px; line-height: 1.5; border-radius: 3px; } /* Added for btn-sm */
+        .btn-danger { background-color: #d9534f; border-color: #d43f3a; }
+        .form-control { display: block; width: calc(100% - 18px); padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; background-clip: padding-box; border: 1px solid #ced4da; border-radius: .25rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: inline-block; margin-bottom: .5rem; }
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-success { color: #3c763d; background-color: #dff0d8; border-color: #d6e9c6; }
+        .table-responsive { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    </style>
+</head>
+<body>
+    <!-- @extends('layouts.app') -->
+
+    <!-- @section('title', 'My Registered Mobile Devices') -->
+
+    <!-- @section('content') -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+
+                <h2>My Registered Mobile Devices</h2>
+                <hr>
+
+                <!-- @if (session('status')) -->
+                    <div class="alert alert-success" role="alert">
+                        [session_status]
+                    </div>
+                <!-- @endif -->
+
+                <!-- @if($devices->isEmpty()) -->
+                    <p>You have no registered mobile devices.</p>
+                    <p>To add a new device, please contact an administrator to send you a registration link via your user profile page.</p>
+                <!-- @else -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>Registered At</th>
+                                    <th>Token Hint (Optional)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- @foreach ($devices as $device) -->
+                                    <tr>
+                                        <td>[device_platform_or_NA]</td>
+                                        <td>[device_created_at_formatted_or_NA]</td>
+                                        <td>[Str_limit_device_token_15]...</td>
+                                        <td>
+                                            <form action="[route:mobilenotifications.device.delete,device_id]" method="POST" onsubmit="return confirm('Are you sure you want to remove this device?');" style="display:inline;">
+                                                <!-- @csrf -->
+                                                <!-- @method('DELETE') -->
+                                                <input type="hidden" name="_method" value="DELETE"> <!-- Manual method spoofing -->
+                                                <button type="submit" class="btn btn-sm btn-danger">Remove Device</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <!-- @endforeach -->
+                                <!-- Placeholder for another device for illustration -->
+                                <tr>
+                                    <td>iOS</td>
+                                    <td>2023-02-15 11:30:00</td>
+                                    <td>anotherFCMtoken...</td>
+                                    <td>
+                                        <form action="#some-device-id-delete-route" method="POST" onsubmit="return confirm('Are you sure you want to remove this device?');" style="display:inline;">
+                                            <input type="hidden" name="_method" value="DELETE">
+                                            <button type="submit" class="btn btn-sm btn-danger">Remove Device</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <hr>
+                    <p>To add a new device, please contact an administrator to send you a registration link via your user profile page.</p>
+                <!-- @endif -->
+
+                <!-- {{-- Example link to go back to a general profile page --}} -->
+                <!-- {{-- <a href="[route:user.profile]" class="btn btn-default">Back to Profile</a> --}} -->
+
+            </div>
+        </div>
+    </div>
+    <!-- @endsection -->
+</body>
+</html>

@@ -2,191 +2,175 @@
 
 namespace Modules\MobileNotifications\Providers;
 
-use App\Conversation;
-use App\Subscription;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Factory;
+use Illuminate\Support\Facades\Event; // Added import for Event Facade
+use App\Events\CustomerReplied;
+use App\Events\ConversationUserChanged;
+use Modules\MobileNotifications\Listeners\NotifyAgentOnCustomerReply;
+use Modules\MobileNotifications\Listeners\NotifyAgentOnAssignment;
+use Illuminate\Cache\RateLimiting\Limit; // Added for Rate Limiter
+// use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request;
+use App\Option; // Added for Option model
+use Illuminate\Support\Facades\Schema; // To check if 'options' table exists
 
 // Module alias
-define('MOBNOTIF_MODULE', 'mobilenotifications');
+if (!defined('MN_MODULE')) {
+    define('MN_MODULE', 'mobilenotifications');
+}
 
 class MobileNotificationsServiceProvider extends ServiceProvider
 {
-    const SERVICE_URL = 'https://service.freescout.net/fcm/send.php';
-
     /**
-     * Indicates if loading of the provider is deferred.
+     * The event listener mappings for the application.
      *
-     * @var bool
+     * @var array
      */
-    protected $defer = false;
+    protected $listen = [
+        CustomerReplied::class => [
+            NotifyAgentOnCustomerReply::class,
+        ],
+        ConversationUserChanged::class => [
+            NotifyAgentOnAssignment::class,
+        ],
+    ];
 
-    /**
-     * Boot the application events.
-     *
-     * @return void
-     */
     public function boot()
     {
+        // Register config first so its defaults are available.
         $this->registerConfig();
+
+        // $this->loadSettingsFromOptions(); // Temporarily commented out to allow migrations if it causes Auth issues
+        \Illuminate\Support\Facades\Log::info('MobileNotificationsServiceProvider: loadSettingsFromOptions temporarily disabled for migration.');
+
+
         $this->registerViews();
-        $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
-        $this->hooks();
+        // $this->registerListeners(); // Temporarily commented out
+        \Illuminate\Support\Facades\Log::info('MobileNotificationsServiceProvider: registerListeners temporarily disabled for migration.');
+        // $this->configureRateLimiting(); // Commented out due to RateLimiter facade not available in L5.5
     }
 
-    /**
-     * Module hooks.
-     */
-    public function hooks()
+    protected function loadSettingsFromOptions()
     {
-        \Eventy::addFilter('notifications.mobile_available', function($value) {
-            return true;
-        });
+        // Ensure Option class exists and options table is present (e.g. during initial setup)
+        if (!class_exists(Option::class) || !Schema::hasTable('options')) {
+            return;
+        }
 
-        // \Eventy::addFilter('notifications.android_link', function($value) {
-        //     return 'https://freescout.net/module/mobile-notifications/';
-        // });
-
-        // Add module's JS file to the application layout.
-        \Eventy::addAction('javascript', function() {
-            $user = auth()->user();
-            $topic = '';
-            //$token = '';
-            if ($user) {
-                $topic = self::getUserTopic($user);
-                //$token = $user->getAuthToken();
-            }
-            // inAppSendData('<?php echo $topic; ? >', '<?php echo $token; ? >');
-            ?>
-                fs_in_app_data['topic'] = '<?php echo $topic; ?>';
-            <?php
-        });
-
-        // Send push notifications
-        \Eventy::addAction('subscription.process_events', function($notify) {
-            if (empty($notify[Subscription::MEDIUM_MOBILE])) {
-                return;
-            }
-            $delay = now()->addSeconds(Conversation::UNDO_TIMOUT);
-            foreach ($notify[Subscription::MEDIUM_MOBILE] as $conversation_id => $notify_info) {
-                \Modules\MobileNotifications\Jobs\SendPushNotificationToUsers::dispatch($notify_info['users'], $notify_info['conversation'], $notify_info['threads'])
-                    ->delay($delay)
-                    ->onQueue('default');
-            }
-        });
-    }
-
-    public static function getUserTopic($user)
-    {
-        return md5(\Helper::getAppIdentifier().$user->id);
-    }
-
-    /**
-     * https://firebase.google.com/docs/cloud-messaging/http-server-ref
-     */
-    public static function sendPushNotification($title, $body, $url, $topics)
-    {
-        $data = [
-            'title' => $title,
-            'body'  => $body,
-            'url'   => $url,
-            'topics' => $topics,
+        $settingsKeys = [
+            'project_id',
+            'server_name',
+            'default_title',
+            'enabled',
+            'firebase_credentials_path', // This was previously 'firebase_credentials' in the old table
         ];
 
-        $client = new \GuzzleHttp\Client();
-        $res = $client->post(self::SERVICE_URL, \Helper::setGuzzleDefaultOptions([
-            'form_params' => $data,
-            'connect_timeout' => 10,
-        ]));
+        foreach ($settingsKeys as $key) {
+            $optionKey = 'mobilenotifications_' . $key;
+            $configKey = 'mobilenotifications.' . $key;
 
-        if ($res->getStatusCode() != 200) {
-            throw new \Exception("Error occured sending push notification: ".$http_code, 1);
+            // Get default from the already merged Config/config.php file
+            $defaultValue = config($configKey);
+
+            // Fetch from options table, using file default if not found in options
+            $valueFromOptions = Option::get($optionKey, $defaultValue);
+
+            // Special handling for 'enabled' to ensure it's boolean
+            if ($key === 'enabled') {
+                // If the value from options is a string '0' or '1', convert to boolean
+                if ($valueFromOptions === '0') {
+                    $valueFromOptions = false;
+                } elseif ($valueFromOptions === '1') {
+                    $valueFromOptions = true;
+                }
+                // Otherwise, filter_var should handle it, including boolean defaults
+                $valueFromOptions = filter_var($valueFromOptions, FILTER_VALIDATE_BOOLEAN, ['flags' => FILTER_NULL_ON_FAILURE]);
+                if ($valueFromOptions === null) {
+                    $valueFromOptions = filter_var($defaultValue, FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+
+            // Special handling for firebase_credentials_path
+            if ($key === 'firebase_credentials_path') {
+                if (!empty($valueFromOptions)) {
+                    // If valueFromOptions is the same as the default, it means it likely came from the config file
+                    // (which already uses storage_path()) or it was never set in options table.
+                    // We only prepend storage_path if it's a relative path coming from the options table.
+                    $isLikelyDefaultAbsPath = ($valueFromOptions === $defaultValue && preg_match('/^([A-Za-z]:\\\|\\|\/)/', $valueFromOptions));
+
+                    if (!$isLikelyDefaultAbsPath && !preg_match('/^([A-Za-z]:\\\|\\|\/)/', $valueFromOptions)) {
+                         // It's a relative path (e.g., "mobilenotifications/file.json") and not the default absolute path
+                         $valueFromOptions = storage_path('app/' . $valueFromOptions);
+                    }
+                } elseif (empty($valueFromOptions) && !empty($defaultValue)) {
+                    // If value from options is empty, but default is not, ensure default (which should be absolute) is used.
+                     $valueFromOptions = $defaultValue;
+                }
+            }
+
+            // Set the config value for the application's current lifecycle
+            if ($valueFromOptions !== null) { // Check not null in case Option::get returns null and no default.
+                config()->set($configKey, $valueFromOptions);
+            }
         }
-
-        $response = $res->getBody();
-        try {
-            $response_data = json_decode($response, true);
-        } catch (\Exception $e) {
-            throw new \Exception("Error occured parsing push notification response: ".$response, 1);
-        }
-
-        return $response_data;
     }
 
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
+    protected function configureRateLimiting()
+    {
+        /* // RateLimiter Facade not available in L5.5 - entire method content commented out.
+        RateLimiter::for('mobilenotifications_register_device', function (Request $request) {
+            // Limit to 10 registration attempts per IP address per minute.
+            return Limit::perMinute(10)->by($request->ip());
+        });
+        */
+    }
+
     public function register()
     {
-        $this->registerTranslations();
     }
 
-    /**
-     * Register config.
-     *
-     * @return void
-     */
     protected function registerConfig()
     {
         $this->publishes([
-            __DIR__.'/../Config/config.php' => config_path('mobilenotifications.php'),
+            __DIR__.'/../Config/config.php' => config_path('mobilenotifications.php'), // Main settings
+            // Note: notification_types.php is not typically published as it's module-internal logic.
         ], 'config');
+
+        // Merge main module settings
         $this->mergeConfigFrom(
             __DIR__.'/../Config/config.php', 'mobilenotifications'
         );
+
+        // Merge notification types settings
+        $this->mergeConfigFrom(
+            __DIR__.'/../Config/notification_types.php', 'mobilenotifications.notification_types'
+        );
     }
 
-    /**
-     * Register views.
-     *
-     * @return void
-     */
-    public function registerViews()
+    protected function registerViews()
     {
         $viewPath = resource_path('views/modules/mobilenotifications');
-
         $sourcePath = __DIR__.'/../Resources/views';
 
         $this->publishes([
             $sourcePath => $viewPath
-        ],'views');
+        ], 'views');
 
-        $this->loadViewsFrom(array_merge(array_map(function ($path) {
-            return $path . '/modules/mobilenotifications';
-        }, \Config::get('view.paths')), [$sourcePath]), 'mobilenotifications');
+        $this->loadViewsFrom([$sourcePath, $viewPath], 'mobilenotifications');
     }
 
     /**
-     * Register translations.
+     * Register the application's event listeners.
      *
      * @return void
      */
-    public function registerTranslations()
+    protected function registerListeners()
     {
-        $this->loadJsonTranslationsFrom(__DIR__ .'/../Resources/lang');
-    }
-
-    /**
-     * Register an additional directory of factories.
-     * @source https://github.com/sebastiaanluca/laravel-resource-flow/blob/develop/src/Modules/ModuleServiceProvider.php#L66
-     */
-    public function registerFactories()
-    {
-        if (! app()->environment('production')) {
-            app(Factory::class)->load(__DIR__ . '/../Database/factories');
+        foreach ($this->listen as $event => $listeners) {
+            foreach ($listeners as $listener) {
+                Event::listen($event, $listener);
+            }
         }
-    }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return [];
     }
 }

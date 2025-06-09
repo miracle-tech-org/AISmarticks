@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings - MobileNotifications Module</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: monospace; }
+        a { color: #007bff; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { display: inline-block; padding: 6px 12px; margin-bottom: 0; font-size: 14px; font-weight: 400; line-height: 1.42857143; text-align: center; white-space: nowrap; vertical-align: middle; cursor: pointer; user-select: none; background-image: none; border: 1px solid transparent; border-radius: 4px; color: #fff; background-color: #007bff; border-color: #007bff; }
+        .btn.btn-info { background-color: #5bc0de; border-color: #46b8da; } /* Added for btn-info */
+        .btn-danger { background-color: #d9534f; border-color: #d43f3a; }
+        .form-control { display: block; width: calc(100% - 18px); padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; background-clip: padding-box; border: 1px solid #ced4da; border-radius: .25rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: inline-block; margin-bottom: .5rem; }
+    </style>
+</head>
+<body>
+    <!-- @extends('layouts.app') -->
+
+    <!-- @section('title', 'Mobile Notifications') -->
+
+    <!-- @section('content') -->
+    <div class="section">
+        <form method="POST" enctype="multipart/form-data" action="[route:mobilenotifications.settings.save]">
+            <!-- @csrf -->
+            <div class="form-group">
+                <label>Project ID</label>
+                <input type="text" name="project_id" class="form-control" value="[old_project_id_or_settings_project_id]" required>
+            </div>
+            <div class="form-group">
+                <label>Server Name</label>
+                <input type="text" name="server_name" class="form-control" value="[old_server_name_or_settings_server_name]" required>
+            </div>
+            <div class="form-group">
+                <label>Default Title</label>
+                <input type="text" name="default_title" class="form-control" value="[old_default_title_or_settings_default_title]">
+            </div>
+            <div class="form-group">
+                <label>Firebase Credentials</label>
+                <input type="file" name="firebase_credentials" class="form-control">
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" name="enabled" value="1" [settings_enabled_checked_or_empty_string]> Enable Push</label>
+            </div>
+            <button class="btn btn-primary" type="submit">Save</button>
+            <button type="button" id="sendTestNotification" class="btn btn-info">Send Test Notification</button>
+        </form>
+    </div>
+    <!-- @endsection -->
+
+    <!-- @push('scripts') -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const testButton = document.getElementById('sendTestNotification');
+        if (testButton) {
+            testButton.addEventListener('click', function() {
+                fetch("[route:mobilenotifications.test]", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': "[csrf_token_value_placeholder]" // Replaced document.querySelector...
+                    },
+                    // body: JSON.stringify({}) // No body needed for this request as user is taken from auth
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    if (data.success === true) {
+                        alert('Test notification sent (simulated). Check logs.');
+                    } else {
+                        alert('Failed to send test notification. Server indicated failure. Check console/logs.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending test notification:', error);
+                    alert('Failed to send test notification. Check console/logs.');
+                });
+            });
+        }
+    });
+    </script>
+    <!-- @endpush -->
+</body>
+</html>
