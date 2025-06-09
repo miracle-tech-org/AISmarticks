@@ -9,7 +9,7 @@ use App\Events\ConversationUserChanged;
 use Modules\MobileNotifications\Listeners\NotifyAgentOnCustomerReply;
 use Modules\MobileNotifications\Listeners\NotifyAgentOnAssignment;
 use Illuminate\Cache\RateLimiting\Limit; // Added for Rate Limiter
-// use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use App\Option; // Added for Option model
 use Illuminate\Support\Facades\Schema; // To check if 'options' table exists
@@ -49,6 +49,7 @@ class MobileNotificationsServiceProvider extends ServiceProvider
         // $this->registerListeners(); // Temporarily commented out
         \Illuminate\Support\Facades\Log::info('MobileNotificationsServiceProvider: registerListeners temporarily disabled for migration.');
         // $this->configureRateLimiting(); // Commented out due to RateLimiter facade not available in L5.5
+        $this->hooks();
     }
 
     protected function loadSettingsFromOptions()
@@ -114,6 +115,27 @@ class MobileNotificationsServiceProvider extends ServiceProvider
                 config()->set($configKey, $valueFromOptions);
             }
         }
+    }
+
+    public function hooks() {
+        \Eventy::addAction('mailboxes.settings.menu', function($mailbox) {
+            if (auth()->user()->isAdmin()) {
+                echo \View::make('mobilenotifications::partials/settings_menu', ['mailbox' => $mailbox])->render();
+            }
+        }, 35);
+
+        \Eventy::addFilter('menu.selected', function($menu) {
+            $menu['mobilenotifications.settings'] = [
+                'mobilenotifications.settings',
+            ];
+            $menu['mobilenotifications.devices.index'] = [
+                'mobilenotifications.devices.index',
+            ];
+            $menu['mobilenotifications.logs.index'] = [
+                'mobilenotifications.logs.index',
+            ];
+            return $menu;
+        });
     }
 
     protected function configureRateLimiting()

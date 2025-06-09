@@ -5,6 +5,7 @@ namespace Modules\MobileNotifications\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\MobileNotifications\Models\DeviceToken;
 use Illuminate\Http\Request;
+use App\Mailbox;
 
 class DeviceManagementController extends Controller
 {
@@ -13,10 +14,11 @@ class DeviceManagementController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($mailbox_id)
     {
+        $mailbox = Mailbox::findOrFail($mailbox_id);
         $devices = DeviceToken::with('user')->latest()->paginate(20);
-        return view('mobilenotifications::devices.index', compact('devices'));
+        return view('mobilenotifications::devices.index', compact('devices', 'mailbox'));
     }
 
     /**
@@ -25,13 +27,12 @@ class DeviceManagementController extends Controller
      * @param  \Modules\MobileNotifications\Models\DeviceToken  $device
      * @return \Illuminate\Http\Response
      */
-    public function destroy(DeviceToken $device)
+    public function destroy(Request $request)
     {
-        // Authorization is handled by the route group middleware 'roles' => ['admin']
-        // For more granular control, a Policy could be used here.
-        $device->delete();
+        $id = $request->device_id;
+        $deviceToken = DeviceToken::findOrFail($id);
+        $deviceToken->delete();
 
-        return redirect()->route('mobilenotifications.devices.index')
-                         ->with('status', __('Device token deleted successfully.'));
+        return 'Device token deleted successfully.';
     }
 }

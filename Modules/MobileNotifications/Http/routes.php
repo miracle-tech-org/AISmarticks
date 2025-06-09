@@ -1,12 +1,13 @@
 <?php
 
 Route::group(['middleware' => ['web', 'auth', 'roles'], 'roles' => ['admin'], 'prefix' => Helper::getSubdirectory(), 'namespace' => 'Modules\MobileNotifications\Http\Controllers'], function () {
-    Route::get('/mobile-notifications/settings', 'SettingsController@index')->name('mobilenotifications.settings');
+    Route::get('/mailbox/{mailbox_id}/mobile-notifications/settings', 'SettingsController@index')->name('mobilenotifications.settings');
+    Route::get('/mailbox/{mailbox_id}/mobile-notifications/devices', 'DeviceManagementController@index')->name('mobilenotifications.devices.index');
+    Route::get('/mailbox/{mailbox_id}/mobile-notifications/logs', 'NotificationLogController@index')->name('mobilenotifications.logs.index');
+
     Route::post('/mobile-notifications/settings', 'SettingsController@save')->name('mobilenotifications.settings.save');
     Route::post('/mobile-notifications/test-notification', 'NotificationController@test')->name('mobilenotifications.test');
-    Route::get('/mobile-notifications/devices', 'DeviceManagementController@index')->name('mobilenotifications.devices.index');
-    Route::delete('/mobile-notifications/devices/{device}', 'DeviceManagementController@destroy')->name('mobilenotifications.devices.destroy');
-    Route::get('/mobile-notifications/logs', 'NotificationLogController@index')->name('mobilenotifications.logs.index');
+    Route::delete('/mobile-notifications/devices/delete', 'DeviceManagementController@destroy')->name('mobilenotifications.devices.destroy');
 });
 
 Route::group(['middleware' => ['web', 'auth'], 'prefix' => Helper::getSubdirectory(), 'namespace' => 'Modules\MobileNotifications\Http\Controllers'], function () {

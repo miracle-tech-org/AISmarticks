@@ -14,13 +14,13 @@ class CreateNotificationLogsTable extends Migration
     public function up()
     {
         Schema::create('notification_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('device_token_id')->nullable()->constrained('device_tokens')->onDelete('set null');
+            $table->increments('id');
+            $table->integer('user_id');
+            $table->integer('device_token_id');
             $table->string('status');
             $table->text('message_payload');
             $table->text('response')->nullable();
-            $table->timestamp('sent_at')->useCurrent();
+            $table->timestamp('sent_at');
             $table->timestamps();
         });
     }

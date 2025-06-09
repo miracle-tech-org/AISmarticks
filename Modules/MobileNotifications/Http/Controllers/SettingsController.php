@@ -6,16 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Option; // Assuming App\Option model
 use Illuminate\Support\Facades\Storage; // Keep for potential future use if direct storage interaction is needed
+use App\Mailbox;
 
 class SettingsController extends Controller
 {
     protected $optionPrefix = 'mobilenotifications_';
 
-    public function index()
+    public function index($mailbox_id)
     {
         // Default values can be provided from the module's config file if an Option entry doesn't exist yet.
         $defaultModuleConfig = config('mobilenotifications');
-
+        $mailbox = Mailbox::findOrFail($mailbox_id);
         $settings = [
             'project_id' => Option::get($this->optionPrefix . 'project_id', $defaultModuleConfig['project_id'] ?? ''),
             'server_name' => Option::get($this->optionPrefix . 'server_name', $defaultModuleConfig['server_name'] ?? ''),
@@ -25,7 +26,7 @@ class SettingsController extends Controller
         ];
         // Pass settings as individual variables or as an array, matching the view's expectation.
         // For this refactor, we'll pass them as an array similar to before to minimize view changes initially.
-        return view('mobilenotifications::settings', ['settings' => $settings]);
+        return view('mobilenotifications::settings', ['settings' => $settings, 'mailbox' => $mailbox]);
     }
 
     public function save(Request $request)

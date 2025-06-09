@@ -1,13 +1,19 @@
 @extends('layouts.app') {{-- Assuming 'layouts.app' is your main layout --}}
 
 @section('title', __('Notification Logs'))
+@section('sidebar')
+    @include('partials/sidebar_menu_toggle')
+    @include('mailboxes/sidebar_menu')
+@endsection
 
 @section('content')
-<div class="container-fluid">
-    <h1>{{ __('Notification Logs') }}</h1>
 
-    <div class="card">
-        <div class="card-body">
+    <div class="section-heading">
+        {{ __('Notification Logs') }}
+    </div>
+
+    <div class="row-container">
+        <div class="col-md-12">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
@@ -43,5 +49,5 @@
             </div>
         @endif
     </div>
-</div>
+
 @endsection
