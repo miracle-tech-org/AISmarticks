@@ -2,6 +2,11 @@
 
 @section('title', __('My Registered Mobile Devices'))
 
+@section('sidebar')
+    @include('partials/sidebar_menu_toggle')
+    @include('users/sidebar_menu')
+@endsection
+
 @section('content')
 <div class="container"> {{-- Or your typical content wrapper --}}
     <div class="row">
@@ -9,12 +14,6 @@
 
             <h2>{{ __('My Registered Mobile Devices') }}</h2>
             <hr>
-
-            @if (session('status'))
-                <div class="alert alert-success" role="alert">
-                    {{ session('status') }}
-                </div>
-            @endif
 
             @if($devices->isEmpty())
                 <p>{{ __('You have no registered mobile devices.') }}</p>
@@ -37,11 +36,7 @@
                                     <td>{{ $device->created_at ? $device->created_at->format(config('app.datetime_format', 'Y-m-d H:i:s')) : __('N/A') }}</td>
                                     <td>{{ Str::limit($device->token, 15) }}...</td>
                                     <td>
-                                        <form action="{{ route('mobilenotifications.device.delete', $device->id) }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to remove this device?') }}');" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">{{ __('Remove Device') }}</button>
-                                        </form>
+                                        <button data-itemid="{{$device->id}}" type="button" class="btn-delete btn btn-sm btn-danger">{{ __('Remove Device') }}</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -56,8 +51,6 @@
 
             <h2>{{ __('Mobile Notification Preferences') }}</h2>
             <form method="POST" action="{{ route('mobilenotifications.user.preferences.update') }}">
-                @csrf
-                <!-- @if(isset($preferencesData) && !$preferencesData->isEmpty()) --> {{-- This check is not quite right for an array --}}
                 @if(!empty($preferencesData))
                     @foreach ($preferencesData as $preference)
                         <div class="form-check" style="margin-bottom: 10px;">
@@ -76,9 +69,38 @@
             </form>
 
             {{-- Example link to go back to a general profile page --}}
-            {{-- <a href="{{ route('user.profile') }}" class="btn btn-default">{{ __('Back to Profile') }}</a> --}}
 
         </div>
     </div>
 </div>
 @endsection
+
+<script>
+    window.onload = function() {
+        $(".btn-delete").click((e) => {
+            if(!confirm("Are you sure you want to delete this?")) {
+                return;
+            }
+
+            const itemId = $(e.currentTarget).data("itemid");
+
+            var data = {
+                id: itemId
+            }
+
+            var url = "{{ route('mobilenotifications.device.delete') }}";
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: data,
+                success: function(response) {
+                    showFloatingAlert('success', response);
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        })
+    }
+</script>

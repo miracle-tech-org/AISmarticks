@@ -12,10 +12,9 @@ Route::group(['middleware' => ['web', 'auth', 'roles'], 'roles' => ['admin'], 'p
 
 Route::group(['middleware' => ['web', 'auth'], 'prefix' => Helper::getSubdirectory(), 'namespace' => 'Modules\MobileNotifications\Http\Controllers'], function () {
     Route::get('/user/mobile-devices', 'UserDeviceController@index')->name('mobilenotifications.user.devices');
-    Route::get('/mobile-notifications/register/{user}', 'RegistrationController@form')->name('mobilenotifications.form')->middleware('signed');
-    Route::post('/mobile-notifications/register-device', 'RegistrationController@register')
-        ->name('mobilenotifications.register');
+    Route::get('/mobile-notifications/register/{user}', 'RegistrationController@form')->name('mobilenotifications.form');
+    Route::post('/mobile-notifications/register-device', 'RegistrationController@register')->name('mobilenotifications.register');
         // ->middleware('throttle:mobilenotifications_register_device'); // Commented out due to RateLimiter facade not available in L5.5
     Route::post('/user/mobile-devices/preferences', 'UserDeviceController@updatePreferences')->name('mobilenotifications.user.preferences.update');
-    Route::delete('/mobile-notifications/device/{id}', 'RegistrationController@delete')->name('mobilenotifications.device.delete');
+    Route::post('/mobile-notifications/device/delete', 'RegistrationController@delete')->name('mobilenotifications.device.delete');
 });

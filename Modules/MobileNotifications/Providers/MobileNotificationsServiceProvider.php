@@ -136,6 +136,14 @@ class MobileNotificationsServiceProvider extends ServiceProvider
             ];
             return $menu;
         });
+
+        \Eventy::addAction('user.profile.menu.after_profile', function ($user) {
+            $auth = \Auth::user();
+            // if ($user->id != $auth->id && !$auth->isAdmin()) {
+            //     return;
+            // }
+            echo \View::make('mobilenotifications::partials/profile_menu', ['user' => $user])->render();
+        }, 35);
     }
 
     protected function configureRateLimiting()

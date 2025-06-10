@@ -7,9 +7,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request; // Added for Request
 use Modules\MobileNotifications\Models\DeviceToken;
 use Modules\MobileNotifications\Models\AgentMobileNotificationPreference; // Added model
+use App\User;
 
 class UserDeviceController extends Controller
 {
+    public function getUsersForSidebar($except_id)
+    {
+        if (auth()->user()->isAdmin()) {
+            return User::sortUsers(User::nonDeleted()->get());/*->except($except_id)*/;
+        } else {
+            return [];
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -18,9 +28,7 @@ class UserDeviceController extends Controller
     public function index()
     {
         $userId = Auth::id();
-        $devices = DeviceToken::where('user_id', $userId)
-                              ->latest()
-                              ->get();
+        $devices = DeviceToken::where('user_id', $userId)->latest()->get();
 
         $availableTypes = config('mobilenotifications.notification_types', []);
         $preferencesData = [];
@@ -39,7 +47,10 @@ class UserDeviceController extends Controller
             ];
         }
 
-        return view('mobilenotifications::user.devices', compact('devices', 'preferencesData'));
+        $user = Auth::user();
+        $users = $this->getUsersForSidebar($userId);
+
+        return view('mobilenotifications::user.devices', compact('devices', 'preferencesData', 'user', 'users'));
     }
 
     /**

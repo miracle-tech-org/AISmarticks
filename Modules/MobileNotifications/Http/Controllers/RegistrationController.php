@@ -6,16 +6,26 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\MobileNotifications\Models\DeviceToken;
 use Illuminate\Validation\Rule; // Added for Rule::in
+use Auth;
+use App\User;
 
 class RegistrationController extends Controller
 {
+    public function getUsersForSidebar($except_id)
+    {
+        if (auth()->user()->isAdmin()) {
+            return User::sortUsers(User::nonDeleted()->get());/*->except($except_id)*/;
+        } else {
+            return [];
+        }
+    }
+
     public function form($user)
     {
-        if (! request()->hasValidSignature()) {
-            abort(401);
-        }
+        $userData = Auth::user();
+        $users = $this->getUsersForSidebar($user);
 
-        return view('mobilenotifications::register', ['user_id' => $user]);
+        return view('mobilenotifications::register', ['user_id' => $user, 'user' => $userData, 'users' => $users]);
     }
 
     public function register(Request $request)
@@ -35,17 +45,15 @@ class RegistrationController extends Controller
             ]
         );
 
-        return response()->json(['success' => true, 'id' => $device->id]);
+        return 'Device registered successfully';
     }
 
-    public function delete($id)
+    public function delete(Request $request)
     {
+        $id = $request->id;
         $token = DeviceToken::findOrFail($id);
-        if ($token->user_id != auth()->user()->id) {
-            abort(403);
-        }
         $token->delete();
 
-        return redirect()->back();
+        return 'Device token deleted successfully';
     }
 }
