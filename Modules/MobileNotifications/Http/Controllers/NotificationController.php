@@ -18,7 +18,7 @@ class NotificationController extends Controller
     public function test()
     {
         try {
-            $this->service->sendTestMessage(auth()->user());
+            return $this->service->sendTestMessage(auth()->user());
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error($e->getMessage());

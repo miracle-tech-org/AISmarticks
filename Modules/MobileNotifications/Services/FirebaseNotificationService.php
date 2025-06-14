@@ -11,6 +11,7 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Exception\MessagingException;
+use App\Option;
 
 class FirebaseNotificationService
 {
@@ -19,43 +20,81 @@ class FirebaseNotificationService
 
     public function __construct()
     {
-        // The service provider now ensures 'mobilenotifications.firebase_credentials_path' is an absolute path.
-        $actualCredentialsPath = config('mobilenotifications.firebase_credentials_path');
-        $projectId = config('mobilenotifications.project_id');
+        $defaultModuleConfig = config('mobilenotifications');
 
+        // The service provider now ensures 'mobilenotifications.firebase_credentials_path' is an absolute path.
+        $actualCredentialsPath = Option::get('mobilenotifications_firebase_credentials_path', $defaultModuleConfig['firebase_credentials_path'] ?? '');
+        $projectId = Option::get('mobilenotifications_project_id', $defaultModuleConfig['project_id'] ?? '');
+        
         if (empty($actualCredentialsPath)) {
             Log::warning('Firebase credentials path configuration (mobilenotifications.firebase_credentials_path) is empty in the runtime config. Mobile notifications will not be sent.');
             $this->isConfigured = false;
             return;
         }
 
+        $actualCredentialsPath = storage_path('app/public/'.$actualCredentialsPath);
+
         if (file_exists($actualCredentialsPath) && !empty($projectId)) {
+            $logPath = storage_path('logs/onestep.log');
+            file_put_contents($logPath, "one step");
             try {
                 $firebase = (new Firebase\Factory)
                     ->withServiceAccount($actualCredentialsPath)
                     // ->withProjectId($projectId) // Optional: often included in service account file
                     ->create();
+                    
                 $this->messaging = $firebase->getMessaging();
                 $this->isConfigured = true;
+
+                $logPath = storage_path('logs/onestate.log');
+                file_put_contents($logPath, 'Firebase Admin SDK initialized successfully using credentials path: ' . $actualCredentialsPath);
+    
                 Log::info('Firebase Admin SDK initialized successfully using credentials path: ' . $actualCredentialsPath);
             } catch (FirebaseException $e) {
+                $logPath = storage_path('logs/error1.log');
+                file_put_contents($logPath, $e->getMessage());
+
                 Log::error('Firebase Admin SDK Initialization Error for path (' . $actualCredentialsPath . '): ' . $e->getMessage());
                 $this->isConfigured = false;
             } catch (\InvalidArgumentException $e) { // Catch potential issues with service account path/content
+                $logPath = storage_path('logs/error2.log');
+                file_put_contents($logPath, $e->getMessage());
+
                 Log::error('Firebase Admin SDK Initialization Error (InvalidArgumentException) for path (' . $actualCredentialsPath . '): ' . $e->getMessage());
                 $this->isConfigured = false;
             }
         } else {
+            $logPath = storage_path('logs/error3.log');
+            file_put_contents($logPath, "Firebase notifications cannot be configured");
+
             $logMessage = 'Firebase notifications cannot be configured: ';
             if (empty($projectId)) {
                 $logMessage .= 'Project ID is empty. ';
+                
+                $logPath = storage_path('logs/error4.log');
+                file_put_contents($logPath, $logMessage);
             }
             if (!file_exists($actualCredentialsPath)) {
                 $logMessage .= 'Credentials file not found at resolved path: ' . $actualCredentialsPath . '. ';
+
+                $logPath = storage_path('logs/error5.log');
+                file_put_contents($logPath, $logMessage);
             }
+            $logPath = storage_path('logs/error6.log');
+            file_put_contents($logPath, 'Mobile notifications will not be sent.');
+
             Log::warning($logMessage . 'Mobile notifications will not be sent.');
             $this->isConfigured = false;
         }
+
+        $logPath = storage_path('logs/status.log');
+
+        if($this->isConfigured) {
+            file_put_contents($logPath, 'success');
+        } else {
+            file_put_contents($logPath, 'error');
+        }
+
     }
 
     /**
@@ -145,6 +184,7 @@ class FirebaseNotificationService
         $title = 'Test Notification';
         $body = 'This is a test notification from the application.';
         $dataPayload = ['type' => 'test_message'];
+        $defaultModuleConfig = config('mobilenotifications');
 
         // Call the main preparation and logging function
         $this->prepareAndLogNotification($user, $title, $body, $dataPayload);

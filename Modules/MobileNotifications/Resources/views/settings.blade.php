@@ -43,13 +43,11 @@
 </div>
 @endsection
 
-@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const testButton = document.getElementById('sendTestNotification');
-    if (testButton) {
-        testButton.addEventListener('click', function() {
-            fetch("{{ route('mobilenotifications.test') }}", {
+
+window.onload = function() {
+    $("#sendTestNotification").click(() => {
+        fetch("{{ route('mobilenotifications.test') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,8 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error sending test notification:', error);
                 alert('Failed to send test notification. Check console/logs.');
             });
-        });
-    }
-});
+    })
+}
 </script>
-@endpush
