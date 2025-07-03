@@ -41,6 +41,7 @@ class WhapiController extends Controller
 		$channel_name = false;
 
 		error_log('Compare ' . $request->mailbox_secret . ' AND ' . \Whapi::getMailboxSecret($mailbox_id . '_' . $settings['token']) . '(' . $mailbox_id . '_' . $settings['token'] . ')');
+
 		if (\Whapi::getMailboxSecret($mailbox_id . '_' . $settings['token']) == $request->mailbox_secret) {
 			$token_found = true;
 			$token = $settings['token'];
@@ -103,7 +104,7 @@ class WhapiController extends Controller
 				$customer_phone = preg_replace("/@.*/", '', $customer_phone);
 				$user = null;
 
-				if ($message['from_me']) {
+				/*if ($message['from_me']) {
 					// Message from user.
 					$from_customer = false;
 
@@ -118,7 +119,7 @@ class WhapiController extends Controller
 						error_log('Could not import your own message sent as a response to a customer. Could not find the user with the following phone number: ' . $sender_phone . '. Make sure to set this phone number to one of the users in FreeScout. Webhook data: ' . json_encode($data));
 						return;
 					}
-				}
+				}*/
 
 				$attachments = [];
 				$body = '';
@@ -300,14 +301,52 @@ class WhapiController extends Controller
 						$body = 'Unsupported message type: ' . $message['type'];
 						error_log('Unsupported Whapi message type ' . $message['type']);
 				}
+
+				if($message['from_me'] == true) {
+					$parts = $parts = explode('@', $channel_id);
+					$sender_phone = $parts[0];
+					$sender_name = "Mobile";
+				}
+
 				$body = htmlspecialchars($body);
 				$body = nl2br($body);
-
+				
 				if ($from_customer) {
 					\DB::insert('insert into billing_statistics (type,month,cnt) values (?, ?, ?) ON DUPLICATE KEY UPDATE `cnt`=`cnt`+?', ["whapi_in", date('Y-m'), 1, 1]);
+	
+					$d = [
+						"sender_phone" => $sender_phone,
+						"sender_name" => $sender_name,
+						"channel_id" => $channel_id,
+						"body" => $body,
+						"mailbox" => $mailbox,
+						"attachments" => $attachments,
+						"token" => $token,
+						"channel_name" => $channel_name
+					];
+
+					$lastThread = Thread::orderBy('id', 'desc')->first();
+
+					if(!is_null($lastThread) && "<div>".$lastThread->body."</div>" == $body) {
+						return;
+					}
+
+					if(!is_null($lastThread) && $lastThread->body == "<div>".$body."</div>") {
+						return;
+					}
+
 					\Whapi::processIncomingMessage($sender_phone, $sender_name, $channel_id, $body, $mailbox, $attachments, $token, $channel_name);
 				} else {
 					// From user.
+					$d = [
+						"user" => $user,
+						"customer_phone" => $customer_phone,
+						"body" => $body,
+						"mailbox" => $mailbox,
+						"attachment" => $attachments,
+						"customer_phone" => $customer_phone
+					];
+
 					\Whapi::processOwnMessage($user, $customer_phone, $body, $mailbox, $attachments, $customer_phone);
 				}
 

@@ -983,7 +983,6 @@ class Thread extends Model
 
     public static function createExtended($data = [], $conversation = null, $customer = null, $update_conv = true)
     {
-
         if (empty($data['type']) || empty($data['body'])) {
             return false;
         }
@@ -999,14 +998,13 @@ class Thread extends Model
 
         // User which creatd the thread should be passed in created_by_user_id.
         // user_id is check for backward compatibility.
-        $user_id = $data['created_by_user_id'] ?? $data['user_id'] ?? 4;
+        $user_id = $data['created_by_user_id'] ?? $data['user_id'] ?? null;
 
         // Check type.
         if ($data['type'] == Thread::TYPE_CUSTOMER && empty($customer)) {
             return false;
             //return $this->getErrorResponse('`customer` parameter is required', 'customer');
         }
-
         if (($data['type'] == Thread::TYPE_MESSAGE || $data['type'] == Thread::TYPE_NOTE) && empty($user_id)) {
             return false;
             //return $this->getErrorResponse('`user` parameter is required', 'user');
@@ -1056,6 +1054,7 @@ class Thread extends Model
             $thread->user_id = $conversation->user_id;
         }
 
+		error_log('Attachments is absent? '.json_encode(empty($data['attachments'])));
         // Process attachments.
         if (!empty($data['attachments'])) {
             $has_attachments = false;
@@ -1065,18 +1064,19 @@ class Thread extends Model
                 $uploaded_file = null;
 
                 if (is_object($attachment) && get_class($attachment) == 'Illuminate\Http\UploadedFile') {
-
+					error_log('Attachment object');
                     $uploaded_file = $attachment;
                     $attachment = [];
                     $attachment['file_name'] = $uploaded_file->getClientOriginalName();
                     $attachment['mime_type'] = $uploaded_file->getMimeType();
 
                 } else {
-
-                    if (empty($attachment['file_name'])
+					error_log('Attachment nonobject');
+					if (empty($attachment['file_name'])
                         //|| empty($attachment['mime_type'])
                         || (empty($attachment['data']) && empty($attachment['file_url']))
                     ) {
+						error_log('Attackment Contine! '.json_encode(empty($attachment['file_name'])).' | '.json_encode(empty($attachment['data'])).' | '.json_encode(empty($attachment['file_url'])));
                         continue;
                     }
 
@@ -1084,6 +1084,7 @@ class Thread extends Model
                         // BASE64 string.
                         $content = base64_decode($attachment['data']);
                         if (!$content) {
+							error_log('attachment !content');
                             continue;
                         }
                         if (empty($attachment['mime_type'])) {
@@ -1121,6 +1122,7 @@ class Thread extends Model
                     $thread->id,
                     $user_id ?? null
                 );
+				error_log('Attachment = '.json_encode($attachment));
 
                 if ($attachment) {
                     $has_attachments = true;
@@ -1261,7 +1263,8 @@ class Thread extends Model
                 event(new UserReplied($conversation, $thread));
                 \Eventy::action('conversation.user_replied_can_undo', $conversation, $thread);
                 // After Conversation::UNDO_TIMOUT period trigger final event.
-                \Helper::backgroundAction('conversation.user_replied', [$conversation, $thread], now()->addSeconds(Conversation::UNDO_TIMOUT));
+                error_log('smar142 Thread '.$conversation->id.' / '.$thread->id);
+				\Helper::backgroundAction('conversation.user_replied', [$conversation, $thread], now()->addSeconds(Conversation::UNDO_TIMOUT));
             }
         }
 

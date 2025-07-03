@@ -873,6 +873,7 @@ class ConversationsController extends Controller
                         $response["msg"] = __("Not enough permissions");
                     }
                 }
+
                 $new = false;
                 if (empty($request->conversation_id)) {
                     $new = true;
@@ -923,6 +924,14 @@ class ConversationsController extends Controller
 				if ($request->is_whapi == 1) {
 					$is_whapi = true;
 				}
+                try {
+                    if (!empty($conversation->meta['whtoken'])) {
+                        $is_whapi = true;
+                        $is_whatsapp = true;
+                    }
+                } catch(\Exception $e) {
+
+                }
 
                 $is_custom = false;
                 if ($type == Conversation::TYPE_CUSTOM) {

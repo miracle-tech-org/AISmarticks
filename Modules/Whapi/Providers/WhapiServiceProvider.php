@@ -76,11 +76,11 @@ class WhapiServiceProvider extends ServiceProvider
 			{
 				if ($conversation->meta['whtoken']==@$config['token'])
 				{
-					echo '<span class="conv-tags"><span class="fs-tag fs-tag-md"><a class="fs-tag-name" href="" target="_blank" onClick="javascript:{return false;}">'.$config['channel_name'].'</a></span></span>';
+					echo '<span class="conv-tags"><span class="fs-tag fs-tag-md tag-c-'.@$config['color'].'"><a class="fs-tag-name" href="" target="_blank" onClick="javascript:{return false;}">'.@$config['channel_name'].'</a></span></span>';
 				}
 				else if (isset($config['tokens'])) if (($tk=array_search($conversation->meta['whtoken'],$config['tokens']))!==false)
 				{
-					echo '<span class="conv-tags"><span class="fs-tag fs-tag-md"><a class="fs-tag-name" href="" target="_blank" onClick="javascript:{return false;}">'.$config['channels_names'][$tk].'</a></span></span>';
+					echo '<span class="conv-tags"><span class="fs-tag fs-tag-md tag-c-'.@$config['colors'][$tk].'"><a class="fs-tag-name" href="" target="_blank" onClick="javascript:{return false;}">'.@$config['channels_names'][$tk].'</a></span></span>';
 				}
 			}
 		}, 20, 2);
@@ -91,35 +91,35 @@ class WhapiServiceProvider extends ServiceProvider
 			{
 				if ($conversation->meta['whtoken']==@$config['token'])
 				{
-					echo '<span class="fs-tag pull-left crm-tag" data-toggle="tooltip" title="" data-original-title="Channel"><span class="fs-tag-name">'.$config['channel_name'].'</span></span>';
+					echo '<span class="fs-tag tag-c-'.@$config['color'].' pull-left crm-tag" data-toggle="tooltip" title="" data-original-title="Channel"><span class="fs-tag-name">'.@$config['channel_name'].'</span></span>';
 				}
 				else if (isset($config['tokens'])) if (($tk=array_search($conversation->meta['whtoken'],$config['tokens']))!==false)
 				{
-					echo '<span class="fs-tag pull-left crm-tag" data-toggle="tooltip" title="" data-original-title="Channel"><span class="fs-tag-name">'.$config['channels_names'][$tk].'</span></span>';
+					echo '<span class="fs-tag tag-c-'.@$config['colors'][$tk].' pull-left crm-tag" data-toggle="tooltip" title="" data-original-title="Channel"><span class="fs-tag-name">'.@$config['channels_names'][$tk].'</span></span>';
 				}
 			}
-		}, 20, 2);
+		}, 20, 1);
 
 		// // Add module's JS file to the application layout.
         \Eventy::addFilter('javascripts', function($javascripts) {
             $javascripts[] = \Module::getPublicPath('whapi').'/js/laroute.js';
             $javascripts[] = \Module::getPublicPath('whapi').'/js/module.js';
             return $javascripts;
-        });
+        }, 20, 1);
 
         // Add item to the mailbox menu
         \Eventy::addAction('mailboxes.settings.menu', function($mailbox) {
             if (auth()->user()->isAdmin()) {
                 echo \View::make('whapi::partials/settings_menu', ['mailbox' => $mailbox])->render();
             }
-        }, 35);
+        }, 35, 1);
 
 		// Add item to the mailbox menu
         \Eventy::addAction('reports.menu', function($mailbox) {
             if (auth()->user()->isAdmin()) {
                 echo \View::make('whapi::partials/reports_menu', [])->render();
             }
-        });
+        }, 20, 1);
 
 		\Eventy::addFilter('menu.selected', function($menu) {
             $menu['whapi'] = [
@@ -135,7 +135,7 @@ class WhapiServiceProvider extends ServiceProvider
 				'whapi.report_conversationvolume',
 			];
             return $menu;
-        });
+        }, 20, 1);
 
 		\Eventy::addFilter('channel.name', function($name, $channel) {
             if ($name) {
@@ -151,7 +151,7 @@ class WhapiServiceProvider extends ServiceProvider
 		\Eventy::addFilter('channels.list', function($channels) {
             $channels[self::CHANNEL] = self::CHANNEL_NAME;
             return $channels;
-        });
+        }, 20, 1);
 
 		\Eventy::addAction('conversation.created_by_user', function($conversation, $thread) {
 		    $thread = $thread->fresh();
@@ -204,9 +204,58 @@ class WhapiServiceProvider extends ServiceProvider
 			$thread->setMeta('channel','whapi');
 			$thread->save();
 			
-        }, 20, 3);
+        }, 20, 2);
 
-		\Eventy::addAction('voipeintegration.sendwhapi', function($conversation, $thread) {
+		\Eventy::addFilter('voipeintegration.senddefault', function($result, $conversation, $thread, $default_channel) {
+		    error_log('voipeintegration.senddefault whapi');
+			error_log('voipeintegration.senddefault whapi in '.json_encode($result));
+			if (strpos($default_channel,self::CHANNEL.'_')===0)
+			{
+				error_log('Lets use whapi (default)!');
+				$thread = $thread->fresh();
+				if ($thread->type!=Thread::TYPE_MESSAGE) return;
+				$customer=$conversation->customer;
+				$channel_id = $customer->getChannelId(self::CHANNEL);
+				if (!$channel_id) $channel_id=$customer->getChannelId(\VoipeIntegration::CHANNEL);
+				if (!$channel_id) $channel_id=$customer->getChannelId(\VoipeSmsTickets::CHANNEL);
+				if (!$channel_id) {
+					\Whapi::log('Conversation #'.$conversation->number.'. Can not send a reply to the customer (ID '.$customer->id.'; Phone '.$customer->getMainPhoneValue().'): customer has no phone number.', $conversation->mailbox, true);
+					error_log('Conversation #'.$conversation->number.'. Can not send a reply to the customer (ID '.$customer->id.'; Phone '.$customer->getMainPhoneValue().'): customer has no phone number.');
+					return $result;
+				}
+
+				if ($thread->isDraft() || $thread->imported) {
+					return $result;
+				}
+
+				$text = $thread->getBodyAsText();
+
+				$config = $conversation->mailbox->meta[\Whapi::DRIVER] ?? [];
+
+				$token=$config['token']??'';
+				$tk=preg_replace('/^.+_/uis','',$default_channel);
+				if (isset($config['tokens'][$tk-1])) $token=$config['tokens'][$tk-1];
+				error_log('Default channel '.$default_channel.' = '.$token);
+				$response=self::sendMessage($channel_id,$text,$token,$thread->has_attachments?$thread->attachments:[]);
+				error_log('Whapi response = '.json_encode($response));
+				if (empty($response['sent'])) {
+					\Whapi::log('Error occurred sending Whapi message to '.$channel_id, $conversation->mailbox, true);
+					error_log('Error occurred sending Whapi message to '.$channel_id.': '.json_encode($response));
+				}
+				if (isset($response['message']['id']))
+				{
+					$thread->setMeta('whapiid',$response['message']['id']);
+					$thread->save();
+				}
+				$thread->setMeta('channel','whapi');
+				$thread->save();
+				$result['whapi']=true;
+			}
+			error_log('voipeintegration.senddefault whapi out '.json_encode($result));
+			return $result;
+        }, 20, 4);
+
+		\Eventy::addFilter('voipeintegration.sendwhapi', function($result, $conversation, $thread) {
 		    $thread = $thread->fresh();
             if ($thread->type!=Thread::TYPE_MESSAGE) return;
 			$customer=$conversation->customer;
@@ -216,11 +265,11 @@ class WhapiServiceProvider extends ServiceProvider
 			if (!$channel_id) {
                 \Whapi::log('Conversation #'.$conversation->number.'. Can not send a reply to the customer (ID '.$customer->id.'; Phone '.$customer->getMainPhoneValue().'): customer has no phone number.', $conversation->mailbox, true);
 				error_log('Conversation #'.$conversation->number.'. Can not send a reply to the customer (ID '.$customer->id.'; Phone '.$customer->getMainPhoneValue().'): customer has no phone number.');
-                return;
+                return false;
             }
 
             if ($thread->isDraft() || $thread->imported) {
-                return;
+                return false;
             }
 
             $text = $thread->getBodyAsText();
@@ -244,6 +293,7 @@ class WhapiServiceProvider extends ServiceProvider
 			}
 			$thread->setMeta('channel','whapi');
 			$thread->save();
+			return true;
 		
         }, 20, 3);
 
@@ -299,7 +349,7 @@ class WhapiServiceProvider extends ServiceProvider
 			$thread->save();
 			\DB::insert('insert into billing_statistics (type,month,cnt) values (?, ?, ?) ON DUPLICATE KEY UPDATE `cnt`=`cnt`+?', ["whapi_out", date('Y-m'),1,1]);
 
-        }, 20, 3);
+        }, 20, 4);
 
 		\Eventy::addAction('conversation.user_replied', function($conversation, $thread) {
 			$thread = $thread->fresh();
@@ -353,7 +403,7 @@ class WhapiServiceProvider extends ServiceProvider
 			$thread->save();
 			\DB::insert('insert into billing_statistics (type,month,cnt) values (?, ?, ?) ON DUPLICATE KEY UPDATE `cnt`=`cnt`+?', ["whapi_out", date('Y-m'),1,1]);
 
-        }, 20, 3);
+        }, 20, 2);
 
 		\Eventy::addAction('conversation.send_reply_save', function($conversation, $request) {
 
@@ -366,7 +416,7 @@ class WhapiServiceProvider extends ServiceProvider
 				$conversation->save();
 
 			}
-        }, 20, 3);
+        }, 20, 2);
 
 		\Eventy::addAction('workflows.values_custom', function($type, $value, $mode, $and_i, $row_i, $data) {
 			if ($type != 'whapi') {
@@ -383,7 +433,7 @@ class WhapiServiceProvider extends ServiceProvider
                 'values_custom' => true,
 			];
 			return $actions;
-        });
+        }, 20, 1);
 
         \Eventy::addFilter('workflow.perform_action', function($performed, $type, $operator, $value, $conversation, $workflow) {
 			error_log('Perform Action '.$type);
@@ -422,15 +472,18 @@ class WhapiServiceProvider extends ServiceProvider
 				error_log('DST = '.$dst);
 				
 				$config = $conversation->mailbox->meta[\Whapi::DRIVER] ?? [];
-				$channel_id = $customer->getChannelId(\Whapi::CHANNEL);
 				$token=$config['token']??'';
-				if (isset($conversation->meta['whtoken'])) if (isset($config['tokens'])) if (in_array($conversation->meta['whtoken'],$config['tokens'])) $token=$conversation->meta['whtoken'];
+				error_log('Whapi Workflow token = '.$token);
+				// if (isset($conversation->meta['whtoken'])) if (isset($config['tokens'])) if (in_array($conversation->meta['whtoken'],$config['tokens'])) $token=$conversation->meta['whtoken'];
+				// error_log('Whapi Workflow token (after conversation) = '.$token);
+				if (isset($value['wh_channel'])) if (isset($config['tokens'])) if (isset($config['tokens'][$value['wh_channel']-1])) $token=$config['tokens'][$value['wh_channel']-1];
+				error_log('Whapi Workflow token (after value) = '.$token);
 				$conversation->setMeta('whtoken',$token);
 				$conversation->save();
-				$response=\Whapi::sendMessage($channel_id,$value['text'],$token,[]);
+				$response=\Whapi::sendMessage($dst,$value['text'],$token,[]);
 				if (empty($response['sent'])) {
-					\Whapi::log('Error occurred sending Whapi message to '.$channel_id, $conversation->mailbox, true);
-					error_log('Error occurred sending Whapi message to '.$channel_id.': '.json_encode($response));
+					\Whapi::log('Error occurred sending Whapi message to '.$dst, $conversation->mailbox, true);
+					error_log('Error occurred sending Whapi message to '.$dst.': '.json_encode($response));
 				}
 				else
 				{
@@ -472,7 +525,7 @@ class WhapiServiceProvider extends ServiceProvider
 			})->cron("48 11 * * *")->name('module_whapi_health_check')->withoutOverlapping();
 			// \Whapi::cronMetrics();
 			return $schedule;
-        });
+        }, 20, 1);
 
         //     return $events;
         // }, 20, 3);
@@ -514,6 +567,31 @@ class WhapiServiceProvider extends ServiceProvider
 
         //     return $users_to_notify;
         // }, 20, 4);
+
+		\Eventy::addFilter('voipe.default_channels', function($channels,$mailbox) {
+			$settings = $mailbox->meta[self::DRIVER] ?? [];
+			error_log('Default Whapi before = '.json_encode($channels));
+			if (isset($settings['token'])) $channels['whapi_0']=[
+				'type'=>'whapi',
+				'name'=>'Whapi '.($settings['channel_name'] ?? ''),
+				'id'=>self::CHANNEL.'_0',
+			];
+			if (isset($settings['tokens'])) foreach ($settings['tokens'] as $tk=>$token)
+			{
+				$channels['whapi_'.($tk+1)]=[
+					'type'=>'whapi',
+					'name'=>'Whapi '.($settings['channels_names'][$tk] ?? ''),
+					'id'=>self::CHANNEL.'_'.($tk+1),
+				];
+			}
+			error_log('Default Whapi after = '.json_encode($channels));
+			return $channels;
+		}, 20, 2);
+
+		\Eventy::addFilter('voipeintegration.channel_id', function($channel_id, $customer) {
+            if (!$channel_id) $channel_id = $customer->getChannelId(self::CHANNEL);
+            return $channel_id;
+        }, 20, 2);
     }
 
 	public static function processIncomingMessage($user_phone, $user_name, $channel_id, $text, $mailbox, $attachments = [], $token='', $channel_name='')
@@ -623,6 +701,14 @@ class WhapiServiceProvider extends ServiceProvider
             );
 			$thread->setMeta('channel','whapi');
 			$thread->save();
+			if($thread) {
+				if($user_name == "Mobile") {
+					$thread->type = '2';
+					$thread->created_by_customer_id = null;
+					$thread->created_by_user_id = User::where("first_name", "Mobile")->first()->id;
+					$thread->save();
+				}
+			}
         } else {
             // Create conversation.
             $res=Conversation::create([
