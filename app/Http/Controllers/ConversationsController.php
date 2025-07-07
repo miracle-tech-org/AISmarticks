@@ -2164,6 +2164,7 @@ class ConversationsController extends Controller
                 //     } catch (\Exception $e) {
                 //     }
                 // }
+                \Cache::put('send_reply_called', true, 30);
                 break;
 
             // Send reply, new conversation, add note or forward

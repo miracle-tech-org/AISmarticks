@@ -24,6 +24,12 @@ class WhapiController extends Controller
 {
 	public function webhooks(Request $request, $mailbox_id, $mailbox_secret)
 	{
+		if (\Cache::has('send_reply_called')) {
+			\Cache::forget('send_reply_called');
+			return;
+		}
+		\Cache::forget('send_reply_called');
+
 		if (class_exists('Debugbar')) {
 			\Debugbar::disable();
 		}
@@ -333,6 +339,12 @@ class WhapiController extends Controller
 
 					if(!is_null($lastThread) && $lastThread->body == "<div>".$body."</div>") {
 						return;
+					}
+
+					if(!is_null($lastThread) && $lastThread->has_attachments) {
+						$lastAttachment = $lastThread->attachments->first();
+						if($lastAttachment->file_name == $attachments[0]['file_name'])
+							return;
 					}
 
 					\Whapi::processIncomingMessage($sender_phone, $sender_name, $channel_id, $body, $mailbox, $attachments, $token, $channel_name);
